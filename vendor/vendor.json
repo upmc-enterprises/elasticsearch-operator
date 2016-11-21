@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "jRtYpPa7CRuA+LP4ELF9c9CjJao=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "a437dfd2463eaedbec3dfe443e477d3b0a810b3f",
+			"revisionTime": "2016-11-18T19:45:39Z"
+		}
+	],
+	"rootPath": "github.com/upmc-enterprises/elasticsearch-operator"
+}
