@@ -28,8 +28,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"traefik/log"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
 )
 
 var (
@@ -37,15 +42,19 @@ var (
 
 	printVersion bool
 	baseImage    string
+	kubeCfgFile  string
+	namespace    = os.Getenv("NAMESPACE")
 )
 
 func init() {
 	flag.BoolVar(&printVersion, "version", false, "Show version and quit")
 	flag.StringVar(&baseImage, "baseImage", "upmcenterprises/docker-elasticsearch-kubernetes:2.4.1.1", "Base image to use when spinning up the elasticsearch components.")
+	flag.StringVar(&kubeCfgFile, "kubecfg-file", "", "Location of kubecfg file for access to kubernetes master service; --kube_master_url overrides the URL part of this; if neither this nor --kube_master_url are provided, defaults to service account tokens")
 	flag.Parse()
 }
 
-func main() {
+// Main entrypoint
+func Main() int {
 	if printVersion {
 		fmt.Println("elasticsearch-operator", appVersion)
 		os.Exit(0)
@@ -56,4 +65,39 @@ func main() {
 	// Print params configured
 	logrus.Info("Using Variables:")
 	logrus.Infof("   baseImage: %s", baseImage)
+
+	// Init Controller
+	controller, err := controller.New("elasticcluster", namespace, kubeCfgFile)
+
+	if err != nil {
+		log.Error("Could not init Controller! ", err)
+		return 1
+	}
+
+	// Kick it off
+	controller.Run()
+
+	stopc := make(chan struct{})
+	errc := make(chan error)
+	var wg sync.WaitGroup
+
+	term := make(chan os.Signal)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	select {
+	case <-term:
+		fmt.Fprint(os.Stdout, "Received SIGTERM, exiting gracefully...")
+		close(stopc)
+		wg.Wait()
+	case <-errc:
+		fmt.Fprintf(os.Stderr, "Unhandled error received. Exiting...")
+		close(stopc)
+		wg.Wait()
+		return 1
+	}
+
+	return 0
+}
+
+func main() {
+	os.Exit(Main())
 }

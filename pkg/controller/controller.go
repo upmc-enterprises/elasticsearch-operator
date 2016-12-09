@@ -23,3 +23,153 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 */
 
 package controller
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+	"traefik/log"
+
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/cluster"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
+	"k8s.io/client-go/1.4/kubernetes"
+	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.4/rest"
+	"k8s.io/client-go/1.4/tools/clientcmd"
+)
+
+const (
+	tprName           = "elasticsearch.enterprises.upmc.edu"
+	initRetryWaitTime = 30 * time.Second
+)
+
+type rawEvent struct {
+	Type   string
+	Object json.RawMessage
+}
+
+type Event struct {
+	Type   string
+	Object *spec.ElasticSearchCluster
+}
+
+type Config struct {
+	Namespace  string
+	MasterHost string
+}
+
+type Controller struct {
+	Config
+	kclient  *kubernetes.Clientset
+	clusters map[string]*cluster.ElasticSearchCluster
+}
+
+func New(name, ns, kubeCfgFile string) (*Controller, error) {
+	var (
+		client     *kubernetes.Clientset
+		masterHost string
+	)
+
+	// Should we use in cluster or out of cluster config
+	if len(kubeCfgFile) == 0 {
+		log.Info("Using InCluster k8s config")
+		cfg, err := rest.InClusterConfig()
+
+		if err != nil {
+			return nil, err
+		}
+
+		masterHost = cfg.Host
+		client, err = kubernetes.NewForConfig(cfg)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
+		cfg, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
+
+		if err != nil {
+			log.Error("Got error trying to create client: ", err)
+			return nil, err
+		}
+
+		masterHost = cfg.Host
+		client, err = kubernetes.NewForConfig(cfg)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	c := &Controller{
+		kclient: client,
+		Config: Config{
+			Namespace:  ns,
+			MasterHost: masterHost,
+		},
+		clusters: make(map[string]*cluster.ElasticSearchCluster),
+	}
+
+	return c, nil
+}
+
+func (c *Controller) Run() error {
+
+	_, err := c.init()
+
+	if err != nil {
+		log.Error("Error in init(): ", err)
+	}
+	return nil
+}
+
+func (c *Controller) init() (string, error) {
+	err := c.createTPR()
+	if err != nil {
+		return "", err
+	}
+
+	return "", fmt.Errorf("fail to create TPR: %v", err)
+}
+
+func (c *Controller) createTPR() error {
+	tpr := &v1beta1.ThirdPartyResource{
+		ObjectMeta: v1.ObjectMeta{
+			Name: tprName,
+		},
+		Versions: []v1beta1.APIVersion{
+			{Name: "v1"},
+		},
+		Description: "Managed elasticsearch clusters",
+	}
+
+	log.Infof("serverip: %s", c.MasterHost)
+
+	resp, err := k8sutil.ListElasticCluster(c.MasterHost, c.Namespace, c.kclient.CoreClient.Client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	log.Infof("resp.StatusCode: %d", resp.StatusCode)
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		log.Info("Found ElasticSearchCluster ThirdPartyResource already existing, skipping creation.")
+		return nil
+	case http.StatusNotFound: // not set up yet
+		log.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
+		_, err := c.kclient.ThirdPartyResources().Create(tpr)
+		if err != nil {
+			log.Error("Error creating ThirdPartyResource: ", err)
+			return err
+		}
+		return nil
+	default:
+		return fmt.Errorf("invalid status code: %v", resp.Status)
+	}
+}

@@ -9,7 +9,7 @@ PREFIX ?= upmcenterprises
 all: container
 
 build:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix cgo -o _outpugt/bin/elasticsearch-operator --ldflags '-w' ./cmd/operator/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix cgo -o _output/bin/elasticsearch-operator --ldflags '-w' ./cmd/operator/main.go
 
 container: build
 	docker build -t $(PREFIX)/elasticsearch-controller:$(TAG) .
@@ -18,7 +18,7 @@ push:
 	docker push $(PREFIX)/elasticsearch-controller:$(TAG)
 
 clean:
-	rm -f elasticsearch-controller
+	rm -f _output
 
 test: clean
 	godep go test -v --vmodule=*=4
