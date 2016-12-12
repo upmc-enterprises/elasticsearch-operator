@@ -27,10 +27,6 @@ package k8sutil
 import (
 	"fmt"
 	"net/http"
-	"time"
-	"traefik/log"
-
-	"k8s.io/kubernetes/pkg/util/wait"
 )
 
 const (
@@ -40,27 +36,5 @@ const (
 
 // ListElasticCluster returns list of elasticclusters existing currently in the api
 func ListElasticCluster(host, ns string, httpClient *http.Client) (*http.Response, error) {
-	return httpClient.Get(fmt.Sprintf("%s/apis/enterprises.upmc.edu/v1/namespaces/%s/elasticclusters", host, ns))
-}
-
-// WaitElasticTPRReady returns true if TPR is created for false if not (or error)
-func WaitElasticTPRReady(interval, timeout time.Duration, host, ns string, httpClient *http.Client) error {
-	return wait.Poll(interval, timeout, func() (bool, error) {
-		resp, err := ListElasticCluster(host, ns, httpClient)
-		if err != nil {
-			return false, err
-		}
-		defer resp.Body.Close()
-
-		log.Infof("resp.StatusCode: %d", resp.StatusCode)
-
-		switch resp.StatusCode {
-		case http.StatusOK:
-			return true, nil
-		case http.StatusNotFound: // not set up yet. wait.
-			return false, nil
-		default:
-			return false, fmt.Errorf("invalid status code: %v", resp.Status)
-		}
-	})
+	return httpClient.Get(fmt.Sprintf("%s/apis/enterprises.upmc.edu/v1/namespaces/%s/elasticsearchs", host, ns))
 }

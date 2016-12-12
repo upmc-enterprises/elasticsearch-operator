@@ -137,17 +137,30 @@ func (c *Controller) init() (string, error) {
 }
 
 func (c *Controller) createTPR() error {
-	tpr := &v1beta1.ThirdPartyResource{
-		ObjectMeta: v1.ObjectMeta{
-			Name: tprName,
-		},
-		Versions: []v1beta1.APIVersion{
-			{Name: "v1"},
-		},
-		Description: "Managed elasticsearch clusters",
-	}
 
 	log.Infof("serverip: %s", c.MasterHost)
+
+	tprResult, err := c.kclient.ThirdPartyResources().Get(tprName)
+
+	if len(tprResult.Name) == 0 {
+		log.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
+
+		tpr := &v1beta1.ThirdPartyResource{
+			ObjectMeta: v1.ObjectMeta{
+				Name: tprName,
+			},
+			Versions: []v1beta1.APIVersion{
+				{Name: "v1"},
+			},
+			Description: "Managed elasticsearch clusters",
+		}
+
+		_, err := c.kclient.ThirdPartyResources().Create(tpr)
+		if err != nil {
+			log.Error("Error creating ThirdPartyResource: ", err)
+			return err
+		}
+	}
 
 	resp, err := k8sutil.ListElasticCluster(c.MasterHost, c.Namespace, c.kclient.CoreClient.Client)
 	if err != nil {
@@ -159,15 +172,7 @@ func (c *Controller) createTPR() error {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		log.Info("Found ElasticSearchCluster ThirdPartyResource already existing, skipping creation.")
-		return nil
-	case http.StatusNotFound: // not set up yet
-		log.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
-		_, err := c.kclient.ThirdPartyResources().Create(tpr)
-		if err != nil {
-			log.Error("Error creating ThirdPartyResource: ", err)
-			return err
-		}
+		log.Info("Found %d ElasticSearch Clusters!")
 		return nil
 	default:
 		return fmt.Errorf("invalid status code: %v", resp.Status)
