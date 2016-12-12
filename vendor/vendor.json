@@ -1156,12 +1156,6 @@
 			"revisionTime": "2016-10-06T10:29:19Z"
 		},
 		{
-			"checksumSHA1": "tDyoW3CItU3LN4S6bJQF8lbT2cA=",
-			"path": "k8s.io/kubernetes/pkg/util/wait",
-			"revision": "4dc418c5eeb4e56796ce7021f0eed7f54dcb74b7",
-			"revisionTime": "2016-10-06T10:29:19Z"
-		},
-		{
 			"checksumSHA1": "bsyemohcE/o7ijF70p7caPrLmEk=",
 			"path": "k8s.io/kubernetes/pkg/util/yaml",
 			"revision": "4dc418c5eeb4e56796ce7021f0eed7f54dcb74b7",
