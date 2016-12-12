@@ -25,58 +25,59 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package controller
 
 import (
-	"fmt"
-	"traefik/log"
-
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/cluster"
+	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/rest"
 	"k8s.io/client-go/1.4/tools/clientcmd"
 )
 
+// Config defines properties of the controller
 type Config struct {
 	Namespace  string
 	MasterHost string
 }
 
+// Controller object
 type Controller struct {
 	Config
 	kclient  *kubernetes.Clientset
-	clusters map[string]*cluster.ElasticSearchCluster
+	clusters map[string]*spec.ElasticSearchCluster
 }
 
+// New up a Controller
 func New(name, ns, kubeCfgFile string) (*Controller, error) {
 	var (
 		client     *kubernetes.Clientset
 		masterHost string
 	)
 
+	masterHost = "http://127.0.0.1:9005"
+
 	// Should we use in cluster or out of cluster config
 	if len(kubeCfgFile) == 0 {
-		log.Info("Using InCluster k8s config")
+		logrus.Info("Using InCluster k8s config")
 		cfg, err := rest.InClusterConfig()
 
 		if err != nil {
 			return nil, err
 		}
 
-		masterHost = cfg.Host
 		client, err = kubernetes.NewForConfig(cfg)
 
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		log.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
+		logrus.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
 		cfg, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
 
 		if err != nil {
-			log.Error("Got error trying to create client: ", err)
+			logrus.Error("Got error trying to create client: ", err)
 			return nil, err
 		}
 
-		masterHost = cfg.Host
 		client, err = kubernetes.NewForConfig(cfg)
 
 		if err != nil {
@@ -90,27 +91,32 @@ func New(name, ns, kubeCfgFile string) (*Controller, error) {
 			Namespace:  ns,
 			MasterHost: masterHost,
 		},
-		clusters: make(map[string]*cluster.ElasticSearchCluster),
+		clusters: make(map[string]*spec.ElasticSearchCluster),
 	}
 
 	return c, nil
 }
 
+// Run get's the party started
 func (c *Controller) Run() error {
 
-	_, err := c.init()
+	// Init TPR
+	err := c.init()
 
 	if err != nil {
-		log.Error("Error in init(): ", err)
+		logrus.Error("Error in init(): ", err)
 	}
+
+	//
+
 	return nil
 }
 
-func (c *Controller) init() (string, error) {
-	err := k8sutil.CreateKubernetesThirdPartyResource(c.MasterHost)
+func (c *Controller) init() error {
+	err := k8sutil.CreateKubernetesThirdPartyResource(c.kclient, c.MasterHost)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return "", fmt.Errorf("fail to create TPR: %v", err)
+	return nil
 }

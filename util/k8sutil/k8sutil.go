@@ -28,15 +28,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
-
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
+	"github.com/Sirupsen/logrus"
+	"k8s.io/client-go/1.4/kubernetes"
+	"k8s.io/client-go/1.4/pkg/api/v1"
+	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
 )
 
 var (
@@ -100,13 +99,14 @@ type ElasticSearch struct {
 	Type       string            `json:"type"`
 }
 
+// GetElasticSearchClusters returns a list of custom clusters defined
 func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
 	var resp *http.Response
 	var err error
 	for {
 		resp, err = http.Get(apiHost + elasticSearchEndpoint)
 		if err != nil {
-			log.Println(err)
+			logrus.Error(err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -123,6 +123,7 @@ func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
 	return elasticSearchList.Items, nil
 }
 
+// MonitorElasticSearchEvents watches for new or removed clusters
 func MonitorElasticSearchEvents(apiHost string) (<-chan ElasticSearchEvent, <-chan error) {
 	events := make(chan ElasticSearchEvent)
 	errc := make(chan error, 1)
@@ -157,11 +158,11 @@ func MonitorElasticSearchEvents(apiHost string) (<-chan ElasticSearchEvent, <-ch
 }
 
 // CreateKubernetesThirdPartyResource checks if ElasticSearch TPR exists. If not, create
-func CreateKubernetesThirdPartyResource(apiHost string) error {
-	tprResult, err := c.kclient.ThirdPartyResources().Get(tprName)
+func CreateKubernetesThirdPartyResource(kclient *kubernetes.Clientset, apiHost string) error {
+	tprResult, _ := kclient.ThirdPartyResources().Get(tprName)
 
 	if len(tprResult.Name) == 0 {
-		log.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
+		logrus.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
 
 		tpr := &v1beta1.ThirdPartyResource{
 			ObjectMeta: v1.ObjectMeta{
@@ -173,31 +174,14 @@ func CreateKubernetesThirdPartyResource(apiHost string) error {
 			Description: "Managed elasticsearch clusters",
 		}
 
-		_, err := c.kclient.ThirdPartyResources().Create(tpr)
+		_, err := kclient.ThirdPartyResources().Create(tpr)
 		if err != nil {
-			log.Error("Error creating ThirdPartyResource: ", err)
+			logrus.Error("Error creating ThirdPartyResource: ", err)
 			return err
 		}
+	} else {
+		logrus.Info("Elastic Search TPR already existing...")
 	}
 
-	resp, err := k8sutil.ListElasticCluster(c.MasterHost, c.kclient.CoreClient.Client)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	log.Infof("resp.StatusCode: %d", resp.StatusCode)
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		log.Info("Found %d ElasticSearch Clusters!")
-		return nil
-	default:
-		return fmt.Errorf("invalid status code: %v", resp.Status)
-	}
-}
-
-// ListElasticCluster returns list of elasticclusters existing currently in the api
-func ListElasticCluster(host string, httpClient *http.Client) (*http.Response, error) {
-	return httpClient.Get(fmt.Sprintf("%s/%s", host, elasticSearchEndpoint))
+	return nil
 }
