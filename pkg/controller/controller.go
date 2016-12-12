@@ -25,36 +25,15 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package controller
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
 	"traefik/log"
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/cluster"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 	"k8s.io/client-go/1.4/kubernetes"
-	"k8s.io/client-go/1.4/pkg/api/v1"
-	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.4/rest"
 	"k8s.io/client-go/1.4/tools/clientcmd"
 )
-
-const (
-	tprName           = "elasticsearch.enterprises.upmc.edu"
-	initRetryWaitTime = 30 * time.Second
-)
-
-type rawEvent struct {
-	Type   string
-	Object json.RawMessage
-}
-
-type Event struct {
-	Type   string
-	Object *spec.ElasticSearchCluster
-}
 
 type Config struct {
 	Namespace  string
@@ -128,53 +107,10 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) init() (string, error) {
-	err := c.createTPR()
+	err := k8sutil.CreateKubernetesThirdPartyResource(c.MasterHost)
 	if err != nil {
 		return "", err
 	}
 
 	return "", fmt.Errorf("fail to create TPR: %v", err)
-}
-
-func (c *Controller) createTPR() error {
-
-	log.Infof("serverip: %s", c.MasterHost)
-
-	tprResult, err := c.kclient.ThirdPartyResources().Get(tprName)
-
-	if len(tprResult.Name) == 0 {
-		log.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
-
-		tpr := &v1beta1.ThirdPartyResource{
-			ObjectMeta: v1.ObjectMeta{
-				Name: tprName,
-			},
-			Versions: []v1beta1.APIVersion{
-				{Name: "v1"},
-			},
-			Description: "Managed elasticsearch clusters",
-		}
-
-		_, err := c.kclient.ThirdPartyResources().Create(tpr)
-		if err != nil {
-			log.Error("Error creating ThirdPartyResource: ", err)
-			return err
-		}
-	}
-
-	resp, err := k8sutil.ListElasticCluster(c.MasterHost, c.Namespace, c.kclient.CoreClient.Client)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	log.Infof("resp.StatusCode: %d", resp.StatusCode)
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		log.Info("Found %d ElasticSearch Clusters!")
-		return nil
-	default:
-		return fmt.Errorf("invalid status code: %v", resp.Status)
-	}
 }
