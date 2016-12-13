@@ -104,8 +104,6 @@ func (c *Controller) Run() error {
 		logrus.Error("Error in init(): ", err)
 	}
 
-	logrus.Info("Using masterhost: ", c.MasterHost)
-
 	// Get existing clusters
 	currentClusters, err := k8sutil.GetElasticSearchClusters(c.MasterHost)
 

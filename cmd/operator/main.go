@@ -35,6 +35,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/processor"
 )
 
 var (
@@ -76,12 +77,19 @@ func Main() int {
 		return 1
 	}
 
+	stopc := make(chan struct{})
+	doneChan := make(chan struct{})
+	errc := make(chan error)
+	var wg sync.WaitGroup
+
 	// Kick it off
 	controller.Run()
 
-	stopc := make(chan struct{})
-	errc := make(chan error)
-	var wg sync.WaitGroup
+	// Watch for events that add, modify, or delete ElasticSearchCluster definitions and
+	// process them asynchronously.
+	log.Println("Watching for elastic search events...")
+	wg.Add(1)
+	processor.WatchElasticSearchClusterEvents(doneChan, &wg, masterHost)
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
