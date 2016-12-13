@@ -40,9 +40,10 @@ import (
 
 var (
 	namespace                  = os.Getenv("NAMESPACE")
-	tprName                    = "elasticsearch.enterprises.upmc.edu"
-	elasticSearchEndpoint      = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchs", namespace)
-	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchs?watch=true", namespace)
+	tprName                    = "elasticsearch-cluster.enterprises.upmc.com"
+	elasticSearchEndpoint      = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters", namespace)
+	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters?watch=true", namespace)
+	tprEndpoint                = "/apis/extensions/v1beta1/thirdpartyresources"
 )
 
 const (
@@ -75,11 +76,10 @@ type ElasticSearchCluster struct {
 
 // ElasticSearchSpec represents the custom data of the object
 type ElasticSearchSpec struct {
-	Policy              string    `json:"policy"`
-	Secret              string    `json:"secret"`
-	LeaseDuration       int       `json:"leaseDuration"`
-	LeaseID             string    `json:"leastId"`
-	LeaseExpirationDate time.Time `json:"leaseExpirationDate"`
+	ClusterName    string `json: "cluster-name"`
+	ClientNodeSize int    `json:"client-node-size"`
+	MasterNodeSize int    `json:"master-node-size"`
+	DataNodeSize   int    `json:"data-node-size"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
@@ -117,8 +117,11 @@ func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&elasticSearchList)
 	if err != nil {
+		logrus.Error("Could not get list of elasticsearch clusters: ", err)
 		return nil, err
 	}
+
+	logrus.Info("found: ", elasticSearchList.Items)
 
 	return elasticSearchList.Items, nil
 }

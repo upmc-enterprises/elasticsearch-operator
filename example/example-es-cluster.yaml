@@ -1,0 +1,8 @@
+apiVersion: "enterprises.upmc.com/v1"
+kind: "ElasticsearchCluster"
+metadata:
+  name: "example-es-cluster"
+spec:
+  client-node-size: 3
+  master-node-size: 2
+  data-node-size: 3

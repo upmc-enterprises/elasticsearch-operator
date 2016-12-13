@@ -107,7 +107,28 @@ func (c *Controller) Run() error {
 		logrus.Error("Error in init(): ", err)
 	}
 
-	//
+	logrus.Info("Using masterhost: ", c.MasterHost)
+
+	// Get existing clusters
+	currentClusters, err := k8sutil.GetElasticSearchClusters(c.MasterHost)
+
+	if err != nil {
+		logrus.Error("Could not get list of clusters: ", err)
+		return err
+	}
+
+	for _, cluster := range currentClusters {
+		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
+		c.clusters[cluster.Metadata["name"]] = &spec.ElasticSearchCluster{
+			Spec: spec.ClusterSpec{
+				ClientNodeSize: cluster.Spec.ClientNodeSize,
+				MasterNodeSize: cluster.Spec.MasterNodeSize,
+				DataNodeSize:   cluster.Spec.DataNodeSize,
+			},
+		}
+	}
+
+	logrus.Infof("Found %d existing clusters ", len(c.clusters))
 
 	return nil
 }
