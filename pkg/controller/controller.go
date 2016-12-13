@@ -47,13 +47,10 @@ type Controller struct {
 }
 
 // New up a Controller
-func New(name, ns, kubeCfgFile string) (*Controller, error) {
+func New(name, ns, kubeCfgFile, masterHost string) (*Controller, error) {
 	var (
-		client     *kubernetes.Clientset
-		masterHost string
+		client *kubernetes.Clientset
 	)
-
-	masterHost = "http://127.0.0.1:9005"
 
 	// Should we use in cluster or out of cluster config
 	if len(kubeCfgFile) == 0 {

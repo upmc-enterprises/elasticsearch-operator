@@ -121,8 +121,6 @@ func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
 		return nil, err
 	}
 
-	logrus.Info("found: ", elasticSearchList.Items)
-
 	return elasticSearchList.Items, nil
 }
 
