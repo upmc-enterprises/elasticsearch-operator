@@ -77,9 +77,7 @@ func Main() int {
 		return 1
 	}
 
-	stopc := make(chan struct{})
 	doneChan := make(chan struct{})
-	errc := make(chan error)
 	var wg sync.WaitGroup
 
 	// Kick it off
@@ -91,21 +89,17 @@ func Main() int {
 	wg.Add(1)
 	processor.WatchElasticSearchClusterEvents(doneChan, &wg, masterHost)
 
-	term := make(chan os.Signal)
-	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-term:
-		fmt.Fprint(os.Stdout, "Received SIGTERM, exiting gracefully...")
-		close(stopc)
-		wg.Wait()
-	case <-errc:
-		fmt.Fprintf(os.Stderr, "Unhandled error received. Exiting...")
-		close(stopc)
-		wg.Wait()
-		return 1
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	for {
+		select {
+		case <-signalChan:
+			log.Printf("Shutdown signal received, exiting...")
+			close(doneChan)
+			wg.Wait()
+			os.Exit(0)
+		}
 	}
-
-	return 0
 }
 
 func main() {
