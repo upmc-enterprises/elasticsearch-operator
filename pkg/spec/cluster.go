@@ -39,13 +39,13 @@ type ElasticSearchCluster struct {
 // ClusterSpec defines cluster options
 type ClusterSpec struct {
 	// ClientNodeSize defines how many client nodes to have in cluster
-	ClientNodeSize int `json:"client-node-size"`
+	ClientNodeSize int32 `json:"client-node-size"`
 
 	// MasterNodeSize defines how many client nodes to have in cluster
-	MasterNodeSize int `json:"master-node-size"`
+	MasterNodeSize int32 `json:"master-node-size"`
 
 	// DataNodeSize defines how many client nodes to have in cluster
-	DataNodeSize int `json:"data-node-size"`
+	DataNodeSize int32 `json:"data-node-size"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
 	// to run on a node, the node must have each of the indicated key-value pairs as

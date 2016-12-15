@@ -36,6 +36,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/processor"
+	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
 var (
@@ -69,8 +70,10 @@ func Main() int {
 	logrus.Info("Using Variables:")
 	logrus.Infof("   baseImage: %s", baseImage)
 
-	// Init Controller
-	controller, err := controller.New("elasticcluster", namespace, kubeCfgFile, masterHost)
+	// Init
+	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost)
+	controller, err := controller.New("elasticcluster", namespace, k8sclient)
+	processor, err := processor.New(k8sclient)
 
 	if err != nil {
 		log.Error("Could not init Controller! ", err)
@@ -87,7 +90,7 @@ func Main() int {
 	// process them asynchronously.
 	log.Println("Watching for elastic search events...")
 	wg.Add(1)
-	processor.WatchElasticSearchClusterEvents(doneChan, &wg, masterHost)
+	processor.WatchElasticSearchClusterEvents(doneChan, &wg)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)

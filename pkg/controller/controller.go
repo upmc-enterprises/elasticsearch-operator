@@ -28,65 +28,27 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
-	"k8s.io/client-go/1.4/kubernetes"
-	"k8s.io/client-go/1.4/rest"
-	"k8s.io/client-go/1.4/tools/clientcmd"
 )
 
 // Config defines properties of the controller
 type Config struct {
-	Namespace  string
-	MasterHost string
+	Namespace string
+	k8sclient *k8sutil.K8sutil
 }
 
 // Controller object
 type Controller struct {
 	Config
-	kclient  *kubernetes.Clientset
 	clusters map[string]*spec.ElasticSearchCluster
 }
 
 // New up a Controller
-func New(name, ns, kubeCfgFile, masterHost string) (*Controller, error) {
-	var (
-		client *kubernetes.Clientset
-	)
-
-	// Should we use in cluster or out of cluster config
-	if len(kubeCfgFile) == 0 {
-		logrus.Info("Using InCluster k8s config")
-		cfg, err := rest.InClusterConfig()
-
-		if err != nil {
-			return nil, err
-		}
-
-		client, err = kubernetes.NewForConfig(cfg)
-
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		logrus.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
-		cfg, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
-
-		if err != nil {
-			logrus.Error("Got error trying to create client: ", err)
-			return nil, err
-		}
-
-		client, err = kubernetes.NewForConfig(cfg)
-
-		if err != nil {
-			return nil, err
-		}
-	}
+func New(name, ns string, k8sclient *k8sutil.K8sutil) (*Controller, error) {
 
 	c := &Controller{
-		kclient: client,
 		Config: Config{
-			Namespace:  ns,
-			MasterHost: masterHost,
+			Namespace: ns,
+			k8sclient: k8sclient,
 		},
 		clusters: make(map[string]*spec.ElasticSearchCluster),
 	}
@@ -105,7 +67,7 @@ func (c *Controller) Run() error {
 	}
 
 	// Get existing clusters
-	currentClusters, err := k8sutil.GetElasticSearchClusters(c.MasterHost)
+	currentClusters, err := c.k8sclient.GetElasticSearchClusters()
 
 	if err != nil {
 		logrus.Error("Could not get list of clusters: ", err)
@@ -129,7 +91,7 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) init() error {
-	err := k8sutil.CreateKubernetesThirdPartyResource(c.kclient, c.MasterHost)
+	err := c.k8sclient.CreateKubernetesThirdPartyResource()
 	if err != nil {
 		return err
 	}

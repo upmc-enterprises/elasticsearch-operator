@@ -36,6 +36,8 @@ import (
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/pkg/api/v1"
 	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.4/rest"
+	"k8s.io/client-go/1.4/tools/clientcmd"
 )
 
 var (
@@ -49,7 +51,20 @@ var (
 const (
 	dataDir    = "/data"
 	backupFile = "/var/elastic/latest.backup"
+
+	discoveryServiceName = "elasticsearch-discovery"
+	dataServiceName      = "es-data-svc"
+	clientServiceName    = "elasticsearch"
+
+	clientDeploymentName = "es-client"
+
+	secretName = "es-certs"
 )
+
+type K8sutil struct {
+	Kclient    *kubernetes.Clientset
+	MasterHost string
+}
 
 // ThirdPartyResource in Kubernetes
 type ThirdPartyResource struct {
@@ -62,8 +77,8 @@ type ThirdPartyResource struct {
 
 // ElasticSearchEvent stores when a ES needs created
 type ElasticSearchEvent struct {
-	Type   string        `json:"type"`
-	Object ElasticSearch `json:"object"`
+	Type   string               `json:"type"`
+	Object ElasticSearchCluster `json:"object"`
 }
 
 // ElasticSearchCluster represents a custom ES object
@@ -77,9 +92,9 @@ type ElasticSearchCluster struct {
 // ElasticSearchSpec represents the custom data of the object
 type ElasticSearchSpec struct {
 	ClusterName    string `json: "cluster-name"`
-	ClientNodeSize int    `json:"client-node-size"`
-	MasterNodeSize int    `json:"master-node-size"`
-	DataNodeSize   int    `json:"data-node-size"`
+	ClientNodeSize int32  `json:"client-node-size"`
+	MasterNodeSize int32  `json:"master-node-size"`
+	DataNodeSize   int32  `json:"data-node-size"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
@@ -99,12 +114,54 @@ type ElasticSearch struct {
 	Type       string            `json:"type"`
 }
 
+// New creates a new instance of k8sutil
+func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
+	var client *kubernetes.Clientset
+	// Should we use in cluster or out of cluster config
+	if len(kubeCfgFile) == 0 {
+		logrus.Info("Using InCluster k8s config")
+		cfg, err := rest.InClusterConfig()
+
+		if err != nil {
+			return nil, err
+		}
+
+		client, err = kubernetes.NewForConfig(cfg)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		logrus.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
+		cfg, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
+
+		if err != nil {
+			logrus.Error("Got error trying to create client: ", err)
+			return nil, err
+		}
+
+		client, err = kubernetes.NewForConfig(cfg)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	k := &K8sutil{
+		Kclient:    client,
+		MasterHost: masterHost,
+	}
+
+	return k, nil
+
+}
+
 // GetElasticSearchClusters returns a list of custom clusters defined
-func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
+func (k *K8sutil) GetElasticSearchClusters() ([]ElasticSearchCluster, error) {
 	var resp *http.Response
 	var err error
 	for {
-		resp, err = http.Get(apiHost + elasticSearchEndpoint)
+		resp, err = http.Get(k.MasterHost + elasticSearchEndpoint)
 		if err != nil {
 			logrus.Error(err)
 			time.Sleep(5 * time.Second)
@@ -125,12 +182,12 @@ func GetElasticSearchClusters(apiHost string) ([]ElasticSearchCluster, error) {
 }
 
 // MonitorElasticSearchEvents watches for new or removed clusters
-func MonitorElasticSearchEvents(apiHost string) (<-chan ElasticSearchEvent, <-chan error) {
+func (k *K8sutil) MonitorElasticSearchEvents() (<-chan ElasticSearchEvent, <-chan error) {
 	events := make(chan ElasticSearchEvent)
 	errc := make(chan error, 1)
 	go func() {
 		for {
-			resp, err := http.Get(apiHost + elasticSearchWatchEndpoint)
+			resp, err := http.Get(k.MasterHost + elasticSearchWatchEndpoint)
 			if err != nil {
 				errc <- err
 				time.Sleep(5 * time.Second)
@@ -159,8 +216,8 @@ func MonitorElasticSearchEvents(apiHost string) (<-chan ElasticSearchEvent, <-ch
 }
 
 // CreateKubernetesThirdPartyResource checks if ElasticSearch TPR exists. If not, create
-func CreateKubernetesThirdPartyResource(kclient *kubernetes.Clientset, apiHost string) error {
-	tprResult, _ := kclient.ThirdPartyResources().Get(tprName)
+func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
+	tprResult, _ := k.Kclient.ThirdPartyResources().Get(tprName)
 
 	if len(tprResult.Name) == 0 {
 		logrus.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
@@ -175,13 +232,288 @@ func CreateKubernetesThirdPartyResource(kclient *kubernetes.Clientset, apiHost s
 			Description: "Managed elasticsearch clusters",
 		}
 
-		_, err := kclient.ThirdPartyResources().Create(tpr)
+		_, err := k.Kclient.ThirdPartyResources().Create(tpr)
 		if err != nil {
 			logrus.Error("Error creating ThirdPartyResource: ", err)
 			return err
 		}
 	} else {
 		logrus.Info("Elastic Search TPR already existing...")
+	}
+
+	return nil
+}
+
+// CreateDiscoveryService creates the discovery service
+func (k *K8sutil) CreateDiscoveryService() error {
+
+	// Check if service exists
+	svc, err := k.Kclient.Services(namespace).Get(discoveryServiceName)
+
+	// Service missing, create
+	if len(svc.Name) == 0 {
+		logrus.Info("Discovery Service not found, creating...")
+
+		discoverySvc := &v1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name: discoveryServiceName,
+				Labels: map[string]string{
+					"component": "elasticsearch",
+					"role":      "master",
+				},
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"component": "elasticsearch",
+					"role":      "master",
+				},
+				Ports: []v1.ServicePort{
+					v1.ServicePort{
+						Name:     "transport",
+						Port:     9300,
+						Protocol: "TCP",
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.Services(namespace).Create(discoverySvc)
+
+		if err != nil {
+			logrus.Error("Could not create discovery service! ", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get discovery service! ", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateDataService creates the data service
+func (k *K8sutil) CreateDataService() error {
+
+	// Check if service exists
+	svc, err := k.Kclient.Services(namespace).Get(dataServiceName)
+
+	// Service missing, create
+	if len(svc.Name) == 0 {
+		logrus.Infof("%s not found, creating...", dataServiceName)
+
+		dataService := &v1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name: dataServiceName,
+				Labels: map[string]string{
+					"service.alpha.kubernetes.io/tolerate-unready-endpoints": "true",
+				},
+				Annotations: map[string]string{
+					"component": "elasticsearch",
+					"name":      dataServiceName,
+				},
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"component": "elasticsearch",
+					"role":      "data",
+				},
+				Ports: []v1.ServicePort{
+					v1.ServicePort{
+						Name:     "transport",
+						Port:     9300,
+						Protocol: "TCP",
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.Services(namespace).Create(dataService)
+
+		if err != nil {
+			logrus.Error("Could not create data service", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get data service! ", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateClientService creates the client service
+func (k *K8sutil) CreateClientService() error {
+
+	// Check if service exists
+	svc, err := k.Kclient.Services(namespace).Get(clientServiceName)
+
+	// Service missing, create
+	if len(svc.Name) == 0 {
+		logrus.Infof("%s not found, creating...", clientServiceName)
+
+		clientSvc := &v1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name: dataServiceName,
+				Labels: map[string]string{
+					"component": "elasticsearch",
+					"role":      "client",
+				},
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"component": "elasticsearch",
+					"role":      "client",
+				},
+				Ports: []v1.ServicePort{
+					v1.ServicePort{
+						Name:     "http",
+						Port:     9200,
+						Protocol: "TCP",
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.Services(namespace).Create(clientSvc)
+
+		if err != nil {
+			logrus.Error("Could not create client service", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get client service! ", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateClientDeployment creates the client deployment
+func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
+
+	// Check if deployment exists
+	deployment, err := k.Kclient.Deployments(namespace).Get(clientDeploymentName)
+
+	if len(deployment.Name) == 0 {
+		logrus.Infof("%s not found, creating...", clientDeploymentName)
+
+		deployment := &v1beta1.Deployment{
+			ObjectMeta: v1.ObjectMeta{
+				Name: clientDeploymentName,
+				Labels: map[string]string{
+					"component": "elasticsearch",
+					"role":      "client",
+					"name":      clientDeploymentName,
+				},
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: replicas,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Labels: map[string]string{
+							"component": "elasticsearch",
+							"role":      "client",
+							"name":      clientDeploymentName,
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							v1.Container{
+								Name: "es-client",
+								SecurityContext: &v1.SecurityContext{
+									Privileged: &[]bool{true}[0],
+									Capabilities: &v1.Capabilities{
+										Add: []v1.Capability{
+											"IPC_LOCK",
+										},
+									},
+								},
+								Image:           "upmcenterprises/docker-elasticsearch-kubernetes:2.4.1.1",
+								ImagePullPolicy: "Always",
+								Env: []v1.EnvVar{
+									v1.EnvVar{
+										Name: "NAMESPACE",
+										ValueFrom: &v1.EnvVarSource{
+											FieldRef: &v1.ObjectFieldSelector{
+												FieldPath: "metadata.namespace",
+											},
+										},
+									},
+									v1.EnvVar{
+										Name:  "CLUSTER_NAME",
+										Value: "myesdb",
+									},
+									v1.EnvVar{
+										Name:  "NODE_MASTER",
+										Value: "false",
+									},
+									v1.EnvVar{
+										Name:  "NODE_DATA",
+										Value: "false",
+									},
+									v1.EnvVar{
+										Name:  "HTTP_ENABLE",
+										Value: "true",
+									},
+									v1.EnvVar{
+										Name:  "ES_HEAP_SIZE",
+										Value: "1g",
+									},
+								},
+								Ports: []v1.ContainerPort{
+									v1.ContainerPort{
+										Name:          "http",
+										ContainerPort: 9200,
+										Protocol:      v1.ProtocolTCP,
+									},
+									v1.ContainerPort{
+										Name:          "transport",
+										ContainerPort: 9300,
+										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								VolumeMounts: []v1.VolumeMount{
+									v1.VolumeMount{
+										Name:      "storage",
+										MountPath: "/data",
+									},
+									v1.VolumeMount{
+										Name:      "es-certs",
+										MountPath: "/elasticsearch/config/certs",
+									},
+								},
+							},
+						},
+						Volumes: []v1.Volume{
+							v1.Volume{
+								Name: "storage",
+								VolumeSource: v1.VolumeSource{
+									EmptyDir: &v1.EmptyDirVolumeSource{},
+								},
+							},
+							v1.Volume{
+								Name: "es-certs",
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName: "es-certs",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.Deployments(namespace).Create(deployment)
+
+		if err != nil {
+			logrus.Error("Could not create client deployment: ", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get client deployment! ", err)
+		return err
 	}
 
 	return nil

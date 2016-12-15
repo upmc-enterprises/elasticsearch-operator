@@ -28,17 +28,36 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
+// processorLock ensures that reconciliation and event processing does
+// not happen at the same time.
+var processorLock = &sync.Mutex{}
+
+// Processor object
+type Processor struct {
+	k8sclient *k8sutil.K8sutil
+}
+
+// New creates new instance of Processor
+func New(kclient *k8sutil.K8sutil) (*Processor, error) {
+	p := &Processor{
+		k8sclient: kclient,
+	}
+
+	return p, nil
+}
+
 // WatchElasticSearchClusterEvents watches for changes to tpr elasticsearch events
-func WatchElasticSearchClusterEvents(done chan struct{}, wg *sync.WaitGroup, apiHost string) {
-	events, watchErrs := k8sutil.MonitorElasticSearchEvents(apiHost)
+func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync.WaitGroup) {
+	events, watchErrs := p.k8sclient.MonitorElasticSearchEvents()
 	go func() {
 		for {
 			select {
 			case event := <-events:
-				err := processElasticSearchCluster(event)
+				err := p.processElasticSearchClusterEvent(event)
 				if err != nil {
 					logrus.Println(err)
 				}
@@ -53,9 +72,38 @@ func WatchElasticSearchClusterEvents(done chan struct{}, wg *sync.WaitGroup, api
 	}()
 }
 
-func processElasticSearchCluster(c k8sutil.ElasticSearchEvent) error {
+func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEvent) error {
+	processorLock.Lock()
+	defer processorLock.Unlock()
+	switch {
+	case c.Type == "ADDED":
+		return p.processElasticSearchCluster(c.Object)
+	case c.Type == "DELETED":
+		return p.deleteElasticSearchCluster(c.Object)
+	}
+	return nil
+}
 
+func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
 	logrus.Println("--------> ES Event!")
 
+	cluster := &spec.ElasticSearchCluster{
+		Spec: spec.ClusterSpec{
+			ClientNodeSize: c.Spec.ClientNodeSize,
+			MasterNodeSize: c.Spec.MasterNodeSize,
+			DataNodeSize:   c.Spec.DataNodeSize,
+		},
+	}
+
+	p.k8sclient.CreateDiscoveryService()
+	p.k8sclient.CreateDataService()
+	p.k8sclient.CreateClientService()
+	p.k8sclient.CreateClientDeployment(&cluster.Spec.ClientNodeSize)
+
+	return nil
+}
+
+func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
+	logrus.Println("--------> ES Deleted!@!")
 	return nil
 }
