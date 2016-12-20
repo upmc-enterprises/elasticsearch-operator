@@ -57,6 +57,7 @@ const (
 	clientServiceName    = "elasticsearch"
 
 	clientDeploymentName = "es-client"
+	masterDeploymentName = "es-master"
 
 	secretName = "es-certs"
 )
@@ -353,7 +354,7 @@ func (k *K8sutil) CreateClientService() error {
 
 		clientSvc := &v1.Service{
 			ObjectMeta: v1.ObjectMeta{
-				Name: dataServiceName,
+				Name: clientServiceName,
 				Labels: map[string]string{
 					"component": "elasticsearch",
 					"role":      "client",
@@ -388,22 +389,36 @@ func (k *K8sutil) CreateClientService() error {
 	return nil
 }
 
-// CreateClientDeployment creates the client deployment
-func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
+// CreateClientMasterDeployment creates the client or master deployment
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType string, replicas *int32) error {
+
+	var deploymentName, role, isNodeMaster, httpEnable string
+
+	if deploymentType == "client" {
+		httpEnable = "true"
+		deploymentName = clientDeploymentName
+		isNodeMaster = "false"
+		role = "client"
+	} else if deploymentType == "master" {
+		httpEnable = "false"
+		deploymentName = masterDeploymentName
+		isNodeMaster = "true"
+		role = "master"
+	}
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.Deployments(namespace).Get(clientDeploymentName)
+	deployment, err := k.Kclient.Deployments(namespace).Get(deploymentName)
 
 	if len(deployment.Name) == 0 {
-		logrus.Infof("%s not found, creating...", clientDeploymentName)
+		logrus.Infof("%s not found, creating...", deploymentName)
 
 		deployment := &v1beta1.Deployment{
 			ObjectMeta: v1.ObjectMeta{
-				Name: clientDeploymentName,
+				Name: deploymentName,
 				Labels: map[string]string{
 					"component": "elasticsearch",
-					"role":      "client",
-					"name":      clientDeploymentName,
+					"role":      role,
+					"name":      deploymentName,
 				},
 			},
 			Spec: v1beta1.DeploymentSpec{
@@ -412,14 +427,14 @@ func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
 					ObjectMeta: v1.ObjectMeta{
 						Labels: map[string]string{
 							"component": "elasticsearch",
-							"role":      "client",
-							"name":      clientDeploymentName,
+							"role":      role,
+							"name":      deploymentName,
 						},
 					},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
 							v1.Container{
-								Name: "es-client",
+								Name: deploymentName,
 								SecurityContext: &v1.SecurityContext{
 									Privileged: &[]bool{true}[0],
 									Capabilities: &v1.Capabilities{
@@ -445,7 +460,7 @@ func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
 									},
 									v1.EnvVar{
 										Name:  "NODE_MASTER",
-										Value: "false",
+										Value: isNodeMaster,
 									},
 									v1.EnvVar{
 										Name:  "NODE_DATA",
@@ -453,7 +468,7 @@ func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
 									},
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
-										Value: "true",
+										Value: httpEnable,
 									},
 									v1.EnvVar{
 										Name:  "ES_HEAP_SIZE",
@@ -462,13 +477,13 @@ func (k *K8sutil) CreateClientDeployment(replicas *int32) error {
 								},
 								Ports: []v1.ContainerPort{
 									v1.ContainerPort{
-										Name:          "http",
-										ContainerPort: 9200,
+										Name:          "transport",
+										ContainerPort: 9300,
 										Protocol:      v1.ProtocolTCP,
 									},
 									v1.ContainerPort{
-										Name:          "transport",
-										ContainerPort: 9300,
+										Name:          "http",
+										ContainerPort: 9200,
 										Protocol:      v1.ProtocolTCP,
 									},
 								},

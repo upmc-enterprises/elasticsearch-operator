@@ -65,7 +65,7 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 				logrus.Println(err)
 			case <-done:
 				wg.Done()
-				logrus.Println("Stopped custom secrets event watcher.")
+				logrus.Println("Stopped elasticsearch event watcher.")
 				return
 			}
 		}
@@ -98,7 +98,8 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	p.k8sclient.CreateDiscoveryService()
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
-	p.k8sclient.CreateClientDeployment(&cluster.Spec.ClientNodeSize)
+	p.k8sclient.CreateClientMasterDeployment("client", &cluster.Spec.ClientNodeSize)
+	p.k8sclient.CreateClientMasterDeployment("master", &cluster.Spec.MasterNodeSize)
 
 	return nil
 }
