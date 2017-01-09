@@ -73,7 +73,7 @@ func Main() int {
 	// Init
 	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost)
 	controller, err := controller.New("elasticcluster", namespace, k8sclient)
-	processor, err := processor.New(k8sclient)
+	processor, err := processor.New(k8sclient, baseImage)
 
 	if err != nil {
 		logrus.Error("Could not init Controller! ", err)

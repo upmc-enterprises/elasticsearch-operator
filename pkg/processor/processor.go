@@ -39,12 +39,14 @@ var processorLock = &sync.Mutex{}
 // Processor object
 type Processor struct {
 	k8sclient *k8sutil.K8sutil
+	baseImage string
 }
 
 // New creates new instance of Processor
-func New(kclient *k8sutil.K8sutil) (*Processor, error) {
+func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
 	p := &Processor{
 		k8sclient: kclient,
+		baseImage: baseImage,
 	}
 
 	return p, nil
@@ -59,10 +61,10 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 			case event := <-events:
 				err := p.processElasticSearchClusterEvent(event)
 				if err != nil {
-					logrus.Println(err)
+					logrus.Errorln(err)
 				}
 			case err := <-watchErrs:
-				logrus.Println(err)
+				logrus.Errorln(err)
 			case <-done:
 				wg.Done()
 				logrus.Println("Stopped elasticsearch event watcher.")
@@ -98,13 +100,13 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	p.k8sclient.CreateDiscoveryService()
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
-	p.k8sclient.CreateClientMasterDeployment("client", &cluster.Spec.ClientNodeSize)
-	p.k8sclient.CreateClientMasterDeployment("master", &cluster.Spec.MasterNodeSize)
+	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeSize)
+	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeSize)
 
 	return nil
 }
 
 func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
-	logrus.Println("--------> ES Deleted!@!")
+	logrus.Println("--------> ES Deleted!!")
 	return nil
 }

@@ -33,18 +33,18 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/client-go/1.4/kubernetes"
-	"k8s.io/client-go/1.4/pkg/api/v1"
-	"k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.4/rest"
-	"k8s.io/client-go/1.4/tools/clientcmd"
+	"k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/rest"
+	"k8s.io/client-go/1.5/tools/clientcmd"
 )
 
 var (
 	namespace                  = os.Getenv("NAMESPACE")
 	tprName                    = "elasticsearch-cluster.enterprises.upmc.com"
 	elasticSearchEndpoint      = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters", namespace)
-	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters?watch=true", namespace)
+	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/watch/namespaces/%s/elasticsearchclusters", namespace)
 	tprEndpoint                = "/apis/extensions/v1beta1/thirdpartyresources"
 )
 
@@ -58,10 +58,12 @@ const (
 
 	clientDeploymentName = "es-client"
 	masterDeploymentName = "es-master"
+	dataDeploymentName   = "es-data"
 
 	secretName = "es-certs"
 )
 
+// K8sutil defines the kube object
 type K8sutil struct {
 	Kclient    *kubernetes.Clientset
 	MasterHost string
@@ -184,6 +186,11 @@ func (k *K8sutil) GetElasticSearchClusters() ([]ElasticSearchCluster, error) {
 
 // MonitorElasticSearchEvents watches for new or removed clusters
 func (k *K8sutil) MonitorElasticSearchEvents() (<-chan ElasticSearchEvent, <-chan error) {
+	// Validate Namespace exists
+	if len(namespace) == 0 {
+		logrus.Errorln("WARNING: No namespace found! Events will not be able to be watched!")
+	}
+
 	events := make(chan ElasticSearchEvent)
 	errc := make(chan error, 1)
 	go func() {
@@ -390,7 +397,7 @@ func (k *K8sutil) CreateClientService() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType string, replicas *int32) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32) error {
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
@@ -443,7 +450,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType string, replicas *
 										},
 									},
 								},
-								Image:           "upmcenterprises/docker-elasticsearch-kubernetes:2.4.1.1",
+								Image:           baseImage,
 								ImagePullPolicy: "Always",
 								Env: []v1.EnvVar{
 									v1.EnvVar{
@@ -533,3 +540,125 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType string, replicas *
 
 	return nil
 }
+
+// // CreateDataNodeDeployment creates the data node deployment
+// func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) error {
+
+// 	// Check if deployment exists
+// 	deployment, err := k.Kclient.Deployments(namespace).Get(dataDeploymentName)
+
+// 	if len(deployment.Name) == 0 {
+// 		logrus.Infof("%s not found, creating...", dataDeploymentName)
+
+// 		deployment := &apps{
+// 			ObjectMeta: v1.ObjectMeta{
+// 				Name: dataDeploymentName,
+// 				Labels: map[string]string{
+// 					"component": "elasticsearch",
+// 					"role":      "data",
+// 					"name":      dataDeploymentName,
+// 				},
+// 			},
+// 			Spec: v1beta1.DeploymentSpec{
+// 				Replicas: replicas,
+// 				Template: v1.PodTemplateSpec{
+// 					ObjectMeta: v1.ObjectMeta{
+// 						Labels: map[string]string{
+// 							"component": "elasticsearch",
+// 							"role":      "data",
+// 							"name":      dataDeploymentName,
+// 						},
+// 					},
+// 					Spec: v1.PodSpec{
+// 						Containers: []v1.Container{
+// 							v1.Container{
+// 								Name: dataDeploymentName,
+// 								SecurityContext: &v1.SecurityContext{
+// 									Privileged: &[]bool{true}[0],
+// 									Capabilities: &v1.Capabilities{
+// 										Add: []v1.Capability{
+// 											"IPC_LOCK",
+// 										},
+// 									},
+// 								},
+// 								Image:           baseImage,
+// 								ImagePullPolicy: "Always",
+// 								Env: []v1.EnvVar{
+// 									v1.EnvVar{
+// 										Name: "NAMESPACE",
+// 										ValueFrom: &v1.EnvVarSource{
+// 											FieldRef: &v1.ObjectFieldSelector{
+// 												FieldPath: "metadata.namespace",
+// 											},
+// 										},
+// 									},
+// 									v1.EnvVar{
+// 										Name:  "CLUSTER_NAME",
+// 										Value: "myesdb",
+// 									},
+// 									v1.EnvVar{
+// 										Name:  "NODE_MASTER",
+// 										Value: "false",
+// 									},
+// 									v1.EnvVar{
+// 										Name:  "HTTP_ENABLE",
+// 										Value: "false",
+// 									},
+// 									v1.EnvVar{
+// 										Name:  "ES_JAVA_OPTS",
+// 										Value: "-Xms1024m -Xmx1024m",
+// 									},
+// 								},
+// 								Ports: []v1.ContainerPort{
+// 									v1.ContainerPort{
+// 										Name:          "transport",
+// 										ContainerPort: 9300,
+// 										Protocol:      v1.ProtocolTCP,
+// 									},
+// 								},
+// 								VolumeMounts: []v1.VolumeMount{
+// 									v1.VolumeMount{
+// 										Name:      "storage",
+// 										MountPath: "/data",
+// 									},
+// 									v1.VolumeMount{
+// 										Name:      "es-certs",
+// 										MountPath: "/elasticsearch/config/certs",
+// 									},
+// 								},
+// 							},
+// 						},
+// 						Volumes: []v1.Volume{
+// 							v1.Volume{
+// 								Name: "storage",
+// 								VolumeSource: v1.VolumeSource{
+// 									EmptyDir: &v1.EmptyDirVolumeSource{},
+// 								},
+// 							},
+// 							v1.Volume{
+// 								Name: "es-certs",
+// 								VolumeSource: v1.VolumeSource{
+// 									Secret: &v1.SecretVolumeSource{
+// 										SecretName: "es-certs",
+// 									},
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		}
+
+// 		_, err := k.Kclient.Deployments(namespace).Create(deployment)
+
+// 		if err != nil {
+// 			logrus.Error("Could not create data deployment: ", err)
+// 			return err
+// 		}
+// 	} else if err != nil {
+// 		logrus.Error("Could not get data deployment! ", err)
+// 		return err
+// 	}
+
+// 	return nil
+// }
