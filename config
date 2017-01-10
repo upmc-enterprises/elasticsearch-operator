@@ -1,0 +1,170 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /Users/slokas/dev/3pl/certs/ca.pem
+    server: https://kubernetes:9443
+  name: 3pl
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUR3akNDQXFxZ0F3SUJBZ0lRWkZDbEdXdkFNVThHODJKOHN3N0UvekFOQmdrcWhraUc5dzBCQVFzRkFEQjcKTVFrd0J3WURWUVFHRXdBeENUQUhCZ05WQkFnVEFERUpNQWNHQTFVRUJ4TUFNUWt3QndZRFZRUVJFd0F4SERBYQpCZ05WQkFvVEUydDFZbVZ5Ym1WMFpYTXRZVzU1ZDJobGNtVXhDVEFIQmdOVkJBc1RBREVrTUNJR0ExVUVBd3diCmEzVmlaWEp1WlhSbGN5MXliMjkwWDJObGNuUnBabWxqWVhSbE1CNFhEVEUyTVRBeU5URXlNelUwTkZvWERURTMKTVRBeU5URXlNelUwTkZvd2V6RUpNQWNHQTFVRUJoTUFNUWt3QndZRFZRUUlFd0F4Q1RBSEJnTlZCQWNUQURFSgpNQWNHQTFVRUVSTUFNUnd3R2dZRFZRUUtFeE5yZFdKbGNtNWxkR1Z6TFdGdWVYZG9aWEpsTVFrd0J3WURWUVFMCkV3QXhKREFpQmdOVkJBTU1HMnQxWW1WeWJtVjBaWE10Y205dmRGOWpaWEowYVdacFkyRjBaVENDQVNJd0RRWUoKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTkh3TURRd0FrOFRTdlBJeWR2UWhvamRaUE84bW1iegpZSE5DRWEyOHAzY29PaFVRZEpLMVJySnByUURHaVlhNzMzSmRFajhEbDV3MTJqNUkrVllmaHUxcDBGMW1CQWNmCkVFN2V6MG5DMzk3MzN3UzdMbjNoNXlBdzFVR3pIa3JVTXpJZ1hUcksvL1pQdjFJWWdqNXZReDE0a29LZ3Q4V1IKUy85U2d0c0NNOXV5UXFjQ2VEOXBVK0RZL2RqbWRLYmg4R1RKT3JFaW8vZHV3dHc4VEdyQlhsUmlFc2ROb1diVwozMExGQ0NTaW5RUVBWem5ab0ZtcnZTcG51bkJQWFFjUTZWcUhHQUhZd3VzSEdyNzM0aDZwblhlTGNieHg3OVpvCm9OQ1J1U3YweCtlNCsvcytDaFNZYUx4cXNUUVF1SGxka3Y2WThaUjVKaGJHRmpWNVVBSEFSODBDQXdFQUFhTkMKTUVBd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRklBLwpqSm05b0lqNitxU1hCZlgrbjBROW8yQlVNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUNCTFdEU0E4Y0VLQ0tyCkRYZGZKMlk4ZGluVFBycjlVbEsvbGlQTVd4U0M3ZjVHZ0RzYld0Z2JiOG9FUnNDTGFQV25SL09jWGJYa2p5Ny8KM2R6SmV5aUgrQ2VndVlBRDJ5Q0xFaWZzZHViaGZtWEM2KzVmc2k2bThwOVB1dXlOL24yYm5kb2NRbW1YZDdudAp3NUtZOUE1Q0NJTkhQV00rVW5xa2RlSDE5VXJ0TGpZeFpXMlFoVHlwSngvcEFRWnBCVnhuT3hIbEVRSXlwNSthCmY5STkvVUsvQkZCOHhKeEhOcFNwR253SVBGcnUzanpZQnUxcDc0aDdVaUR5NHVSUmpBZE42YUJ3VjVZWjBiTW8KNGFtL2srb0UzTXBLeWt1QjF5N2RNRFJVcjBCSzN4QXdNWjFzVXVpMk1pd2YzeEFVK1NhS3U0NXN0UkkvcjVQcApuWXg2TFo1WgotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    server: https://40.123.42.33
+  name: azure
+- cluster:
+    certificate-authority: /Users/slokas/dev/aws-architecture/aws-architecture-cdris/ca.pem
+    server: https://kubernetes:9443
+  name: cdris-aws
+- cluster:
+    server: https://k8s-api-dev.upmc.edu:6443
+  name: dev
+- cluster:
+    server: http://10.118.181.94:8080
+  name: esxi
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURHekNDQWdPZ0F3SUJBZ0lRZnRuZ3F2UWdGNGx3ZnB1SHpHaXRRekFOQmdrcWhraUc5dzBCQVFzRkFEQTMKTVRVd013WURWUVFEREN4MWN5MWxZWE4wTVMxa0xUUTBNek0yTkRNNE9EYzNOeTFqYkhWemRHVnlMVEZBTVRRMwpPREE1TWpneE56QWVGdzB4TmpFeE1ESXhNekl3TVRkYUZ3MHlNVEV4TURFeE16SXdNVGRhTURjeE5UQXpCZ05WCkJBTU1MSFZ6TFdWaGMzUXhMV1F0TkRRek16WTBNemc0TnpjM0xXTnNkWE4wWlhJdE1VQXhORGM0TURreU9ERTMKTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3a2ZDM1R6ekR4T3lDZWZKOXB0UQpqSEkrcTl2bmRUbDZNRVJESms3OWRQemltekN2T3dBMEp4eWE3U3FxYVBJbnhrbnZCaUVsbEVtYWx5MGw2bkNzClJTamVENTZEMkpkQmZQRzdEdDZ0Q3RRM0dwTVdqY2VEM3N6Wm1ZVE05KzFlbTNxUEFTa2lRMnlsNXhIODN5eisKdk0zWS9PSGNHcnFEL1pmclhHWGd1cENpN3JacjJqR2ZBWDBDcHFuNllCN2h5NlJCQVcwS3d4Y3czSVlQMG5FSwp5c2pGeDJvcjluTXN0TXQwUDhSRExOdVdzbTdVSHh2bjhMd3dUT0docnlCSnBkVHlBdGN3OWVRQ0hRc0lyL3ZkCkN5c3dEQUpISWp0RmxqNisyY3puSkdIMzZURityN3pVOUJiQTRGbzNncWRoK3VaT1BHRVZQL2txa3g1TG11cFIKandJREFRQUJveU13SVRBT0JnTlZIUThCQWY4RUJBTUNBZ1F3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcQpoa2lHOXcwQkFRc0ZBQU9DQVFFQVFvTWp4ODltRkI0TEljRUhNMnlzeDlUd3lMbmY1R0YrYk9rQXlrNzI3YWZTCmlDKyt3MUIwY2NoSDFYZWZELzFZQU9ZZ0ZsektQQTdOb2R6NC9DQ3NyWWFFRmNjL3RNQjBtZWg2YUNZbm9pUnQKTkpRcTM5RmJwckhDOHVUYjA3em4vdk1ub0FTejNWVEZySmZiVmdtTjJ5SVBpSHpQQUl5YlBmQ1J4a0ZkRnBITAprT1g0bHdzRktLQ2JOeFVtWVluYXVVRWxGMzlxWnovRDVveU1SQWxTSnRXaUdvaUV1ZGFuVmVLTE9ZSzJDNmN4CkFGUnAzbEROSmkrcGs5NHB2YUt6M09Pd2ZDTnAxQVhzTWxHUXIvS2tOcWVQWk95MFJPbWxNUFR3Z3lRY3RRemgKY3R4cGk4N1VncWlqMWtoTlY4L2UyS2hSV3ovazJQdnpxdUNoVnE3emhBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    server: https://104.196.178.52
+  name: gke_golden-argon-147315_us-east1-d_cluster-1
+- cluster:
+    insecure-skip-tls-verify: true
+    server: https://x70dev12.isd.upmc.edu:6443
+  name: lab
+- cluster:
+    certificate-authority: /home/steve/.minikube/ca.crt
+    server: https://192.168.99.100:8443
+  name: minikube
+- cluster:
+    server: http://10.118.180.64:8080
+  name: nerds
+- cluster:
+    server: http://192.168.2.10:8080
+  name: pi
+- cluster:
+    server: http://192.168.2.18:8080
+  name: pi-solo
+- cluster:
+    server: https://k8s-api-prd.upmc.edu:6443
+  name: prd
+- cluster:
+    certificate-authority: /Users/slokas/dev/steve-architecture/certs/ca.pem
+    server: https://kubernetes:9443
+  name: sloka
+- cluster:
+    server: https://k8s-api-tst.upmc.edu:6443
+  name: tst
+- cluster:
+    certificate-authority: /home/steve/dev/vincent/certs/ca.pem
+    server: https://kubernetes:9443
+  name: vincent
+contexts:
+- context:
+    cluster: 3pl
+    user: 3pl
+  name: 3pl
+- context:
+    cluster: azure
+    user: kubernetes-admin
+  name: azure
+- context:
+    cluster: cdris-aws
+    user: cdris-aws
+  name: cdris-aws
+- context:
+    cluster: dev
+    user: dev
+  name: dev
+- context:
+    cluster: esxi
+    user: esxi
+  name: esxi
+- context:
+    cluster: gke_golden-argon-147315_us-east1-d_cluster-1
+    user: gke_golden-argon-147315_us-east1-d_cluster-1
+  name: gke_golden-argon-147315_us-east1-d_cluster-1
+- context:
+    cluster: lab
+    user: lab
+  name: lab
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+- context:
+    cluster: nerds
+    user: ""
+  name: nerds
+- context:
+    cluster: pi
+    user: pi
+  name: pi
+- context:
+    cluster: pi-solo
+    user: pi-solo
+  name: pi-solo
+- context:
+    cluster: prd
+    namespace: default
+    user: prd
+  name: prd
+- context:
+    cluster: sloka
+    user: sloka
+  name: sloka
+- context:
+    cluster: tst
+    user: tst
+  name: tst
+- context:
+    cluster: vincent
+    user: vincent
+  name: vincent
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: 3pl
+  user:
+    client-certificate: /Users/slokas/dev/3pl/certs/apiserver.pem
+    client-key: /Users/slokas/dev/3pl/certs/apiserver-key.pem
+- name: azure
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQ0akNDQXNxZ0F3SUJBZ0lSQVBpMlE3Qk1KQkpId3R1L0xRaXhUWDR3RFFZSktvWklodmNOQVFFTEJRQXcKZXpFSk1BY0dBMVVFQmhNQU1Ra3dCd1lEVlFRSUV3QXhDVEFIQmdOVkJBY1RBREVKTUFjR0ExVUVFUk1BTVJ3dwpHZ1lEVlFRS0V4TnJkV0psY201bGRHVnpMV0Z1ZVhkb1pYSmxNUWt3QndZRFZRUUxFd0F4SkRBaUJnTlZCQU1NCkcydDFZbVZ5Ym1WMFpYTXRjbTl2ZEY5alpYSjBhV1pwWTJGMFpUQWVGdzB4TmpFd01qVXhNak0xTkRSYUZ3MHgKTnpFd01qVXhNak0xTkRSYU1Id3hDVEFIQmdOVkJBWVRBREVKTUFjR0ExVUVDQk1BTVFrd0J3WURWUVFIRXdBeApDVEFIQmdOVkJCRVRBREVjTUJvR0ExVUVDaE1UYTNWaVpYSnVaWFJsY3kxaGJubDNhR1Z5WlRFSk1BY0dBMVVFCkN4TUFNU1V3SXdZRFZRUUREQnhyZFdKbGNtNWxkR1Z6TFdGa2JXbHVYMk5sY25ScFptbGpZWFJsTUlJQklqQU4KQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBekt2Tk5PUDNVc0RGbDI3WTJBZnhFRkxlRHBKSApTNmRmVlRCN3dhRkRVTlJrV2gwRTlMaExRTFZRdkhMaElvaUxCTGdHQ3NKS0Rldk8rZXdIQWhwaFRXa294MHBGCjU5ZGhPRlhKOTFpTjludjRXeks2c2dBUzNJU1JTNE96UjlZb1ZDU3VPRWljblBMNXoyUVpnZGlBZjBFZjdOa0IKNjg0cXN5di9RY0k4T0Vqc3htRmNxbHZzZmZtcHg5d0p6SENWeWVlV3ZPR1dRTTI3TlJab2pEakdFRWgwSEdaZQpDQ3Z5TEoxNUk2Z2U0S3BWMms0bXFQck1ZbzgrY1hSVjI2S1RqL2xCZTFVSXJqb0ZXTU5jSUhvd3I5UjNGa2crCjFGeHg3VHJUbnY3Mm9zVlFUOUFEN29WMmdBTHlTb1hPRXBkb2NjWDFEOFU1a2FmbXpKS21TOERiaFFJREFRQUIKbzJBd1hqQU9CZ05WSFE4QkFmOEVCQU1DQjRBd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRgpCd01DTUF3R0ExVWRFd0VCL3dRQ01BQXdId1lEVlIwakJCZ3dGb0FVZ0QrTW1iMmdpUHI2cEpjRjlmNmZSRDJqCllGUXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSHBWTkFHNkhybXNiTTZFdE1Tb0J4Zzc0TWFtNjVGcWp2OW0KVWVjejBPVk9nalRHTlRtUHJUVjdBSTdieVUyVm5jVjZ2dWMvYTA4d0lJZWFXdXZHTEFGdnJTUDg0d2kyLzhvUgpuT0lib2ttaGZpc3hTOXlGSENjZ1ZyUmxDd3lrNVRCaGx0YnpFV3JGemgrSHNnbE9tb3g1aEN3SzBKUXdBMkI4CnNQdHNLY25neDFOTExPbWIxeTFxeFJmUGpSbjlPeWpvNjNkTjh1ZGtIdS9XUlhtcXZIUTB5c0NZSEZmV0I2K0EKZmppdjdBbE9sdFJaSVQwajR5dVB1Z0NHK2dGakJ4b2orbnpVOW44VitraC9hdFJKNzZCMGpxNG5WbmdEc0NCSwpVZFBhRW9WbUlKVDJ6MkRzbmdhUWJQK1RneXQ3VXZna1dzVXBSZlZBOXp5czQvTjVBTUU9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBekt2Tk5PUDNVc0RGbDI3WTJBZnhFRkxlRHBKSFM2ZGZWVEI3d2FGRFVOUmtXaDBFCjlMaExRTFZRdkhMaElvaUxCTGdHQ3NKS0Rldk8rZXdIQWhwaFRXa294MHBGNTlkaE9GWEo5MWlOOW52NFd6SzYKc2dBUzNJU1JTNE96UjlZb1ZDU3VPRWljblBMNXoyUVpnZGlBZjBFZjdOa0I2ODRxc3l2L1FjSThPRWpzeG1GYwpxbHZzZmZtcHg5d0p6SENWeWVlV3ZPR1dRTTI3TlJab2pEakdFRWgwSEdaZUNDdnlMSjE1STZnZTRLcFYyazRtCnFQck1ZbzgrY1hSVjI2S1RqL2xCZTFVSXJqb0ZXTU5jSUhvd3I5UjNGa2crMUZ4eDdUclRudjcyb3NWUVQ5QUQKN29WMmdBTHlTb1hPRXBkb2NjWDFEOFU1a2FmbXpKS21TOERiaFFJREFRQUJBb0lCQVFDL1ZzMmM2SkhLMTFUaAo0VXJ2aTEwZCtacUczTkd5TkdLM2JZQUU0UkhoZXUzbUlNTUZWVlZreFIwWlQveVJJRDEyeCtNK0k2eS9udmY4ClJWKzM0NW1ibVBmNmQ4RXFvUHZPZ3NVeGE2UXNEbkY4TU16QW83aitWeURPQysySzl2YjAwdVhjMEdVNWhSMXQKZVJNdmhJdDhiQkhBaG85NU4yQkw2SkhWbEJSZ09IOTdubkJQcEExQ3RKR0hhV1hNYXI3cEI4UklRSjRCUkhUOAovSjhIYzNMNlhNeDVhcjY1U0lKVWtJL1ZlQmRiUGNmNFBJRDlmTWJHUWR1eGVkUURrdk80QmcxMlZUUTdVb3l5CjJibkwwL1EzQUd5ZEF3V1dCakgweDBuTkFITkVweGxsZjl1aEtvTGlrNGJJRVEvQWl1UlgyYUM2dEFCRmVzS0wKSVBiWTJGWnhBb0dCQU5QUlgyWG5sS1MxTDNvZDRBUFVIMjhJRFdEOEROVU5CaGZwOVoyNHhrWHVNL0xhYUlQbAp2SHV5ZkpIdG1kQktUbFJiTE9PZy9xT1JWTzRjTkxCS2o0VnBpNW5JcGJVYWVhUUlaMXRIOXVPUStQanE2ZFlWCjBuazNSL2I0TE12YWtuUmNHOVpZZlZQb21jNWYwRDRnd0ZObDVJQy9pWHAwOGlsdFNncm1TU1MzQW9HQkFQZGMKenBJQTRsWHlJWmk1a041STM2THNKSmlZdHd1aTJPQnhKUHkvcm4zZWhuWk5HL3hoV1JvUVdvdlVpSDdnRStQOQpLZ082b0xQTE1RdmdvZXBuVDlRTzlJc01yUG5TM2RpS3RtL21jZEdjeW1XSEhFZWx0Q1BBam5oYVhUMFlhZEk0CjVHelRVK25wWFFpNXlpTW1iU1lNbTVzODE3ek1yRmkvMHBYRjZGMmpBb0dCQUpVbUVibU14cEx2N2QxY0dmZzQKTG1ZZFVtWmZOSjMwVEwwY0JkSW9ZSnl2TFM4czhYa21sSUM1WHBQV3JYOElRMzJNc2VBYTVoTEE2Lys2SnJPWAozTldCUzBaZkRhZW5XODNRQ1E4eWJqc3hRczdyZ3ZvM1pYdnJIQ1pmL0JNUzloc3ZISDdpMG1UNkhRcy9Wai9aCkNmUHZoR1hQK1BzY1M4UTE2M1FmVVpPakFvR0FXcW9zbUwwME9GWkFWQzhuMXlHVXZxMlpHRWxaUmkyUkdtcSsKS05uRkJpT0syMCtXQTJKVyswT2xQSDFRN2xnSlVsWlhrUGhWc0xDNE1HZE1VWk0rWWpaOUVYNDY1SEtTbDZ6NApBM25PbkFyQThJZWVLUENtWHpoVHYrODNINDZVTXRaaGV6WFdHdlZMQVVpL3V6UjVheW5SMnd0bzg2MTlPaVpNCjlGS093Y3NDZ1lBVzJJUVlYbzhsUVo3amxPMmlrOGIrSGY1d3NJN2VjTWM4ZlFsY285ME5MN2dLdi8wMTJTQkgKQ1VQblIyTnFSQWFYdzlvandlRG16WFVzUjZ6dE42anNKYzBlT2xCbVVwS0V3M3hYMC9MblZQaitPbXl5bkhzZgpPeUd2SGdQK29ZbU83dkM3TjkvcWZIRzd5RWUzV2JKbjBXa09lZHB4Z21HamtvODg1U0Z5Y3c9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+- name: cdris-aws
+  user:
+    client-certificate: /Users/slokas/Documents/dev/aws-architecture/aws-architecture-cdris/apiserver.pem
+    client-key: /Users/slokas/Documents/dev/aws-architecture/aws-architecture-cdris/apiserver-key.pem
+- name: default-admin
+  user:
+    client-certificate: /Users/slokas/.ssh/certs/apiserver.pem
+    client-key: /Users/slokas/.ssh/certs/apiserver-key.pem
+- name: dev
+  user:
+    token: HTvIyoZk2eazx53WuNr1JsruidOVrrQe
+- name: gke_golden-argon-147315_us-east1-d_cluster-1
+  user:
+    auth-provider:
+      config:
+        access-token: ya29.Ci-KAyyvZ_E2_EJaJx99KJtKTZQkYdNTjjnqg68AYJFqVPnUSoYs7xc7XPlf013LfA
+        expiry: 2016-11-02T10:26:10.257363574-04:00
+      name: gcp
+- name: lab
+  user:
+    token: MoSwKW7X7oAJBaDo4ISRVTjb7jzwrtSb
+- name: minikube
+  user:
+    client-certificate: /home/steve/.minikube/apiserver.crt
+    client-key: /home/steve/.minikube/apiserver.key
+- name: nerds
+  user: {}
+- name: prd
+  user:
+    token: vRjvEmWk3SlFXykAnqAZTQ8tyHbkEg74
+- name: sloka
+  user:
+    client-certificate: /Users/slokas/dev/steve-architecture/certs/apiserver.pem
+    client-key: /Users/slokas/dev/steve-architecture/certs/apiserver-key.pem
+- name: tst
+  user:
+    token: P0ZrxIhImVrIeUQiPwfsB4DoWz2KyZ7b
+- name: vincent
+  user:
+    client-certificate: /home/steve/dev/vincent/certs/apiserver.pem
+    client-key: /home/steve/dev/vincent/certs/apiserver-key.pem
