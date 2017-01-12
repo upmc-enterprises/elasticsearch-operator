@@ -33,11 +33,13 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/rest"
-	"k8s.io/client-go/1.5/tools/clientcmd"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/v1"
+	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -544,124 +546,143 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 	return nil
 }
 
-// // CreateDataNodeDeployment creates the data node deployment
-// func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) error {
+// CreateDataNodeDeployment creates the data node deployment
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) error {
 
-// 	// Check if deployment exists
-// 	deployment, err := k.Kclient.Deployments(namespace).Get(dataDeploymentName)
+	// Check if StatefulSet exists
+	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(dataDeploymentName)
 
-// 	if len(deployment.Name) == 0 {
-// 		logrus.Infof("%s not found, creating...", dataDeploymentName)
+	if len(statefulSet.Name) == 0 {
+		volumeSize, _ := resource.ParseQuantity("100Gi")
 
-// 		deployment := &apps{
-// 			ObjectMeta: v1.ObjectMeta{
-// 				Name: dataDeploymentName,
-// 				Labels: map[string]string{
-// 					"component": "elasticsearch",
-// 					"role":      "data",
-// 					"name":      dataDeploymentName,
-// 				},
-// 			},
-// 			Spec: v1beta1.DeploymentSpec{
-// 				Replicas: replicas,
-// 				Template: v1.PodTemplateSpec{
-// 					ObjectMeta: v1.ObjectMeta{
-// 						Labels: map[string]string{
-// 							"component": "elasticsearch",
-// 							"role":      "data",
-// 							"name":      dataDeploymentName,
-// 						},
-// 					},
-// 					Spec: v1.PodSpec{
-// 						Containers: []v1.Container{
-// 							v1.Container{
-// 								Name: dataDeploymentName,
-// 								SecurityContext: &v1.SecurityContext{
-// 									Privileged: &[]bool{true}[0],
-// 									Capabilities: &v1.Capabilities{
-// 										Add: []v1.Capability{
-// 											"IPC_LOCK",
-// 										},
-// 									},
-// 								},
-// 								Image:           baseImage,
-// 								ImagePullPolicy: "Always",
-// 								Env: []v1.EnvVar{
-// 									v1.EnvVar{
-// 										Name: "NAMESPACE",
-// 										ValueFrom: &v1.EnvVarSource{
-// 											FieldRef: &v1.ObjectFieldSelector{
-// 												FieldPath: "metadata.namespace",
-// 											},
-// 										},
-// 									},
-// 									v1.EnvVar{
-// 										Name:  "CLUSTER_NAME",
-// 										Value: "myesdb",
-// 									},
-// 									v1.EnvVar{
-// 										Name:  "NODE_MASTER",
-// 										Value: "false",
-// 									},
-// 									v1.EnvVar{
-// 										Name:  "HTTP_ENABLE",
-// 										Value: "false",
-// 									},
-// 									v1.EnvVar{
-// 										Name:  "ES_JAVA_OPTS",
-// 										Value: "-Xms1024m -Xmx1024m",
-// 									},
-// 								},
-// 								Ports: []v1.ContainerPort{
-// 									v1.ContainerPort{
-// 										Name:          "transport",
-// 										ContainerPort: 9300,
-// 										Protocol:      v1.ProtocolTCP,
-// 									},
-// 								},
-// 								VolumeMounts: []v1.VolumeMount{
-// 									v1.VolumeMount{
-// 										Name:      "storage",
-// 										MountPath: "/data",
-// 									},
-// 									v1.VolumeMount{
-// 										Name:      "es-certs",
-// 										MountPath: "/elasticsearch/config/certs",
-// 									},
-// 								},
-// 							},
-// 						},
-// 						Volumes: []v1.Volume{
-// 							v1.Volume{
-// 								Name: "storage",
-// 								VolumeSource: v1.VolumeSource{
-// 									EmptyDir: &v1.EmptyDirVolumeSource{},
-// 								},
-// 							},
-// 							v1.Volume{
-// 								Name: "es-certs",
-// 								VolumeSource: v1.VolumeSource{
-// 									Secret: &v1.SecretVolumeSource{
-// 										SecretName: "es-certs",
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		}
+		logrus.Infof("%s not found, creating...", dataDeploymentName)
 
-// 		_, err := k.Kclient.Deployments(namespace).Create(deployment)
+		statefulSet := &apps.StatefulSet{
+			ObjectMeta: v1.ObjectMeta{
+				Name: dataDeploymentName,
+				Labels: map[string]string{
+					"component": "elasticsearch",
+					"role":      "data",
+					"name":      dataDeploymentName,
+				},
+			},
+			Spec: apps.StatefulSetSpec{
+				Replicas: replicas,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Labels: map[string]string{
+							"component": "elasticsearch",
+							"role":      "data",
+							"name":      dataDeploymentName,
+						},
+						Annotations: map[string]string{
+							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							v1.Container{
+								Name: dataDeploymentName,
+								SecurityContext: &v1.SecurityContext{
+									Privileged: &[]bool{true}[0],
+									Capabilities: &v1.Capabilities{
+										Add: []v1.Capability{
+											"IPC_LOCK",
+										},
+									},
+								},
+								Image:           baseImage,
+								ImagePullPolicy: "Always",
+								Env: []v1.EnvVar{
+									v1.EnvVar{
+										Name: "NAMESPACE",
+										ValueFrom: &v1.EnvVarSource{
+											FieldRef: &v1.ObjectFieldSelector{
+												FieldPath: "metadata.namespace",
+											},
+										},
+									},
+									v1.EnvVar{
+										Name:  "CLUSTER_NAME",
+										Value: "myesdb",
+									},
+									v1.EnvVar{
+										Name:  "NODE_MASTER",
+										Value: "false",
+									},
+									v1.EnvVar{
+										Name:  "HTTP_ENABLE",
+										Value: "false",
+									},
+									v1.EnvVar{
+										Name:  "ES_JAVA_OPTS",
+										Value: "-Xms1024m -Xmx1024m",
+									},
+								},
+								Ports: []v1.ContainerPort{
+									v1.ContainerPort{
+										Name:          "transport",
+										ContainerPort: 9300,
+										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								VolumeMounts: []v1.VolumeMount{
+									v1.VolumeMount{
+										Name:      "storage",
+										MountPath: "/data",
+									},
+									v1.VolumeMount{
+										Name:      "es-certs",
+										MountPath: "/elasticsearch/config/certs",
+									},
+								},
+							},
+						},
+						Volumes: []v1.Volume{
+							v1.Volume{
+								Name: "es-certs",
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName: "es-certs",
+									},
+								},
+							},
+						},
+					},
+				},
+				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
+					v1.PersistentVolumeClaim{
+						ObjectMeta: v1.ObjectMeta{
+							Name: "elasticsearch-data",
+							Annotations: map[string]string{
+								"volume.beta.kubernetes.io/storage-class": "default",
+							},
+						},
+						Spec: v1.PersistentVolumeClaimSpec{
+							AccessModes: []v1.PersistentVolumeAccessMode{
+								v1.ReadWriteOnce,
+							},
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceStorage: volumeSize,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
 
-// 		if err != nil {
-// 			logrus.Error("Could not create data deployment: ", err)
-// 			return err
-// 		}
-// 	} else if err != nil {
-// 		logrus.Error("Could not get data deployment! ", err)
-// 		return err
-// 	}
+		_, err := k.Kclient.StatefulSets(namespace).Create(statefulSet)
 
-// 	return nil
-// }
+		if err != nil {
+			logrus.Error("Could not create data stateful set: ", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get data stateful set! ", err)
+		return err
+	}
+
+	return nil
+}

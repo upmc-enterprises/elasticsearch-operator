@@ -102,6 +102,7 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	p.k8sclient.CreateClientService()
 	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeSize)
 	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeSize)
+	p.k8sclient.CreateDataNodeDeployment(&cluster.Spec.DataNodeSize, p.baseImage)
 
 	return nil
 }
