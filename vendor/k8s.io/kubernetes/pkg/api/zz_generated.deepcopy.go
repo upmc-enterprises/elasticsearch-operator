@@ -204,18 +204,7 @@ func DeepCopy_api_AWSElasticBlockStoreVolumeSource(in interface{}, out interface
 	{
 		in := in.(*AWSElasticBlockStoreVolumeSource)
 		out := out.(*AWSElasticBlockStoreVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.VolumeID = in.VolumeID
-		out.FSType = in.FSType
-		out.Partition = in.Partition
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -224,28 +213,13 @@ func DeepCopy_api_Affinity(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*Affinity)
 		out := out.(*Affinity)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.NodeAffinity != nil {
 			in, out := &in.NodeAffinity, &out.NodeAffinity
 			*out = new(NodeAffinity)
 			if err := DeepCopy_api_NodeAffinity(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NodeAffinity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PodAffinity != nil {
 			in, out := &in.PodAffinity, &out.PodAffinity
@@ -253,14 +227,6 @@ func DeepCopy_api_Affinity(in interface{}, out interface{}, c *conversion.Cloner
 			if err := DeepCopy_api_PodAffinity(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PodAffinity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PodAntiAffinity != nil {
 			in, out := &in.PodAntiAffinity, &out.PodAntiAffinity
@@ -268,14 +234,6 @@ func DeepCopy_api_Affinity(in interface{}, out interface{}, c *conversion.Cloner
 			if err := DeepCopy_api_PodAntiAffinity(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PodAntiAffinity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -285,16 +243,7 @@ func DeepCopy_api_AttachedVolume(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*AttachedVolume)
 		out := out.(*AttachedVolume)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.DevicePath = in.DevicePath
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -303,14 +252,7 @@ func DeepCopy_api_AvoidPods(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*AvoidPods)
 		out := out.(*AvoidPods)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.PreferAvoidPods != nil {
 			in, out := &in.PreferAvoidPods, &out.PreferAvoidPods
 			*out = make([]PreferAvoidPodsEntry, len(*in))
@@ -319,14 +261,6 @@ func DeepCopy_api_AvoidPods(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PreferAvoidPods = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -336,54 +270,21 @@ func DeepCopy_api_AzureDiskVolumeSource(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*AzureDiskVolumeSource)
 		out := out.(*AzureDiskVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.DiskName = in.DiskName
-		out.DataDiskURI = in.DataDiskURI
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.CachingMode != nil {
 			in, out := &in.CachingMode, &out.CachingMode
 			*out = new(AzureDataDiskCachingMode)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.CachingMode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FSType != nil {
 			in, out := &in.FSType, &out.FSType
 			*out = new(string)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FSType = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ReadOnly != nil {
 			in, out := &in.ReadOnly, &out.ReadOnly
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ReadOnly = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -393,17 +294,7 @@ func DeepCopy_api_AzureFileVolumeSource(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*AzureFileVolumeSource)
 		out := out.(*AzureFileVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.SecretName = in.SecretName
-		out.ShareName = in.ShareName
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -412,24 +303,10 @@ func DeepCopy_api_Binding(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*Binding)
 		out := out.(*Binding)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-			return err
-		}
-		out.Target = in.Target
-=======
->>>>>>> wip
 		*out = *in
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -438,28 +315,13 @@ func DeepCopy_api_Capabilities(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*Capabilities)
 		out := out.(*Capabilities)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Add != nil {
 			in, out := &in.Add, &out.Add
 			*out = make([]Capability, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Add = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Drop != nil {
 			in, out := &in.Drop, &out.Drop
@@ -467,14 +329,6 @@ func DeepCopy_api_Capabilities(in interface{}, out interface{}, c *conversion.Cl
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Drop = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -484,48 +338,17 @@ func DeepCopy_api_CephFSVolumeSource(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*CephFSVolumeSource)
 		out := out.(*CephFSVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Monitors != nil {
 			in, out := &in.Monitors, &out.Monitors
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Monitors = nil
-		}
-		out.Path = in.Path
-		out.User = in.User
-		out.SecretFile = in.SecretFile
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SecretRef != nil {
 			in, out := &in.SecretRef, &out.SecretRef
 			*out = new(LocalObjectReference)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecretRef = nil
-		}
-		out.ReadOnly = in.ReadOnly
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -534,17 +357,7 @@ func DeepCopy_api_CinderVolumeSource(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*CinderVolumeSource)
 		out := out.(*CinderVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.VolumeID = in.VolumeID
-		out.FSType = in.FSType
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -553,18 +366,7 @@ func DeepCopy_api_ComponentCondition(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*ComponentCondition)
 		out := out.(*ComponentCondition)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-		out.Status = in.Status
-		out.Message = in.Message
-		out.Error = in.Error
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -573,15 +375,7 @@ func DeepCopy_api_ComponentStatus(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*ComponentStatus)
 		out := out.(*ComponentStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -591,14 +385,6 @@ func DeepCopy_api_ComponentStatus(in interface{}, out interface{}, c *conversion
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Conditions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -608,16 +394,7 @@ func DeepCopy_api_ComponentStatusList(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*ComponentStatusList)
 		out := out.(*ComponentStatusList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]ComponentStatus, len(*in))
@@ -626,14 +403,6 @@ func DeepCopy_api_ComponentStatusList(in interface{}, out interface{}, c *conver
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -643,15 +412,7 @@ func DeepCopy_api_ConfigMap(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*ConfigMap)
 		out := out.(*ConfigMap)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -661,14 +422,6 @@ func DeepCopy_api_ConfigMap(in interface{}, out interface{}, c *conversion.Clone
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Data = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -678,15 +431,7 @@ func DeepCopy_api_ConfigMapEnvSource(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*ConfigMapEnvSource)
 		out := out.(*ConfigMapEnvSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.LocalObjectReference = in.LocalObjectReference
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -695,16 +440,7 @@ func DeepCopy_api_ConfigMapKeySelector(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*ConfigMapKeySelector)
 		out := out.(*ConfigMapKeySelector)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.LocalObjectReference = in.LocalObjectReference
-		out.Key = in.Key
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -713,16 +449,7 @@ func DeepCopy_api_ConfigMapList(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*ConfigMapList)
 		out := out.(*ConfigMapList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]ConfigMap, len(*in))
@@ -731,14 +458,6 @@ func DeepCopy_api_ConfigMapList(in interface{}, out interface{}, c *conversion.C
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -748,15 +467,7 @@ func DeepCopy_api_ConfigMapVolumeSource(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*ConfigMapVolumeSource)
 		out := out.(*ConfigMapVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.LocalObjectReference = in.LocalObjectReference
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]KeyToPath, len(*in))
@@ -765,27 +476,11 @@ func DeepCopy_api_ConfigMapVolumeSource(in interface{}, out interface{}, c *conv
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DefaultMode != nil {
 			in, out := &in.DefaultMode, &out.DefaultMode
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DefaultMode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -795,59 +490,23 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*Container)
 		out := out.(*Container)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Image = in.Image
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Command != nil {
 			in, out := &in.Command, &out.Command
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Command = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Args != nil {
 			in, out := &in.Args, &out.Args
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Args = nil
-		}
-		out.WorkingDir = in.WorkingDir
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Ports != nil {
 			in, out := &in.Ports, &out.Ports
 			*out = make([]ContainerPort, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Ports = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.EnvFrom != nil {
 			in, out := &in.EnvFrom, &out.EnvFrom
@@ -857,14 +516,6 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.EnvFrom = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Env != nil {
 			in, out := &in.Env, &out.Env
@@ -874,14 +525,6 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Env = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if err := DeepCopy_api_ResourceRequirements(&in.Resources, &out.Resources, c); err != nil {
 			return err
@@ -892,14 +535,6 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.VolumeMounts = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.LivenessProbe != nil {
 			in, out := &in.LivenessProbe, &out.LivenessProbe
@@ -907,14 +542,6 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 			if err := DeepCopy_api_Probe(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.LivenessProbe = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ReadinessProbe != nil {
 			in, out := &in.ReadinessProbe, &out.ReadinessProbe
@@ -922,14 +549,6 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 			if err := DeepCopy_api_Probe(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ReadinessProbe = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Lifecycle != nil {
 			in, out := &in.Lifecycle, &out.Lifecycle
@@ -937,39 +556,14 @@ func DeepCopy_api_Container(in interface{}, out interface{}, c *conversion.Clone
 			if err := DeepCopy_api_Lifecycle(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Lifecycle = nil
-		}
-		out.TerminationMessagePath = in.TerminationMessagePath
-		out.ImagePullPolicy = in.ImagePullPolicy
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SecurityContext != nil {
 			in, out := &in.SecurityContext, &out.SecurityContext
 			*out = new(SecurityContext)
 			if err := DeepCopy_api_SecurityContext(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecurityContext = nil
-		}
-		out.Stdin = in.Stdin
-		out.StdinOnce = in.StdinOnce
-		out.TTY = in.TTY
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -978,30 +572,12 @@ func DeepCopy_api_ContainerImage(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*ContainerImage)
 		out := out.(*ContainerImage)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Names != nil {
 			in, out := &in.Names, &out.Names
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Names = nil
-		}
-		out.SizeBytes = in.SizeBytes
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1010,19 +586,7 @@ func DeepCopy_api_ContainerPort(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*ContainerPort)
 		out := out.(*ContainerPort)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.HostPort = in.HostPort
-		out.ContainerPort = in.ContainerPort
-		out.Protocol = in.Protocol
-		out.HostIP = in.HostIP
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1031,26 +595,11 @@ func DeepCopy_api_ContainerState(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*ContainerState)
 		out := out.(*ContainerState)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Waiting != nil {
 			in, out := &in.Waiting, &out.Waiting
 			*out = new(ContainerStateWaiting)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Waiting = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Running != nil {
 			in, out := &in.Running, &out.Running
@@ -1058,14 +607,6 @@ func DeepCopy_api_ContainerState(in interface{}, out interface{}, c *conversion.
 			if err := DeepCopy_api_ContainerStateRunning(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Running = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Terminated != nil {
 			in, out := &in.Terminated, &out.Terminated
@@ -1073,14 +614,6 @@ func DeepCopy_api_ContainerState(in interface{}, out interface{}, c *conversion.
 			if err := DeepCopy_api_ContainerStateTerminated(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Terminated = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1090,14 +623,7 @@ func DeepCopy_api_ContainerStateRunning(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*ContainerStateRunning)
 		out := out.(*ContainerStateRunning)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		out.StartedAt = in.StartedAt.DeepCopy()
 		return nil
 	}
@@ -1107,25 +633,9 @@ func DeepCopy_api_ContainerStateTerminated(in interface{}, out interface{}, c *c
 	{
 		in := in.(*ContainerStateTerminated)
 		out := out.(*ContainerStateTerminated)
-<<<<<<< HEAD
 		*out = *in
 		out.StartedAt = in.StartedAt.DeepCopy()
 		out.FinishedAt = in.FinishedAt.DeepCopy()
-=======
-<<<<<<< HEAD
-		out.ExitCode = in.ExitCode
-		out.Signal = in.Signal
-		out.Reason = in.Reason
-		out.Message = in.Message
-		out.StartedAt = in.StartedAt.DeepCopy()
-		out.FinishedAt = in.FinishedAt.DeepCopy()
-		out.ContainerID = in.ContainerID
-=======
-		*out = *in
-		out.StartedAt = in.StartedAt.DeepCopy()
-		out.FinishedAt = in.FinishedAt.DeepCopy()
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1134,16 +644,7 @@ func DeepCopy_api_ContainerStateWaiting(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*ContainerStateWaiting)
 		out := out.(*ContainerStateWaiting)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Reason = in.Reason
-		out.Message = in.Message
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1152,32 +653,13 @@ func DeepCopy_api_ContainerStatus(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*ContainerStatus)
 		out := out.(*ContainerStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ContainerState(&in.State, &out.State, c); err != nil {
 			return err
 		}
 		if err := DeepCopy_api_ContainerState(&in.LastTerminationState, &out.LastTerminationState, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.Ready = in.Ready
-		out.RestartCount = in.RestartCount
-		out.Image = in.Image
-		out.ImageID = in.ImageID
-		out.ContainerID = in.ContainerID
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1186,26 +668,6 @@ func DeepCopy_api_ConversionError(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*ConversionError)
 		out := out.(*ConversionError)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		if in.In == nil {
-			out.In = nil
-		} else if newVal, err := c.DeepCopy(&in.In); err != nil {
-			return err
-		} else {
-			out.In = *newVal.(*interface{})
-		}
-		if in.Out == nil {
-			out.Out = nil
-		} else if newVal, err := c.DeepCopy(&in.Out); err != nil {
-			return err
-		} else {
-			out.Out = *newVal.(*interface{})
-		}
-		out.Message = in.Message
-=======
->>>>>>> wip
 		*out = *in
 		// in.In is kind 'Interface'
 		if in.In != nil {
@@ -1223,10 +685,6 @@ func DeepCopy_api_ConversionError(in interface{}, out interface{}, c *conversion
 				out.Out = *newVal.(*interface{})
 			}
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1235,15 +693,7 @@ func DeepCopy_api_DaemonEndpoint(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*DaemonEndpoint)
 		out := out.(*DaemonEndpoint)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Port = in.Port
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1252,27 +702,11 @@ func DeepCopy_api_DeleteOptions(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*DeleteOptions)
 		out := out.(*DeleteOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.GracePeriodSeconds != nil {
 			in, out := &in.GracePeriodSeconds, &out.GracePeriodSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.GracePeriodSeconds = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Preconditions != nil {
 			in, out := &in.Preconditions, &out.Preconditions
@@ -1280,27 +714,11 @@ func DeepCopy_api_DeleteOptions(in interface{}, out interface{}, c *conversion.C
 			if err := DeepCopy_api_Preconditions(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Preconditions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.OrphanDependents != nil {
 			in, out := &in.OrphanDependents, &out.OrphanDependents
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.OrphanDependents = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1310,27 +728,11 @@ func DeepCopy_api_DownwardAPIVolumeFile(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*DownwardAPIVolumeFile)
 		out := out.(*DownwardAPIVolumeFile)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.FieldRef != nil {
 			in, out := &in.FieldRef, &out.FieldRef
 			*out = new(ObjectFieldSelector)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FieldRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ResourceFieldRef != nil {
 			in, out := &in.ResourceFieldRef, &out.ResourceFieldRef
@@ -1338,27 +740,11 @@ func DeepCopy_api_DownwardAPIVolumeFile(in interface{}, out interface{}, c *conv
 			if err := DeepCopy_api_ResourceFieldSelector(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ResourceFieldRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Mode != nil {
 			in, out := &in.Mode, &out.Mode
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Mode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1368,14 +754,7 @@ func DeepCopy_api_DownwardAPIVolumeSource(in interface{}, out interface{}, c *co
 	{
 		in := in.(*DownwardAPIVolumeSource)
 		out := out.(*DownwardAPIVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]DownwardAPIVolumeFile, len(*in))
@@ -1384,27 +763,11 @@ func DeepCopy_api_DownwardAPIVolumeSource(in interface{}, out interface{}, c *co
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DefaultMode != nil {
 			in, out := &in.DefaultMode, &out.DefaultMode
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DefaultMode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1414,15 +777,7 @@ func DeepCopy_api_EmptyDirVolumeSource(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*EmptyDirVolumeSource)
 		out := out.(*EmptyDirVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Medium = in.Medium
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1431,41 +786,16 @@ func DeepCopy_api_EndpointAddress(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*EndpointAddress)
 		out := out.(*EndpointAddress)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.IP = in.IP
-		out.Hostname = in.Hostname
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.NodeName != nil {
 			in, out := &in.NodeName, &out.NodeName
 			*out = new(string)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NodeName = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.TargetRef != nil {
 			in, out := &in.TargetRef, &out.TargetRef
 			*out = new(ObjectReference)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TargetRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1475,17 +805,7 @@ func DeepCopy_api_EndpointPort(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*EndpointPort)
 		out := out.(*EndpointPort)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Port = in.Port
-		out.Protocol = in.Protocol
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1494,14 +814,7 @@ func DeepCopy_api_EndpointSubset(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*EndpointSubset)
 		out := out.(*EndpointSubset)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Addresses != nil {
 			in, out := &in.Addresses, &out.Addresses
 			*out = make([]EndpointAddress, len(*in))
@@ -1510,14 +823,6 @@ func DeepCopy_api_EndpointSubset(in interface{}, out interface{}, c *conversion.
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Addresses = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.NotReadyAddresses != nil {
 			in, out := &in.NotReadyAddresses, &out.NotReadyAddresses
@@ -1527,14 +832,6 @@ func DeepCopy_api_EndpointSubset(in interface{}, out interface{}, c *conversion.
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NotReadyAddresses = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Ports != nil {
 			in, out := &in.Ports, &out.Ports
@@ -1542,14 +839,6 @@ func DeepCopy_api_EndpointSubset(in interface{}, out interface{}, c *conversion.
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Ports = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1559,15 +848,7 @@ func DeepCopy_api_Endpoints(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*Endpoints)
 		out := out.(*Endpoints)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -1579,14 +860,6 @@ func DeepCopy_api_Endpoints(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Subsets = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1596,16 +869,7 @@ func DeepCopy_api_EndpointsList(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*EndpointsList)
 		out := out.(*EndpointsList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Endpoints, len(*in))
@@ -1614,14 +878,6 @@ func DeepCopy_api_EndpointsList(in interface{}, out interface{}, c *conversion.C
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1631,27 +887,11 @@ func DeepCopy_api_EnvFromSource(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*EnvFromSource)
 		out := out.(*EnvFromSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Prefix = in.Prefix
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.ConfigMapRef != nil {
 			in, out := &in.ConfigMapRef, &out.ConfigMapRef
 			*out = new(ConfigMapEnvSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ConfigMapRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1661,30 +901,13 @@ func DeepCopy_api_EnvVar(in interface{}, out interface{}, c *conversion.Cloner) 
 	{
 		in := in.(*EnvVar)
 		out := out.(*EnvVar)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Value = in.Value
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.ValueFrom != nil {
 			in, out := &in.ValueFrom, &out.ValueFrom
 			*out = new(EnvVarSource)
 			if err := DeepCopy_api_EnvVarSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ValueFrom = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1694,26 +917,11 @@ func DeepCopy_api_EnvVarSource(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*EnvVarSource)
 		out := out.(*EnvVarSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.FieldRef != nil {
 			in, out := &in.FieldRef, &out.FieldRef
 			*out = new(ObjectFieldSelector)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FieldRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ResourceFieldRef != nil {
 			in, out := &in.ResourceFieldRef, &out.ResourceFieldRef
@@ -1721,40 +929,16 @@ func DeepCopy_api_EnvVarSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_ResourceFieldSelector(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ResourceFieldRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ConfigMapKeyRef != nil {
 			in, out := &in.ConfigMapKeyRef, &out.ConfigMapKeyRef
 			*out = new(ConfigMapKeySelector)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ConfigMapKeyRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.SecretKeyRef != nil {
 			in, out := &in.SecretKeyRef, &out.SecretKeyRef
 			*out = new(SecretKeySelector)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecretKeyRef = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1764,33 +948,12 @@ func DeepCopy_api_Event(in interface{}, out interface{}, c *conversion.Cloner) e
 	{
 		in := in.(*Event)
 		out := out.(*Event)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-			return err
-		}
-		out.InvolvedObject = in.InvolvedObject
-		out.Reason = in.Reason
-		out.Message = in.Message
-		out.Source = in.Source
-		out.FirstTimestamp = in.FirstTimestamp.DeepCopy()
-		out.LastTimestamp = in.LastTimestamp.DeepCopy()
-		out.Count = in.Count
-		out.Type = in.Type
-=======
->>>>>>> wip
 		*out = *in
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
 		out.FirstTimestamp = in.FirstTimestamp.DeepCopy()
 		out.LastTimestamp = in.LastTimestamp.DeepCopy()
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1799,16 +962,7 @@ func DeepCopy_api_EventList(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*EventList)
 		out := out.(*EventList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Event, len(*in))
@@ -1817,14 +971,6 @@ func DeepCopy_api_EventList(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1834,16 +980,7 @@ func DeepCopy_api_EventSource(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*EventSource)
 		out := out.(*EventSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Component = in.Component
-		out.Host = in.Host
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1852,26 +989,11 @@ func DeepCopy_api_ExecAction(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*ExecAction)
 		out := out.(*ExecAction)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Command != nil {
 			in, out := &in.Command, &out.Command
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Command = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1881,44 +1003,17 @@ func DeepCopy_api_FCVolumeSource(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*FCVolumeSource)
 		out := out.(*FCVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.TargetWWNs != nil {
 			in, out := &in.TargetWWNs, &out.TargetWWNs
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TargetWWNs = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Lun != nil {
 			in, out := &in.Lun, &out.Lun
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Lun = nil
-		}
-		out.FSType = in.FSType
-		out.ReadOnly = in.ReadOnly
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1927,46 +1022,18 @@ func DeepCopy_api_FlexVolumeSource(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*FlexVolumeSource)
 		out := out.(*FlexVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Driver = in.Driver
-		out.FSType = in.FSType
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SecretRef != nil {
 			in, out := &in.SecretRef, &out.SecretRef
 			*out = new(LocalObjectReference)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecretRef = nil
-		}
-		out.ReadOnly = in.ReadOnly
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Options != nil {
 			in, out := &in.Options, &out.Options
 			*out = make(map[string]string)
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Options = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -1976,16 +1043,7 @@ func DeepCopy_api_FlockerVolumeSource(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*FlockerVolumeSource)
 		out := out.(*FlockerVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.DatasetName = in.DatasetName
-		out.DatasetUUID = in.DatasetUUID
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -1994,18 +1052,7 @@ func DeepCopy_api_GCEPersistentDiskVolumeSource(in interface{}, out interface{},
 	{
 		in := in.(*GCEPersistentDiskVolumeSource)
 		out := out.(*GCEPersistentDiskVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.PDName = in.PDName
-		out.FSType = in.FSType
-		out.Partition = in.Partition
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2014,17 +1061,7 @@ func DeepCopy_api_GitRepoVolumeSource(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*GitRepoVolumeSource)
 		out := out.(*GitRepoVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Repository = in.Repository
-		out.Revision = in.Revision
-		out.Directory = in.Directory
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2033,17 +1070,7 @@ func DeepCopy_api_GlusterfsVolumeSource(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*GlusterfsVolumeSource)
 		out := out.(*GlusterfsVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.EndpointsName = in.EndpointsName
-		out.Path = in.Path
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2052,32 +1079,13 @@ func DeepCopy_api_HTTPGetAction(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*HTTPGetAction)
 		out := out.(*HTTPGetAction)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Path = in.Path
-		out.Port = in.Port
-		out.Host = in.Host
-		out.Scheme = in.Scheme
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.HTTPHeaders != nil {
 			in, out := &in.HTTPHeaders, &out.HTTPHeaders
 			*out = make([]HTTPHeader, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.HTTPHeaders = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2087,16 +1095,7 @@ func DeepCopy_api_HTTPHeader(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*HTTPHeader)
 		out := out.(*HTTPHeader)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Value = in.Value
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2105,28 +1104,13 @@ func DeepCopy_api_Handler(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*Handler)
 		out := out.(*Handler)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Exec != nil {
 			in, out := &in.Exec, &out.Exec
 			*out = new(ExecAction)
 			if err := DeepCopy_api_ExecAction(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Exec = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.HTTPGet != nil {
 			in, out := &in.HTTPGet, &out.HTTPGet
@@ -2134,27 +1118,11 @@ func DeepCopy_api_Handler(in interface{}, out interface{}, c *conversion.Cloner)
 			if err := DeepCopy_api_HTTPGetAction(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.HTTPGet = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.TCPSocket != nil {
 			in, out := &in.TCPSocket, &out.TCPSocket
 			*out = new(TCPSocketAction)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TCPSocket = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2164,15 +1132,7 @@ func DeepCopy_api_HostPathVolumeSource(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*HostPathVolumeSource)
 		out := out.(*HostPathVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2181,20 +1141,7 @@ func DeepCopy_api_ISCSIVolumeSource(in interface{}, out interface{}, c *conversi
 	{
 		in := in.(*ISCSIVolumeSource)
 		out := out.(*ISCSIVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TargetPortal = in.TargetPortal
-		out.IQN = in.IQN
-		out.Lun = in.Lun
-		out.ISCSIInterface = in.ISCSIInterface
-		out.FSType = in.FSType
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2203,28 +1150,11 @@ func DeepCopy_api_KeyToPath(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*KeyToPath)
 		out := out.(*KeyToPath)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Key = in.Key
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Mode != nil {
 			in, out := &in.Mode, &out.Mode
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Mode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2234,28 +1164,13 @@ func DeepCopy_api_Lifecycle(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*Lifecycle)
 		out := out.(*Lifecycle)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.PostStart != nil {
 			in, out := &in.PostStart, &out.PostStart
 			*out = new(Handler)
 			if err := DeepCopy_api_Handler(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PostStart = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PreStop != nil {
 			in, out := &in.PreStop, &out.PreStop
@@ -2263,14 +1178,6 @@ func DeepCopy_api_Lifecycle(in interface{}, out interface{}, c *conversion.Clone
 			if err := DeepCopy_api_Handler(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PreStop = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2280,15 +1187,7 @@ func DeepCopy_api_LimitRange(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*LimitRange)
 		out := out.(*LimitRange)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -2303,29 +1202,13 @@ func DeepCopy_api_LimitRangeItem(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*LimitRangeItem)
 		out := out.(*LimitRangeItem)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Max != nil {
 			in, out := &in.Max, &out.Max
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Max = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Min != nil {
 			in, out := &in.Min, &out.Min
@@ -2333,14 +1216,6 @@ func DeepCopy_api_LimitRangeItem(in interface{}, out interface{}, c *conversion.
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Min = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Default != nil {
 			in, out := &in.Default, &out.Default
@@ -2348,14 +1223,6 @@ func DeepCopy_api_LimitRangeItem(in interface{}, out interface{}, c *conversion.
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Default = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DefaultRequest != nil {
 			in, out := &in.DefaultRequest, &out.DefaultRequest
@@ -2363,14 +1230,6 @@ func DeepCopy_api_LimitRangeItem(in interface{}, out interface{}, c *conversion.
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DefaultRequest = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.MaxLimitRequestRatio != nil {
 			in, out := &in.MaxLimitRequestRatio, &out.MaxLimitRequestRatio
@@ -2378,14 +1237,6 @@ func DeepCopy_api_LimitRangeItem(in interface{}, out interface{}, c *conversion.
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.MaxLimitRequestRatio = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2395,16 +1246,7 @@ func DeepCopy_api_LimitRangeList(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*LimitRangeList)
 		out := out.(*LimitRangeList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]LimitRange, len(*in))
@@ -2413,14 +1255,6 @@ func DeepCopy_api_LimitRangeList(in interface{}, out interface{}, c *conversion.
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2430,14 +1264,7 @@ func DeepCopy_api_LimitRangeSpec(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*LimitRangeSpec)
 		out := out.(*LimitRangeSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Limits != nil {
 			in, out := &in.Limits, &out.Limits
 			*out = make([]LimitRangeItem, len(*in))
@@ -2446,14 +1273,6 @@ func DeepCopy_api_LimitRangeSpec(in interface{}, out interface{}, c *conversion.
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Limits = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2463,16 +1282,7 @@ func DeepCopy_api_List(in interface{}, out interface{}, c *conversion.Cloner) er
 	{
 		in := in.(*List)
 		out := out.(*List)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]runtime.Object, len(*in))
@@ -2483,14 +1293,6 @@ func DeepCopy_api_List(in interface{}, out interface{}, c *conversion.Cloner) er
 					(*out)[i] = *newVal.(*runtime.Object)
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2500,28 +1302,6 @@ func DeepCopy_api_ListOptions(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*ListOptions)
 		out := out.(*ListOptions)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		if in.LabelSelector == nil {
-			out.LabelSelector = nil
-		} else if newVal, err := c.DeepCopy(&in.LabelSelector); err != nil {
-			return err
-		} else {
-			out.LabelSelector = *newVal.(*labels.Selector)
-		}
-		if in.FieldSelector == nil {
-			out.FieldSelector = nil
-		} else if newVal, err := c.DeepCopy(&in.FieldSelector); err != nil {
-			return err
-		} else {
-			out.FieldSelector = *newVal.(*fields.Selector)
-		}
-		out.Watch = in.Watch
-		out.ResourceVersion = in.ResourceVersion
-=======
->>>>>>> wip
 		*out = *in
 		// in.LabelSelector is kind 'Interface'
 		if in.LabelSelector != nil {
@@ -2539,22 +1319,10 @@ func DeepCopy_api_ListOptions(in interface{}, out interface{}, c *conversion.Clo
 				out.FieldSelector = *newVal.(*fields.Selector)
 			}
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.TimeoutSeconds != nil {
 			in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TimeoutSeconds = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2564,16 +1332,7 @@ func DeepCopy_api_LoadBalancerIngress(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*LoadBalancerIngress)
 		out := out.(*LoadBalancerIngress)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.IP = in.IP
-		out.Hostname = in.Hostname
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2582,28 +1341,13 @@ func DeepCopy_api_LoadBalancerStatus(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*LoadBalancerStatus)
 		out := out.(*LoadBalancerStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Ingress != nil {
 			in, out := &in.Ingress, &out.Ingress
 			*out = make([]LoadBalancerIngress, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Ingress = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2613,15 +1357,7 @@ func DeepCopy_api_LocalObjectReference(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*LocalObjectReference)
 		out := out.(*LocalObjectReference)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2630,17 +1366,7 @@ func DeepCopy_api_NFSVolumeSource(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*NFSVolumeSource)
 		out := out.(*NFSVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Server = in.Server
-		out.Path = in.Path
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2649,28 +1375,13 @@ func DeepCopy_api_Namespace(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*Namespace)
 		out := out.(*Namespace)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
 		if err := DeepCopy_api_NamespaceSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.Status = in.Status
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2679,16 +1390,7 @@ func DeepCopy_api_NamespaceList(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*NamespaceList)
 		out := out.(*NamespaceList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Namespace, len(*in))
@@ -2697,14 +1399,6 @@ func DeepCopy_api_NamespaceList(in interface{}, out interface{}, c *conversion.C
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2714,28 +1408,13 @@ func DeepCopy_api_NamespaceSpec(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*NamespaceSpec)
 		out := out.(*NamespaceSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Finalizers != nil {
 			in, out := &in.Finalizers, &out.Finalizers
 			*out = make([]FinalizerName, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Finalizers = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2745,15 +1424,7 @@ func DeepCopy_api_NamespaceStatus(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*NamespaceStatus)
 		out := out.(*NamespaceStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Phase = in.Phase
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2762,24 +1433,10 @@ func DeepCopy_api_Node(in interface{}, out interface{}, c *conversion.Cloner) er
 	{
 		in := in.(*Node)
 		out := out.(*Node)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-			return err
-		}
-		out.Spec = in.Spec
-=======
->>>>>>> wip
 		*out = *in
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_NodeStatus(&in.Status, &out.Status, c); err != nil {
 			return err
 		}
@@ -2791,16 +1448,7 @@ func DeepCopy_api_NodeAddress(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*NodeAddress)
 		out := out.(*NodeAddress)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-		out.Address = in.Address
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2809,28 +1457,13 @@ func DeepCopy_api_NodeAffinity(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*NodeAffinity)
 		out := out.(*NodeAffinity)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.RequiredDuringSchedulingIgnoredDuringExecution, &out.RequiredDuringSchedulingIgnoredDuringExecution
 			*out = new(NodeSelector)
 			if err := DeepCopy_api_NodeSelector(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RequiredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PreferredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.PreferredDuringSchedulingIgnoredDuringExecution, &out.PreferredDuringSchedulingIgnoredDuringExecution
@@ -2840,14 +1473,6 @@ func DeepCopy_api_NodeAffinity(in interface{}, out interface{}, c *conversion.Cl
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PreferredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2857,24 +1482,9 @@ func DeepCopy_api_NodeCondition(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*NodeCondition)
 		out := out.(*NodeCondition)
-<<<<<<< HEAD
 		*out = *in
 		out.LastHeartbeatTime = in.LastHeartbeatTime.DeepCopy()
 		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-		out.Status = in.Status
-		out.LastHeartbeatTime = in.LastHeartbeatTime.DeepCopy()
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-		out.Reason = in.Reason
-		out.Message = in.Message
-=======
-		*out = *in
-		out.LastHeartbeatTime = in.LastHeartbeatTime.DeepCopy()
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2883,15 +1493,7 @@ func DeepCopy_api_NodeDaemonEndpoints(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*NodeDaemonEndpoints)
 		out := out.(*NodeDaemonEndpoints)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.KubeletEndpoint = in.KubeletEndpoint
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2900,16 +1502,7 @@ func DeepCopy_api_NodeList(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*NodeList)
 		out := out.(*NodeList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Node, len(*in))
@@ -2918,14 +1511,6 @@ func DeepCopy_api_NodeList(in interface{}, out interface{}, c *conversion.Cloner
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2935,16 +1520,7 @@ func DeepCopy_api_NodeProxyOptions(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*NodeProxyOptions)
 		out := out.(*NodeProxyOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -2953,28 +1529,13 @@ func DeepCopy_api_NodeResources(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*NodeResources)
 		out := out.(*NodeResources)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Capacity != nil {
 			in, out := &in.Capacity, &out.Capacity
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Capacity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -2984,14 +1545,7 @@ func DeepCopy_api_NodeSelector(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*NodeSelector)
 		out := out.(*NodeSelector)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.NodeSelectorTerms != nil {
 			in, out := &in.NodeSelectorTerms, &out.NodeSelectorTerms
 			*out = make([]NodeSelectorTerm, len(*in))
@@ -3000,14 +1554,6 @@ func DeepCopy_api_NodeSelector(in interface{}, out interface{}, c *conversion.Cl
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NodeSelectorTerms = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3017,28 +1563,11 @@ func DeepCopy_api_NodeSelectorRequirement(in interface{}, out interface{}, c *co
 	{
 		in := in.(*NodeSelectorRequirement)
 		out := out.(*NodeSelectorRequirement)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Key = in.Key
-		out.Operator = in.Operator
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Values != nil {
 			in, out := &in.Values, &out.Values
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Values = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3048,14 +1577,7 @@ func DeepCopy_api_NodeSelectorTerm(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*NodeSelectorTerm)
 		out := out.(*NodeSelectorTerm)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.MatchExpressions != nil {
 			in, out := &in.MatchExpressions, &out.MatchExpressions
 			*out = make([]NodeSelectorRequirement, len(*in))
@@ -3064,14 +1586,6 @@ func DeepCopy_api_NodeSelectorTerm(in interface{}, out interface{}, c *conversio
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.MatchExpressions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3081,18 +1595,7 @@ func DeepCopy_api_NodeSpec(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*NodeSpec)
 		out := out.(*NodeSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.PodCIDR = in.PodCIDR
-		out.ExternalID = in.ExternalID
-		out.ProviderID = in.ProviderID
-		out.Unschedulable = in.Unschedulable
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3101,28 +1604,13 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*NodeStatus)
 		out := out.(*NodeStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Capacity != nil {
 			in, out := &in.Capacity, &out.Capacity
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Capacity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Allocatable != nil {
 			in, out := &in.Allocatable, &out.Allocatable
@@ -3130,18 +1618,7 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Allocatable = nil
-		}
-		out.Phase = in.Phase
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
 			*out = make([]NodeCondition, len(*in))
@@ -3150,14 +1627,6 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Conditions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Addresses != nil {
 			in, out := &in.Addresses, &out.Addresses
@@ -3165,19 +1634,7 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Addresses = nil
-		}
-		out.DaemonEndpoints = in.DaemonEndpoints
-		out.NodeInfo = in.NodeInfo
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Images != nil {
 			in, out := &in.Images, &out.Images
 			*out = make([]ContainerImage, len(*in))
@@ -3186,14 +1643,6 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Images = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.VolumesInUse != nil {
 			in, out := &in.VolumesInUse, &out.VolumesInUse
@@ -3201,14 +1650,6 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.VolumesInUse = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.VolumesAttached != nil {
 			in, out := &in.VolumesAttached, &out.VolumesAttached
@@ -3216,14 +1657,6 @@ func DeepCopy_api_NodeStatus(in interface{}, out interface{}, c *conversion.Clon
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.VolumesAttached = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3233,24 +1666,7 @@ func DeepCopy_api_NodeSystemInfo(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*NodeSystemInfo)
 		out := out.(*NodeSystemInfo)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.MachineID = in.MachineID
-		out.SystemUUID = in.SystemUUID
-		out.BootID = in.BootID
-		out.KernelVersion = in.KernelVersion
-		out.OSImage = in.OSImage
-		out.ContainerRuntimeVersion = in.ContainerRuntimeVersion
-		out.KubeletVersion = in.KubeletVersion
-		out.KubeProxyVersion = in.KubeProxyVersion
-		out.OperatingSystem = in.OperatingSystem
-		out.Architecture = in.Architecture
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3259,16 +1675,7 @@ func DeepCopy_api_ObjectFieldSelector(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*ObjectFieldSelector)
 		out := out.(*ObjectFieldSelector)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.APIVersion = in.APIVersion
-		out.FieldPath = in.FieldPath
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3277,47 +1684,17 @@ func DeepCopy_api_ObjectMeta(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*ObjectMeta)
 		out := out.(*ObjectMeta)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.GenerateName = in.GenerateName
-		out.Namespace = in.Namespace
-		out.SelfLink = in.SelfLink
-		out.UID = in.UID
-		out.ResourceVersion = in.ResourceVersion
-		out.Generation = in.Generation
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		out.CreationTimestamp = in.CreationTimestamp.DeepCopy()
 		if in.DeletionTimestamp != nil {
 			in, out := &in.DeletionTimestamp, &out.DeletionTimestamp
 			*out = new(v1.Time)
 			**out = (*in).DeepCopy()
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DeletionTimestamp = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DeletionGracePeriodSeconds != nil {
 			in, out := &in.DeletionGracePeriodSeconds, &out.DeletionGracePeriodSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DeletionGracePeriodSeconds = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Labels != nil {
 			in, out := &in.Labels, &out.Labels
@@ -3325,14 +1702,6 @@ func DeepCopy_api_ObjectMeta(in interface{}, out interface{}, c *conversion.Clon
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Labels = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Annotations != nil {
 			in, out := &in.Annotations, &out.Annotations
@@ -3340,14 +1709,6 @@ func DeepCopy_api_ObjectMeta(in interface{}, out interface{}, c *conversion.Clon
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Annotations = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.OwnerReferences != nil {
 			in, out := &in.OwnerReferences, &out.OwnerReferences
@@ -3357,31 +1718,12 @@ func DeepCopy_api_ObjectMeta(in interface{}, out interface{}, c *conversion.Clon
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.OwnerReferences = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Finalizers != nil {
 			in, out := &in.Finalizers, &out.Finalizers
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Finalizers = nil
-		}
-		out.ClusterName = in.ClusterName
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3390,21 +1732,7 @@ func DeepCopy_api_ObjectReference(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*ObjectReference)
 		out := out.(*ObjectReference)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Kind = in.Kind
-		out.Namespace = in.Namespace
-		out.Name = in.Name
-		out.UID = in.UID
-		out.APIVersion = in.APIVersion
-		out.ResourceVersion = in.ResourceVersion
-		out.FieldPath = in.FieldPath
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3413,28 +1741,13 @@ func DeepCopy_api_PersistentVolume(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*PersistentVolume)
 		out := out.(*PersistentVolume)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
 		if err := DeepCopy_api_PersistentVolumeSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.Status = in.Status
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3443,15 +1756,7 @@ func DeepCopy_api_PersistentVolumeClaim(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*PersistentVolumeClaim)
 		out := out.(*PersistentVolumeClaim)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -3469,16 +1774,7 @@ func DeepCopy_api_PersistentVolumeClaimList(in interface{}, out interface{}, c *
 	{
 		in := in.(*PersistentVolumeClaimList)
 		out := out.(*PersistentVolumeClaimList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]PersistentVolumeClaim, len(*in))
@@ -3487,14 +1783,6 @@ func DeepCopy_api_PersistentVolumeClaimList(in interface{}, out interface{}, c *
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3504,28 +1792,13 @@ func DeepCopy_api_PersistentVolumeClaimSpec(in interface{}, out interface{}, c *
 	{
 		in := in.(*PersistentVolumeClaimSpec)
 		out := out.(*PersistentVolumeClaimSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.AccessModes != nil {
 			in, out := &in.AccessModes, &out.AccessModes
 			*out = make([]PersistentVolumeAccessMode, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AccessModes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
@@ -3533,25 +1806,10 @@ func DeepCopy_api_PersistentVolumeClaimSpec(in interface{}, out interface{}, c *
 			if err := v1.DeepCopy_v1_LabelSelector(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Selector = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if err := DeepCopy_api_ResourceRequirements(&in.Resources, &out.Resources, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.VolumeName = in.VolumeName
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3560,29 +1818,13 @@ func DeepCopy_api_PersistentVolumeClaimStatus(in interface{}, out interface{}, c
 	{
 		in := in.(*PersistentVolumeClaimStatus)
 		out := out.(*PersistentVolumeClaimStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Phase = in.Phase
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.AccessModes != nil {
 			in, out := &in.AccessModes, &out.AccessModes
 			*out = make([]PersistentVolumeAccessMode, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AccessModes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Capacity != nil {
 			in, out := &in.Capacity, &out.Capacity
@@ -3590,14 +1832,6 @@ func DeepCopy_api_PersistentVolumeClaimStatus(in interface{}, out interface{}, c
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Capacity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3607,16 +1841,7 @@ func DeepCopy_api_PersistentVolumeClaimVolumeSource(in interface{}, out interfac
 	{
 		in := in.(*PersistentVolumeClaimVolumeSource)
 		out := out.(*PersistentVolumeClaimVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.ClaimName = in.ClaimName
-		out.ReadOnly = in.ReadOnly
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3625,16 +1850,7 @@ func DeepCopy_api_PersistentVolumeList(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*PersistentVolumeList)
 		out := out.(*PersistentVolumeList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]PersistentVolume, len(*in))
@@ -3643,14 +1859,6 @@ func DeepCopy_api_PersistentVolumeList(in interface{}, out interface{}, c *conve
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3660,78 +1868,31 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 	{
 		in := in.(*PersistentVolumeSource)
 		out := out.(*PersistentVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.GCEPersistentDisk != nil {
 			in, out := &in.GCEPersistentDisk, &out.GCEPersistentDisk
 			*out = new(GCEPersistentDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.GCEPersistentDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AWSElasticBlockStore != nil {
 			in, out := &in.AWSElasticBlockStore, &out.AWSElasticBlockStore
 			*out = new(AWSElasticBlockStoreVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AWSElasticBlockStore = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.HostPath != nil {
 			in, out := &in.HostPath, &out.HostPath
 			*out = new(HostPathVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.HostPath = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Glusterfs != nil {
 			in, out := &in.Glusterfs, &out.Glusterfs
 			*out = new(GlusterfsVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Glusterfs = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.NFS != nil {
 			in, out := &in.NFS, &out.NFS
 			*out = new(NFSVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NFS = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RBD != nil {
 			in, out := &in.RBD, &out.RBD
@@ -3739,40 +1900,16 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 			if err := DeepCopy_api_RBDVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RBD = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Quobyte != nil {
 			in, out := &in.Quobyte, &out.Quobyte
 			*out = new(QuobyteVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Quobyte = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ISCSI != nil {
 			in, out := &in.ISCSI, &out.ISCSI
 			*out = new(ISCSIVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ISCSI = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FlexVolume != nil {
 			in, out := &in.FlexVolume, &out.FlexVolume
@@ -3780,27 +1917,11 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 			if err := DeepCopy_api_FlexVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FlexVolume = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Cinder != nil {
 			in, out := &in.Cinder, &out.Cinder
 			*out = new(CinderVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Cinder = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.CephFS != nil {
 			in, out := &in.CephFS, &out.CephFS
@@ -3808,14 +1929,6 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 			if err := DeepCopy_api_CephFSVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.CephFS = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FC != nil {
 			in, out := &in.FC, &out.FC
@@ -3823,53 +1936,21 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 			if err := DeepCopy_api_FCVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FC = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Flocker != nil {
 			in, out := &in.Flocker, &out.Flocker
 			*out = new(FlockerVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Flocker = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AzureFile != nil {
 			in, out := &in.AzureFile, &out.AzureFile
 			*out = new(AzureFileVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AzureFile = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.VsphereVolume != nil {
 			in, out := &in.VsphereVolume, &out.VsphereVolume
 			*out = new(VsphereVirtualDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.VsphereVolume = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AzureDisk != nil {
 			in, out := &in.AzureDisk, &out.AzureDisk
@@ -3877,27 +1958,11 @@ func DeepCopy_api_PersistentVolumeSource(in interface{}, out interface{}, c *con
 			if err := DeepCopy_api_AzureDiskVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AzureDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PhotonPersistentDisk != nil {
 			in, out := &in.PhotonPersistentDisk, &out.PhotonPersistentDisk
 			*out = new(PhotonPersistentDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PhotonPersistentDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -3907,28 +1972,13 @@ func DeepCopy_api_PersistentVolumeSpec(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*PersistentVolumeSpec)
 		out := out.(*PersistentVolumeSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Capacity != nil {
 			in, out := &in.Capacity, &out.Capacity
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Capacity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if err := DeepCopy_api_PersistentVolumeSource(&in.PersistentVolumeSource, &out.PersistentVolumeSource, c); err != nil {
 			return err
@@ -3939,31 +1989,12 @@ func DeepCopy_api_PersistentVolumeSpec(in interface{}, out interface{}, c *conve
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AccessModes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ClaimRef != nil {
 			in, out := &in.ClaimRef, &out.ClaimRef
 			*out = new(ObjectReference)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.ClaimRef = nil
-		}
-		out.PersistentVolumeReclaimPolicy = in.PersistentVolumeReclaimPolicy
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3972,17 +2003,7 @@ func DeepCopy_api_PersistentVolumeStatus(in interface{}, out interface{}, c *con
 	{
 		in := in.(*PersistentVolumeStatus)
 		out := out.(*PersistentVolumeStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Phase = in.Phase
-		out.Message = in.Message
-		out.Reason = in.Reason
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -3991,16 +2012,7 @@ func DeepCopy_api_PhotonPersistentDiskVolumeSource(in interface{}, out interface
 	{
 		in := in.(*PhotonPersistentDiskVolumeSource)
 		out := out.(*PhotonPersistentDiskVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.PdID = in.PdID
-		out.FSType = in.FSType
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4009,15 +2021,7 @@ func DeepCopy_api_Pod(in interface{}, out interface{}, c *conversion.Cloner) err
 	{
 		in := in.(*Pod)
 		out := out.(*Pod)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -4035,14 +2039,7 @@ func DeepCopy_api_PodAffinity(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*PodAffinity)
 		out := out.(*PodAffinity)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.RequiredDuringSchedulingIgnoredDuringExecution, &out.RequiredDuringSchedulingIgnoredDuringExecution
 			*out = make([]PodAffinityTerm, len(*in))
@@ -4051,14 +2048,6 @@ func DeepCopy_api_PodAffinity(in interface{}, out interface{}, c *conversion.Clo
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RequiredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PreferredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.PreferredDuringSchedulingIgnoredDuringExecution, &out.PreferredDuringSchedulingIgnoredDuringExecution
@@ -4068,14 +2057,6 @@ func DeepCopy_api_PodAffinity(in interface{}, out interface{}, c *conversion.Clo
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PreferredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4085,45 +2066,19 @@ func DeepCopy_api_PodAffinityTerm(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodAffinityTerm)
 		out := out.(*PodAffinityTerm)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.LabelSelector != nil {
 			in, out := &in.LabelSelector, &out.LabelSelector
 			*out = new(v1.LabelSelector)
 			if err := v1.DeepCopy_v1_LabelSelector(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.LabelSelector = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Namespaces != nil {
 			in, out := &in.Namespaces, &out.Namespaces
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Namespaces = nil
-		}
-		out.TopologyKey = in.TopologyKey
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4132,14 +2087,7 @@ func DeepCopy_api_PodAntiAffinity(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodAntiAffinity)
 		out := out.(*PodAntiAffinity)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.RequiredDuringSchedulingIgnoredDuringExecution, &out.RequiredDuringSchedulingIgnoredDuringExecution
 			*out = make([]PodAffinityTerm, len(*in))
@@ -4148,14 +2096,6 @@ func DeepCopy_api_PodAntiAffinity(in interface{}, out interface{}, c *conversion
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RequiredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PreferredDuringSchedulingIgnoredDuringExecution != nil {
 			in, out := &in.PreferredDuringSchedulingIgnoredDuringExecution, &out.PreferredDuringSchedulingIgnoredDuringExecution
@@ -4165,14 +2105,6 @@ func DeepCopy_api_PodAntiAffinity(in interface{}, out interface{}, c *conversion
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PreferredDuringSchedulingIgnoredDuringExecution = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4182,20 +2114,7 @@ func DeepCopy_api_PodAttachOptions(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*PodAttachOptions)
 		out := out.(*PodAttachOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Stdin = in.Stdin
-		out.Stdout = in.Stdout
-		out.Stderr = in.Stderr
-		out.TTY = in.TTY
-		out.Container = in.Container
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4204,24 +2123,9 @@ func DeepCopy_api_PodCondition(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*PodCondition)
 		out := out.(*PodCondition)
-<<<<<<< HEAD
 		*out = *in
 		out.LastProbeTime = in.LastProbeTime.DeepCopy()
 		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-		out.Status = in.Status
-		out.LastProbeTime = in.LastProbeTime.DeepCopy()
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-		out.Reason = in.Reason
-		out.Message = in.Message
-=======
-		*out = *in
-		out.LastProbeTime = in.LastProbeTime.DeepCopy()
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4230,32 +2134,11 @@ func DeepCopy_api_PodExecOptions(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*PodExecOptions)
 		out := out.(*PodExecOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Stdin = in.Stdin
-		out.Stdout = in.Stdout
-		out.Stderr = in.Stderr
-		out.TTY = in.TTY
-		out.Container = in.Container
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Command != nil {
 			in, out := &in.Command, &out.Command
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Command = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4265,16 +2148,7 @@ func DeepCopy_api_PodList(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*PodList)
 		out := out.(*PodList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Pod, len(*in))
@@ -4283,14 +2157,6 @@ func DeepCopy_api_PodList(in interface{}, out interface{}, c *conversion.Cloner)
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4300,72 +2166,26 @@ func DeepCopy_api_PodLogOptions(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*PodLogOptions)
 		out := out.(*PodLogOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Container = in.Container
-		out.Follow = in.Follow
-		out.Previous = in.Previous
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SinceSeconds != nil {
 			in, out := &in.SinceSeconds, &out.SinceSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SinceSeconds = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.SinceTime != nil {
 			in, out := &in.SinceTime, &out.SinceTime
 			*out = new(v1.Time)
 			**out = (*in).DeepCopy()
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.SinceTime = nil
-		}
-		out.Timestamps = in.Timestamps
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.TailLines != nil {
 			in, out := &in.TailLines, &out.TailLines
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TailLines = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.LimitBytes != nil {
 			in, out := &in.LimitBytes, &out.LimitBytes
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.LimitBytes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4375,16 +2195,7 @@ func DeepCopy_api_PodProxyOptions(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodProxyOptions)
 		out := out.(*PodProxyOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4393,81 +2204,31 @@ func DeepCopy_api_PodSecurityContext(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*PodSecurityContext)
 		out := out.(*PodSecurityContext)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.HostNetwork = in.HostNetwork
-		out.HostPID = in.HostPID
-		out.HostIPC = in.HostIPC
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SELinuxOptions != nil {
 			in, out := &in.SELinuxOptions, &out.SELinuxOptions
 			*out = new(SELinuxOptions)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SELinuxOptions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RunAsUser != nil {
 			in, out := &in.RunAsUser, &out.RunAsUser
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RunAsUser = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RunAsNonRoot != nil {
 			in, out := &in.RunAsNonRoot, &out.RunAsNonRoot
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RunAsNonRoot = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.SupplementalGroups != nil {
 			in, out := &in.SupplementalGroups, &out.SupplementalGroups
 			*out = make([]int64, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SupplementalGroups = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FSGroup != nil {
 			in, out := &in.FSGroup, &out.FSGroup
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FSGroup = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4477,28 +2238,13 @@ func DeepCopy_api_PodSignature(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*PodSignature)
 		out := out.(*PodSignature)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.PodController != nil {
 			in, out := &in.PodController, &out.PodController
 			*out = new(v1.OwnerReference)
 			if err := v1.DeepCopy_v1_OwnerReference(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PodController = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4508,14 +2254,7 @@ func DeepCopy_api_PodSpec(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*PodSpec)
 		out := out.(*PodSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Volumes != nil {
 			in, out := &in.Volumes, &out.Volumes
 			*out = make([]Volume, len(*in))
@@ -4524,14 +2263,6 @@ func DeepCopy_api_PodSpec(in interface{}, out interface{}, c *conversion.Cloner)
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Volumes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.InitContainers != nil {
 			in, out := &in.InitContainers, &out.InitContainers
@@ -4541,14 +2272,6 @@ func DeepCopy_api_PodSpec(in interface{}, out interface{}, c *conversion.Cloner)
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.InitContainers = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Containers != nil {
 			in, out := &in.Containers, &out.Containers
@@ -4558,80 +2281,30 @@ func DeepCopy_api_PodSpec(in interface{}, out interface{}, c *conversion.Cloner)
 					return err
 				}
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Containers = nil
-		}
-		out.RestartPolicy = in.RestartPolicy
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.TerminationGracePeriodSeconds != nil {
 			in, out := &in.TerminationGracePeriodSeconds, &out.TerminationGracePeriodSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.TerminationGracePeriodSeconds = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ActiveDeadlineSeconds != nil {
 			in, out := &in.ActiveDeadlineSeconds, &out.ActiveDeadlineSeconds
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.ActiveDeadlineSeconds = nil
-		}
-		out.DNSPolicy = in.DNSPolicy
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.NodeSelector != nil {
 			in, out := &in.NodeSelector, &out.NodeSelector
 			*out = make(map[string]string)
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.NodeSelector = nil
-		}
-		out.ServiceAccountName = in.ServiceAccountName
-		out.NodeName = in.NodeName
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SecurityContext != nil {
 			in, out := &in.SecurityContext, &out.SecurityContext
 			*out = new(PodSecurityContext)
 			if err := DeepCopy_api_PodSecurityContext(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecurityContext = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ImagePullSecrets != nil {
 			in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
@@ -4639,33 +2312,13 @@ func DeepCopy_api_PodSpec(in interface{}, out interface{}, c *conversion.Cloner)
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.ImagePullSecrets = nil
-		}
-		out.Hostname = in.Hostname
-		out.Subdomain = in.Subdomain
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Affinity != nil {
 			in, out := &in.Affinity, &out.Affinity
 			*out = new(Affinity)
 			if err := DeepCopy_api_Affinity(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Affinity = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4675,15 +2328,7 @@ func DeepCopy_api_PodStatus(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*PodStatus)
 		out := out.(*PodStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Phase = in.Phase
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
 			*out = make([]PodCondition, len(*in))
@@ -4692,37 +2337,12 @@ func DeepCopy_api_PodStatus(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Conditions = nil
-		}
-		out.Message = in.Message
-		out.Reason = in.Reason
-		out.HostIP = in.HostIP
-		out.PodIP = in.PodIP
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.StartTime != nil {
 			in, out := &in.StartTime, &out.StartTime
 			*out = new(v1.Time)
 			**out = (*in).DeepCopy()
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.StartTime = nil
-		}
-		out.QOSClass = in.QOSClass
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.InitContainerStatuses != nil {
 			in, out := &in.InitContainerStatuses, &out.InitContainerStatuses
 			*out = make([]ContainerStatus, len(*in))
@@ -4731,14 +2351,6 @@ func DeepCopy_api_PodStatus(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.InitContainerStatuses = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ContainerStatuses != nil {
 			in, out := &in.ContainerStatuses, &out.ContainerStatuses
@@ -4748,14 +2360,6 @@ func DeepCopy_api_PodStatus(in interface{}, out interface{}, c *conversion.Clone
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ContainerStatuses = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4765,15 +2369,7 @@ func DeepCopy_api_PodStatusResult(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodStatusResult)
 		out := out.(*PodStatusResult)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -4788,15 +2384,7 @@ func DeepCopy_api_PodTemplate(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*PodTemplate)
 		out := out.(*PodTemplate)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -4811,16 +2399,7 @@ func DeepCopy_api_PodTemplateList(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodTemplateList)
 		out := out.(*PodTemplateList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]PodTemplate, len(*in))
@@ -4829,14 +2408,6 @@ func DeepCopy_api_PodTemplateList(in interface{}, out interface{}, c *conversion
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4846,14 +2417,7 @@ func DeepCopy_api_PodTemplateSpec(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*PodTemplateSpec)
 		out := out.(*PodTemplateSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -4868,26 +2432,11 @@ func DeepCopy_api_Preconditions(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*Preconditions)
 		out := out.(*Preconditions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.UID != nil {
 			in, out := &in.UID, &out.UID
 			*out = new(types.UID)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.UID = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -4897,26 +2446,11 @@ func DeepCopy_api_PreferAvoidPodsEntry(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*PreferAvoidPodsEntry)
 		out := out.(*PreferAvoidPodsEntry)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_PodSignature(&in.PodSignature, &out.PodSignature, c); err != nil {
 			return err
 		}
 		out.EvictionTime = in.EvictionTime.DeepCopy()
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.Reason = in.Reason
-		out.Message = in.Message
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4925,15 +2459,7 @@ func DeepCopy_api_PreferredSchedulingTerm(in interface{}, out interface{}, c *co
 	{
 		in := in.(*PreferredSchedulingTerm)
 		out := out.(*PreferredSchedulingTerm)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Weight = in.Weight
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_NodeSelectorTerm(&in.Preference, &out.Preference, c); err != nil {
 			return err
 		}
@@ -4945,27 +2471,10 @@ func DeepCopy_api_Probe(in interface{}, out interface{}, c *conversion.Cloner) e
 	{
 		in := in.(*Probe)
 		out := out.(*Probe)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		if err := DeepCopy_api_Handler(&in.Handler, &out.Handler, c); err != nil {
-			return err
-		}
-		out.InitialDelaySeconds = in.InitialDelaySeconds
-		out.TimeoutSeconds = in.TimeoutSeconds
-		out.PeriodSeconds = in.PeriodSeconds
-		out.SuccessThreshold = in.SuccessThreshold
-		out.FailureThreshold = in.FailureThreshold
-=======
->>>>>>> wip
 		*out = *in
 		if err := DeepCopy_api_Handler(&in.Handler, &out.Handler, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4974,19 +2483,7 @@ func DeepCopy_api_QuobyteVolumeSource(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*QuobyteVolumeSource)
 		out := out.(*QuobyteVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Registry = in.Registry
-		out.Volume = in.Volume
-		out.ReadOnly = in.ReadOnly
-		out.User = in.User
-		out.Group = in.Group
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -4995,50 +2492,17 @@ func DeepCopy_api_RBDVolumeSource(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*RBDVolumeSource)
 		out := out.(*RBDVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.CephMonitors != nil {
 			in, out := &in.CephMonitors, &out.CephMonitors
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.CephMonitors = nil
-		}
-		out.RBDImage = in.RBDImage
-		out.FSType = in.FSType
-		out.RBDPool = in.RBDPool
-		out.RadosUser = in.RadosUser
-		out.Keyring = in.Keyring
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.SecretRef != nil {
 			in, out := &in.SecretRef, &out.SecretRef
 			*out = new(LocalObjectReference)
 			**out = **in
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.SecretRef = nil
-		}
-		out.ReadOnly = in.ReadOnly
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5047,36 +2511,14 @@ func DeepCopy_api_RangeAllocation(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*RangeAllocation)
 		out := out.(*RangeAllocation)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-			return err
-		}
-		out.Range = in.Range
-=======
->>>>>>> wip
 		*out = *in
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Data != nil {
 			in, out := &in.Data, &out.Data
 			*out = make([]byte, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Data = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5086,15 +2528,7 @@ func DeepCopy_api_ReplicationController(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*ReplicationController)
 		out := out.(*ReplicationController)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -5112,21 +2546,8 @@ func DeepCopy_api_ReplicationControllerCondition(in interface{}, out interface{}
 	{
 		in := in.(*ReplicationControllerCondition)
 		out := out.(*ReplicationControllerCondition)
-<<<<<<< HEAD
 		*out = *in
 		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-		out.Status = in.Status
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
-		out.Reason = in.Reason
-		out.Message = in.Message
-=======
-		*out = *in
-		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5135,16 +2556,7 @@ func DeepCopy_api_ReplicationControllerList(in interface{}, out interface{}, c *
 	{
 		in := in.(*ReplicationControllerList)
 		out := out.(*ReplicationControllerList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]ReplicationController, len(*in))
@@ -5153,14 +2565,6 @@ func DeepCopy_api_ReplicationControllerList(in interface{}, out interface{}, c *
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5170,30 +2574,13 @@ func DeepCopy_api_ReplicationControllerSpec(in interface{}, out interface{}, c *
 	{
 		in := in.(*ReplicationControllerSpec)
 		out := out.(*ReplicationControllerSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Replicas = in.Replicas
-		out.MinReadySeconds = in.MinReadySeconds
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
 			*out = make(map[string]string)
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Selector = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Template != nil {
 			in, out := &in.Template, &out.Template
@@ -5201,14 +2588,6 @@ func DeepCopy_api_ReplicationControllerSpec(in interface{}, out interface{}, c *
 			if err := DeepCopy_api_PodTemplateSpec(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Template = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5218,19 +2597,7 @@ func DeepCopy_api_ReplicationControllerStatus(in interface{}, out interface{}, c
 	{
 		in := in.(*ReplicationControllerStatus)
 		out := out.(*ReplicationControllerStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Replicas = in.Replicas
-		out.FullyLabeledReplicas = in.FullyLabeledReplicas
-		out.ReadyReplicas = in.ReadyReplicas
-		out.AvailableReplicas = in.AvailableReplicas
-		out.ObservedGeneration = in.ObservedGeneration
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
 			*out = make([]ReplicationControllerCondition, len(*in))
@@ -5239,14 +2606,6 @@ func DeepCopy_api_ReplicationControllerStatus(in interface{}, out interface{}, c
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Conditions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5256,16 +2615,7 @@ func DeepCopy_api_ResourceFieldSelector(in interface{}, out interface{}, c *conv
 	{
 		in := in.(*ResourceFieldSelector)
 		out := out.(*ResourceFieldSelector)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.ContainerName = in.ContainerName
-		out.Resource = in.Resource
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		out.Divisor = in.Divisor.DeepCopy()
 		return nil
 	}
@@ -5275,15 +2625,7 @@ func DeepCopy_api_ResourceQuota(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*ResourceQuota)
 		out := out.(*ResourceQuota)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -5301,16 +2643,7 @@ func DeepCopy_api_ResourceQuotaList(in interface{}, out interface{}, c *conversi
 	{
 		in := in.(*ResourceQuotaList)
 		out := out.(*ResourceQuotaList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]ResourceQuota, len(*in))
@@ -5319,14 +2652,6 @@ func DeepCopy_api_ResourceQuotaList(in interface{}, out interface{}, c *conversi
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5336,28 +2661,13 @@ func DeepCopy_api_ResourceQuotaSpec(in interface{}, out interface{}, c *conversi
 	{
 		in := in.(*ResourceQuotaSpec)
 		out := out.(*ResourceQuotaSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Hard != nil {
 			in, out := &in.Hard, &out.Hard
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Hard = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Scopes != nil {
 			in, out := &in.Scopes, &out.Scopes
@@ -5365,14 +2675,6 @@ func DeepCopy_api_ResourceQuotaSpec(in interface{}, out interface{}, c *conversi
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Scopes = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5382,28 +2684,13 @@ func DeepCopy_api_ResourceQuotaStatus(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*ResourceQuotaStatus)
 		out := out.(*ResourceQuotaStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Hard != nil {
 			in, out := &in.Hard, &out.Hard
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Hard = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Used != nil {
 			in, out := &in.Used, &out.Used
@@ -5411,14 +2698,6 @@ func DeepCopy_api_ResourceQuotaStatus(in interface{}, out interface{}, c *conver
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Used = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5428,28 +2707,13 @@ func DeepCopy_api_ResourceRequirements(in interface{}, out interface{}, c *conve
 	{
 		in := in.(*ResourceRequirements)
 		out := out.(*ResourceRequirements)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Limits != nil {
 			in, out := &in.Limits, &out.Limits
 			*out = make(ResourceList)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Limits = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Requests != nil {
 			in, out := &in.Requests, &out.Requests
@@ -5457,14 +2721,6 @@ func DeepCopy_api_ResourceRequirements(in interface{}, out interface{}, c *conve
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Requests = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5474,18 +2730,7 @@ func DeepCopy_api_SELinuxOptions(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*SELinuxOptions)
 		out := out.(*SELinuxOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.User = in.User
-		out.Role = in.Role
-		out.Type = in.Type
-		out.Level = in.Level
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5494,15 +2739,7 @@ func DeepCopy_api_Secret(in interface{}, out interface{}, c *conversion.Cloner) 
 	{
 		in := in.(*Secret)
 		out := out.(*Secret)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -5516,18 +2753,7 @@ func DeepCopy_api_Secret(in interface{}, out interface{}, c *conversion.Cloner) 
 					(*out)[key] = *newVal.(*[]byte)
 				}
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Data = nil
-		}
-		out.Type = in.Type
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5536,16 +2762,7 @@ func DeepCopy_api_SecretKeySelector(in interface{}, out interface{}, c *conversi
 	{
 		in := in.(*SecretKeySelector)
 		out := out.(*SecretKeySelector)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.LocalObjectReference = in.LocalObjectReference
-		out.Key = in.Key
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5554,16 +2771,7 @@ func DeepCopy_api_SecretList(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*SecretList)
 		out := out.(*SecretList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Secret, len(*in))
@@ -5572,14 +2780,6 @@ func DeepCopy_api_SecretList(in interface{}, out interface{}, c *conversion.Clon
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5589,15 +2789,7 @@ func DeepCopy_api_SecretVolumeSource(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*SecretVolumeSource)
 		out := out.(*SecretVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.SecretName = in.SecretName
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]KeyToPath, len(*in))
@@ -5606,27 +2798,11 @@ func DeepCopy_api_SecretVolumeSource(in interface{}, out interface{}, c *convers
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DefaultMode != nil {
 			in, out := &in.DefaultMode, &out.DefaultMode
 			*out = new(int32)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DefaultMode = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5636,93 +2812,38 @@ func DeepCopy_api_SecurityContext(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*SecurityContext)
 		out := out.(*SecurityContext)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Capabilities != nil {
 			in, out := &in.Capabilities, &out.Capabilities
 			*out = new(Capabilities)
 			if err := DeepCopy_api_Capabilities(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Capabilities = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Privileged != nil {
 			in, out := &in.Privileged, &out.Privileged
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Privileged = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.SELinuxOptions != nil {
 			in, out := &in.SELinuxOptions, &out.SELinuxOptions
 			*out = new(SELinuxOptions)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.SELinuxOptions = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RunAsUser != nil {
 			in, out := &in.RunAsUser, &out.RunAsUser
 			*out = new(int64)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RunAsUser = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RunAsNonRoot != nil {
 			in, out := &in.RunAsNonRoot, &out.RunAsNonRoot
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RunAsNonRoot = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ReadOnlyRootFilesystem != nil {
 			in, out := &in.ReadOnlyRootFilesystem, &out.ReadOnlyRootFilesystem
 			*out = new(bool)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ReadOnlyRootFilesystem = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5732,16 +2853,7 @@ func DeepCopy_api_SerializedReference(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*SerializedReference)
 		out := out.(*SerializedReference)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Reference = in.Reference
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5750,15 +2862,7 @@ func DeepCopy_api_Service(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*Service)
 		out := out.(*Service)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -5776,15 +2880,7 @@ func DeepCopy_api_ServiceAccount(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*ServiceAccount)
 		out := out.(*ServiceAccount)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
 		}
@@ -5794,14 +2890,6 @@ func DeepCopy_api_ServiceAccount(in interface{}, out interface{}, c *conversion.
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Secrets = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ImagePullSecrets != nil {
 			in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
@@ -5809,14 +2897,6 @@ func DeepCopy_api_ServiceAccount(in interface{}, out interface{}, c *conversion.
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ImagePullSecrets = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5826,16 +2906,7 @@ func DeepCopy_api_ServiceAccountList(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*ServiceAccountList)
 		out := out.(*ServiceAccountList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]ServiceAccount, len(*in))
@@ -5844,14 +2915,6 @@ func DeepCopy_api_ServiceAccountList(in interface{}, out interface{}, c *convers
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5861,16 +2924,7 @@ func DeepCopy_api_ServiceList(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*ServiceList)
 		out := out.(*ServiceList)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.ListMeta = in.ListMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]Service, len(*in))
@@ -5879,14 +2933,6 @@ func DeepCopy_api_ServiceList(in interface{}, out interface{}, c *conversion.Clo
 					return err
 				}
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Items = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -5896,19 +2942,7 @@ func DeepCopy_api_ServicePort(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*ServicePort)
 		out := out.(*ServicePort)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Protocol = in.Protocol
-		out.Port = in.Port
-		out.TargetPort = in.TargetPort
-		out.NodePort = in.NodePort
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5917,16 +2951,7 @@ func DeepCopy_api_ServiceProxyOptions(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*ServiceProxyOptions)
 		out := out.(*ServiceProxyOptions)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-		out.Path = in.Path
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -5935,29 +2960,13 @@ func DeepCopy_api_ServiceSpec(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*ServiceSpec)
 		out := out.(*ServiceSpec)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Type = in.Type
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Ports != nil {
 			in, out := &in.Ports, &out.Ports
 			*out = make([]ServicePort, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Ports = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
@@ -5965,48 +2974,16 @@ func DeepCopy_api_ServiceSpec(in interface{}, out interface{}, c *conversion.Clo
 			for key, val := range *in {
 				(*out)[key] = val
 			}
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Selector = nil
-		}
-		out.ClusterIP = in.ClusterIP
-		out.ExternalName = in.ExternalName
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.ExternalIPs != nil {
 			in, out := &in.ExternalIPs, &out.ExternalIPs
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.ExternalIPs = nil
-		}
-		out.LoadBalancerIP = in.LoadBalancerIP
-		out.SessionAffinity = in.SessionAffinity
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.LoadBalancerSourceRanges != nil {
 			in, out := &in.LoadBalancerSourceRanges, &out.LoadBalancerSourceRanges
 			*out = make([]string, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.LoadBalancerSourceRanges = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -6016,14 +2993,7 @@ func DeepCopy_api_ServiceStatus(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*ServiceStatus)
 		out := out.(*ServiceStatus)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_LoadBalancerStatus(&in.LoadBalancer, &out.LoadBalancer, c); err != nil {
 			return err
 		}
@@ -6035,16 +3005,7 @@ func DeepCopy_api_Sysctl(in interface{}, out interface{}, c *conversion.Cloner) 
 	{
 		in := in.(*Sysctl)
 		out := out.(*Sysctl)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.Value = in.Value
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6053,15 +3014,7 @@ func DeepCopy_api_TCPSocketAction(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*TCPSocketAction)
 		out := out.(*TCPSocketAction)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Port = in.Port
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6070,17 +3023,7 @@ func DeepCopy_api_Taint(in interface{}, out interface{}, c *conversion.Cloner) e
 	{
 		in := in.(*Taint)
 		out := out.(*Taint)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Key = in.Key
-		out.Value = in.Value
-		out.Effect = in.Effect
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6089,18 +3032,7 @@ func DeepCopy_api_Toleration(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*Toleration)
 		out := out.(*Toleration)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Key = in.Key
-		out.Operator = in.Operator
-		out.Value = in.Value
-		out.Effect = in.Effect
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6109,15 +3041,7 @@ func DeepCopy_api_Volume(in interface{}, out interface{}, c *conversion.Cloner) 
 	{
 		in := in.(*Volume)
 		out := out.(*Volume)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_VolumeSource(&in.VolumeSource, &out.VolumeSource, c); err != nil {
 			return err
 		}
@@ -6129,18 +3053,7 @@ func DeepCopy_api_VolumeMount(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*VolumeMount)
 		out := out.(*VolumeMount)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Name = in.Name
-		out.ReadOnly = in.ReadOnly
-		out.MountPath = in.MountPath
-		out.SubPath = in.SubPath
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6149,78 +3062,31 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*VolumeSource)
 		out := out.(*VolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.HostPath != nil {
 			in, out := &in.HostPath, &out.HostPath
 			*out = new(HostPathVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.HostPath = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.EmptyDir != nil {
 			in, out := &in.EmptyDir, &out.EmptyDir
 			*out = new(EmptyDirVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.EmptyDir = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.GCEPersistentDisk != nil {
 			in, out := &in.GCEPersistentDisk, &out.GCEPersistentDisk
 			*out = new(GCEPersistentDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.GCEPersistentDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AWSElasticBlockStore != nil {
 			in, out := &in.AWSElasticBlockStore, &out.AWSElasticBlockStore
 			*out = new(AWSElasticBlockStoreVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AWSElasticBlockStore = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.GitRepo != nil {
 			in, out := &in.GitRepo, &out.GitRepo
 			*out = new(GitRepoVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.GitRepo = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Secret != nil {
 			in, out := &in.Secret, &out.Secret
@@ -6228,66 +3094,26 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_SecretVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Secret = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.NFS != nil {
 			in, out := &in.NFS, &out.NFS
 			*out = new(NFSVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.NFS = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ISCSI != nil {
 			in, out := &in.ISCSI, &out.ISCSI
 			*out = new(ISCSIVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ISCSI = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Glusterfs != nil {
 			in, out := &in.Glusterfs, &out.Glusterfs
 			*out = new(GlusterfsVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Glusterfs = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PersistentVolumeClaim != nil {
 			in, out := &in.PersistentVolumeClaim, &out.PersistentVolumeClaim
 			*out = new(PersistentVolumeClaimVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PersistentVolumeClaim = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.RBD != nil {
 			in, out := &in.RBD, &out.RBD
@@ -6295,27 +3121,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_RBDVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.RBD = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Quobyte != nil {
 			in, out := &in.Quobyte, &out.Quobyte
 			*out = new(QuobyteVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Quobyte = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FlexVolume != nil {
 			in, out := &in.FlexVolume, &out.FlexVolume
@@ -6323,27 +3133,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_FlexVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FlexVolume = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Cinder != nil {
 			in, out := &in.Cinder, &out.Cinder
 			*out = new(CinderVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Cinder = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.CephFS != nil {
 			in, out := &in.CephFS, &out.CephFS
@@ -6351,27 +3145,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_CephFSVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.CephFS = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.Flocker != nil {
 			in, out := &in.Flocker, &out.Flocker
 			*out = new(FlockerVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Flocker = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.DownwardAPI != nil {
 			in, out := &in.DownwardAPI, &out.DownwardAPI
@@ -6379,14 +3157,6 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_DownwardAPIVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.DownwardAPI = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.FC != nil {
 			in, out := &in.FC, &out.FC
@@ -6394,27 +3164,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_FCVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.FC = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AzureFile != nil {
 			in, out := &in.AzureFile, &out.AzureFile
 			*out = new(AzureFileVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AzureFile = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.ConfigMap != nil {
 			in, out := &in.ConfigMap, &out.ConfigMap
@@ -6422,27 +3176,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_ConfigMapVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.ConfigMap = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.VsphereVolume != nil {
 			in, out := &in.VsphereVolume, &out.VsphereVolume
 			*out = new(VsphereVirtualDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.VsphereVolume = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.AzureDisk != nil {
 			in, out := &in.AzureDisk, &out.AzureDisk
@@ -6450,27 +3188,11 @@ func DeepCopy_api_VolumeSource(in interface{}, out interface{}, c *conversion.Cl
 			if err := DeepCopy_api_AzureDiskVolumeSource(*in, *out, c); err != nil {
 				return err
 			}
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.AzureDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		if in.PhotonPersistentDisk != nil {
 			in, out := &in.PhotonPersistentDisk, &out.PhotonPersistentDisk
 			*out = new(PhotonPersistentDiskVolumeSource)
 			**out = **in
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.PhotonPersistentDisk = nil
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -6480,16 +3202,7 @@ func DeepCopy_api_VsphereVirtualDiskVolumeSource(in interface{}, out interface{}
 	{
 		in := in.(*VsphereVirtualDiskVolumeSource)
 		out := out.(*VsphereVirtualDiskVolumeSource)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.VolumePath = in.VolumePath
-		out.FSType = in.FSType
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -6498,15 +3211,7 @@ func DeepCopy_api_WeightedPodAffinityTerm(in interface{}, out interface{}, c *co
 	{
 		in := in.(*WeightedPodAffinityTerm)
 		out := out.(*WeightedPodAffinityTerm)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.Weight = in.Weight
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if err := DeepCopy_api_PodAffinityTerm(&in.PodAffinityTerm, &out.PodAffinityTerm, c); err != nil {
 			return err
 		}

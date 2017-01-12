@@ -22,13 +22,6 @@ package runtime
 
 import (
 	conversion "k8s.io/kubernetes/pkg/conversion"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-)
-
-=======
->>>>>>> wip
 	reflect "reflect"
 )
 
@@ -41,40 +34,15 @@ func GetGeneratedDeepCopyFuncs() []conversion.GeneratedDeepCopyFunc {
 	}
 }
 
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 func DeepCopy_runtime_RawExtension(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
 		in := in.(*RawExtension)
 		out := out.(*RawExtension)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Raw != nil {
 			in, out := &in.Raw, &out.Raw
 			*out = make([]byte, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-		} else {
-			out.Raw = nil
-		}
-		if in.Object == nil {
-			out.Object = nil
-		} else if newVal, err := c.DeepCopy(&in.Object); err != nil {
-			return err
-		} else {
-			out.Object = *newVal.(*Object)
-=======
->>>>>>> wip
 		}
 		// in.Object is kind 'Interface'
 		if in.Object != nil {
@@ -83,10 +51,6 @@ func DeepCopy_runtime_RawExtension(in interface{}, out interface{}, c *conversio
 			} else {
 				out.Object = *newVal.(*Object)
 			}
-<<<<<<< HEAD
-=======
->>>>>>> e88b60f... wip
->>>>>>> wip
 		}
 		return nil
 	}
@@ -96,16 +60,7 @@ func DeepCopy_runtime_TypeMeta(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*TypeMeta)
 		out := out.(*TypeMeta)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.APIVersion = in.APIVersion
-		out.Kind = in.Kind
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
@@ -114,32 +69,12 @@ func DeepCopy_runtime_Unknown(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*Unknown)
 		out := out.(*Unknown)
-<<<<<<< HEAD
 		*out = *in
-=======
-<<<<<<< HEAD
-		out.TypeMeta = in.TypeMeta
-=======
-		*out = *in
->>>>>>> e88b60f... wip
->>>>>>> wip
 		if in.Raw != nil {
 			in, out := &in.Raw, &out.Raw
 			*out = make([]byte, len(*in))
 			copy(*out, *in)
-<<<<<<< HEAD
 		}
-=======
-<<<<<<< HEAD
-		} else {
-			out.Raw = nil
-		}
-		out.ContentEncoding = in.ContentEncoding
-		out.ContentType = in.ContentType
-=======
-		}
->>>>>>> e88b60f... wip
->>>>>>> wip
 		return nil
 	}
 }
