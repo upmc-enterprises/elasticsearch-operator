@@ -22,33 +22,83 @@ package v1
 
 import (
 	conversion "k8s.io/kubernetes/pkg/conversion"
+<<<<<<< HEAD
 	time "time"
 )
 
+=======
+	reflect "reflect"
+)
+
+// GetGeneratedDeepCopyFuncs returns the generated funcs, since we aren't registering them.
+func GetGeneratedDeepCopyFuncs() []conversion.GeneratedDeepCopyFunc {
+	return []conversion.GeneratedDeepCopyFunc{
+		{Fn: DeepCopy_v1_APIGroup, InType: reflect.TypeOf(&APIGroup{})},
+		{Fn: DeepCopy_v1_APIGroupList, InType: reflect.TypeOf(&APIGroupList{})},
+		{Fn: DeepCopy_v1_APIResource, InType: reflect.TypeOf(&APIResource{})},
+		{Fn: DeepCopy_v1_APIResourceList, InType: reflect.TypeOf(&APIResourceList{})},
+		{Fn: DeepCopy_v1_APIVersions, InType: reflect.TypeOf(&APIVersions{})},
+		{Fn: DeepCopy_v1_Duration, InType: reflect.TypeOf(&Duration{})},
+		{Fn: DeepCopy_v1_ExportOptions, InType: reflect.TypeOf(&ExportOptions{})},
+		{Fn: DeepCopy_v1_GetOptions, InType: reflect.TypeOf(&GetOptions{})},
+		{Fn: DeepCopy_v1_GroupKind, InType: reflect.TypeOf(&GroupKind{})},
+		{Fn: DeepCopy_v1_GroupResource, InType: reflect.TypeOf(&GroupResource{})},
+		{Fn: DeepCopy_v1_GroupVersion, InType: reflect.TypeOf(&GroupVersion{})},
+		{Fn: DeepCopy_v1_GroupVersionForDiscovery, InType: reflect.TypeOf(&GroupVersionForDiscovery{})},
+		{Fn: DeepCopy_v1_GroupVersionKind, InType: reflect.TypeOf(&GroupVersionKind{})},
+		{Fn: DeepCopy_v1_GroupVersionResource, InType: reflect.TypeOf(&GroupVersionResource{})},
+		{Fn: DeepCopy_v1_LabelSelector, InType: reflect.TypeOf(&LabelSelector{})},
+		{Fn: DeepCopy_v1_LabelSelectorRequirement, InType: reflect.TypeOf(&LabelSelectorRequirement{})},
+		{Fn: DeepCopy_v1_ListMeta, InType: reflect.TypeOf(&ListMeta{})},
+		{Fn: DeepCopy_v1_OwnerReference, InType: reflect.TypeOf(&OwnerReference{})},
+		{Fn: DeepCopy_v1_Patch, InType: reflect.TypeOf(&Patch{})},
+		{Fn: DeepCopy_v1_RootPaths, InType: reflect.TypeOf(&RootPaths{})},
+		{Fn: DeepCopy_v1_ServerAddressByClientCIDR, InType: reflect.TypeOf(&ServerAddressByClientCIDR{})},
+		{Fn: DeepCopy_v1_Status, InType: reflect.TypeOf(&Status{})},
+		{Fn: DeepCopy_v1_StatusCause, InType: reflect.TypeOf(&StatusCause{})},
+		{Fn: DeepCopy_v1_StatusDetails, InType: reflect.TypeOf(&StatusDetails{})},
+		{Fn: DeepCopy_v1_Time, InType: reflect.TypeOf(&Time{})},
+		{Fn: DeepCopy_v1_Timestamp, InType: reflect.TypeOf(&Timestamp{})},
+		{Fn: DeepCopy_v1_TypeMeta, InType: reflect.TypeOf(&TypeMeta{})},
+	}
+}
+
+>>>>>>> e88b60f... wip
 func DeepCopy_v1_APIGroup(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
 		in := in.(*APIGroup)
 		out := out.(*APIGroup)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
 		out.Name = in.Name
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Versions != nil {
 			in, out := &in.Versions, &out.Versions
 			*out = make([]GroupVersionForDiscovery, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
+<<<<<<< HEAD
 		} else {
 			out.Versions = nil
 		}
 		out.PreferredVersion = in.PreferredVersion
+=======
+		}
+>>>>>>> e88b60f... wip
 		if in.ServerAddressByClientCIDRs != nil {
 			in, out := &in.ServerAddressByClientCIDRs, &out.ServerAddressByClientCIDRs
 			*out = make([]ServerAddressByClientCIDR, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
+<<<<<<< HEAD
 		} else {
 			out.ServerAddressByClientCIDRs = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -58,7 +108,11 @@ func DeepCopy_v1_APIGroupList(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*APIGroupList)
 		out := out.(*APIGroupList)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Groups != nil {
 			in, out := &in.Groups, &out.Groups
 			*out = make([]APIGroup, len(*in))
@@ -67,8 +121,11 @@ func DeepCopy_v1_APIGroupList(in interface{}, out interface{}, c *conversion.Clo
 					return err
 				}
 			}
+<<<<<<< HEAD
 		} else {
 			out.Groups = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -78,15 +135,22 @@ func DeepCopy_v1_APIResource(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*APIResource)
 		out := out.(*APIResource)
+<<<<<<< HEAD
 		out.Name = in.Name
 		out.Namespaced = in.Namespaced
 		out.Kind = in.Kind
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Verbs != nil {
 			in, out := &in.Verbs, &out.Verbs
 			*out = make(Verbs, len(*in))
 			copy(*out, *in)
+<<<<<<< HEAD
 		} else {
 			out.Verbs = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -96,8 +160,12 @@ func DeepCopy_v1_APIResourceList(in interface{}, out interface{}, c *conversion.
 	{
 		in := in.(*APIResourceList)
 		out := out.(*APIResourceList)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
 		out.GroupVersion = in.GroupVersion
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.APIResources != nil {
 			in, out := &in.APIResources, &out.APIResources
 			*out = make([]APIResource, len(*in))
@@ -106,8 +174,11 @@ func DeepCopy_v1_APIResourceList(in interface{}, out interface{}, c *conversion.
 					return err
 				}
 			}
+<<<<<<< HEAD
 		} else {
 			out.APIResources = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -117,13 +188,20 @@ func DeepCopy_v1_APIVersions(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*APIVersions)
 		out := out.(*APIVersions)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Versions != nil {
 			in, out := &in.Versions, &out.Versions
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+<<<<<<< HEAD
 		} else {
 			out.Versions = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		if in.ServerAddressByClientCIDRs != nil {
 			in, out := &in.ServerAddressByClientCIDRs, &out.ServerAddressByClientCIDRs
@@ -131,8 +209,11 @@ func DeepCopy_v1_APIVersions(in interface{}, out interface{}, c *conversion.Clon
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
+<<<<<<< HEAD
 		} else {
 			out.ServerAddressByClientCIDRs = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -142,7 +223,11 @@ func DeepCopy_v1_Duration(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*Duration)
 		out := out.(*Duration)
+<<<<<<< HEAD
 		out.Duration = in.Duration
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -151,9 +236,13 @@ func DeepCopy_v1_ExportOptions(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*ExportOptions)
 		out := out.(*ExportOptions)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
 		out.Export = in.Export
 		out.Exact = in.Exact
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -162,8 +251,12 @@ func DeepCopy_v1_GetOptions(in interface{}, out interface{}, c *conversion.Clone
 	{
 		in := in.(*GetOptions)
 		out := out.(*GetOptions)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
 		out.ResourceVersion = in.ResourceVersion
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -172,8 +265,12 @@ func DeepCopy_v1_GroupKind(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*GroupKind)
 		out := out.(*GroupKind)
+<<<<<<< HEAD
 		out.Group = in.Group
 		out.Kind = in.Kind
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -182,8 +279,12 @@ func DeepCopy_v1_GroupResource(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*GroupResource)
 		out := out.(*GroupResource)
+<<<<<<< HEAD
 		out.Group = in.Group
 		out.Resource = in.Resource
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -192,8 +293,12 @@ func DeepCopy_v1_GroupVersion(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*GroupVersion)
 		out := out.(*GroupVersion)
+<<<<<<< HEAD
 		out.Group = in.Group
 		out.Version = in.Version
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -202,8 +307,12 @@ func DeepCopy_v1_GroupVersionForDiscovery(in interface{}, out interface{}, c *co
 	{
 		in := in.(*GroupVersionForDiscovery)
 		out := out.(*GroupVersionForDiscovery)
+<<<<<<< HEAD
 		out.GroupVersion = in.GroupVersion
 		out.Version = in.Version
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -212,9 +321,13 @@ func DeepCopy_v1_GroupVersionKind(in interface{}, out interface{}, c *conversion
 	{
 		in := in.(*GroupVersionKind)
 		out := out.(*GroupVersionKind)
+<<<<<<< HEAD
 		out.Group = in.Group
 		out.Version = in.Version
 		out.Kind = in.Kind
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -223,9 +336,13 @@ func DeepCopy_v1_GroupVersionResource(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*GroupVersionResource)
 		out := out.(*GroupVersionResource)
+<<<<<<< HEAD
 		out.Group = in.Group
 		out.Version = in.Version
 		out.Resource = in.Resource
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -234,14 +351,21 @@ func DeepCopy_v1_LabelSelector(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*LabelSelector)
 		out := out.(*LabelSelector)
+<<<<<<< HEAD
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.MatchLabels != nil {
 			in, out := &in.MatchLabels, &out.MatchLabels
 			*out = make(map[string]string)
 			for key, val := range *in {
 				(*out)[key] = val
 			}
+<<<<<<< HEAD
 		} else {
 			out.MatchLabels = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		if in.MatchExpressions != nil {
 			in, out := &in.MatchExpressions, &out.MatchExpressions
@@ -251,8 +375,11 @@ func DeepCopy_v1_LabelSelector(in interface{}, out interface{}, c *conversion.Cl
 					return err
 				}
 			}
+<<<<<<< HEAD
 		} else {
 			out.MatchExpressions = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -262,14 +389,21 @@ func DeepCopy_v1_LabelSelectorRequirement(in interface{}, out interface{}, c *co
 	{
 		in := in.(*LabelSelectorRequirement)
 		out := out.(*LabelSelectorRequirement)
+<<<<<<< HEAD
 		out.Key = in.Key
 		out.Operator = in.Operator
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Values != nil {
 			in, out := &in.Values, &out.Values
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+<<<<<<< HEAD
 		} else {
 			out.Values = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -279,8 +413,12 @@ func DeepCopy_v1_ListMeta(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*ListMeta)
 		out := out.(*ListMeta)
+<<<<<<< HEAD
 		out.SelfLink = in.SelfLink
 		out.ResourceVersion = in.ResourceVersion
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -289,16 +427,23 @@ func DeepCopy_v1_OwnerReference(in interface{}, out interface{}, c *conversion.C
 	{
 		in := in.(*OwnerReference)
 		out := out.(*OwnerReference)
+<<<<<<< HEAD
 		out.APIVersion = in.APIVersion
 		out.Kind = in.Kind
 		out.Name = in.Name
 		out.UID = in.UID
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Controller != nil {
 			in, out := &in.Controller, &out.Controller
 			*out = new(bool)
 			**out = **in
+<<<<<<< HEAD
 		} else {
 			out.Controller = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -308,8 +453,12 @@ func DeepCopy_v1_Patch(in interface{}, out interface{}, c *conversion.Cloner) er
 	{
 		in := in.(*Patch)
 		out := out.(*Patch)
+<<<<<<< HEAD
 		_ = in
 		_ = out
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -318,12 +467,19 @@ func DeepCopy_v1_RootPaths(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*RootPaths)
 		out := out.(*RootPaths)
+<<<<<<< HEAD
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Paths != nil {
 			in, out := &in.Paths, &out.Paths
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+<<<<<<< HEAD
 		} else {
 			out.Paths = nil
+=======
+>>>>>>> e88b60f... wip
 		}
 		return nil
 	}
@@ -333,8 +489,12 @@ func DeepCopy_v1_ServerAddressByClientCIDR(in interface{}, out interface{}, c *c
 	{
 		in := in.(*ServerAddressByClientCIDR)
 		out := out.(*ServerAddressByClientCIDR)
+<<<<<<< HEAD
 		out.ClientCIDR = in.ClientCIDR
 		out.ServerAddress = in.ServerAddress
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -343,21 +503,29 @@ func DeepCopy_v1_Status(in interface{}, out interface{}, c *conversion.Cloner) e
 	{
 		in := in.(*Status)
 		out := out.(*Status)
+<<<<<<< HEAD
 		out.TypeMeta = in.TypeMeta
 		out.ListMeta = in.ListMeta
 		out.Status = in.Status
 		out.Message = in.Message
 		out.Reason = in.Reason
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Details != nil {
 			in, out := &in.Details, &out.Details
 			*out = new(StatusDetails)
 			if err := DeepCopy_v1_StatusDetails(*in, *out, c); err != nil {
 				return err
 			}
+<<<<<<< HEAD
 		} else {
 			out.Details = nil
 		}
 		out.Code = in.Code
+=======
+		}
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -366,9 +534,13 @@ func DeepCopy_v1_StatusCause(in interface{}, out interface{}, c *conversion.Clon
 	{
 		in := in.(*StatusCause)
 		out := out.(*StatusCause)
+<<<<<<< HEAD
 		out.Type = in.Type
 		out.Message = in.Message
 		out.Field = in.Field
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -377,19 +549,27 @@ func DeepCopy_v1_StatusDetails(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*StatusDetails)
 		out := out.(*StatusDetails)
+<<<<<<< HEAD
 		out.Name = in.Name
 		out.Group = in.Group
 		out.Kind = in.Kind
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		if in.Causes != nil {
 			in, out := &in.Causes, &out.Causes
 			*out = make([]StatusCause, len(*in))
 			for i := range *in {
 				(*out)[i] = (*in)[i]
 			}
+<<<<<<< HEAD
 		} else {
 			out.Causes = nil
 		}
 		out.RetryAfterSeconds = in.RetryAfterSeconds
+=======
+		}
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -398,11 +578,15 @@ func DeepCopy_v1_Time(in interface{}, out interface{}, c *conversion.Cloner) err
 	{
 		in := in.(*Time)
 		out := out.(*Time)
+<<<<<<< HEAD
 		if newVal, err := c.DeepCopy(&in.Time); err != nil {
 			return err
 		} else {
 			out.Time = *newVal.(*time.Time)
 		}
+=======
+		*out = in.DeepCopy()
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -411,8 +595,12 @@ func DeepCopy_v1_Timestamp(in interface{}, out interface{}, c *conversion.Cloner
 	{
 		in := in.(*Timestamp)
 		out := out.(*Timestamp)
+<<<<<<< HEAD
 		out.Seconds = in.Seconds
 		out.Nanos = in.Nanos
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }
@@ -421,8 +609,12 @@ func DeepCopy_v1_TypeMeta(in interface{}, out interface{}, c *conversion.Cloner)
 	{
 		in := in.(*TypeMeta)
 		out := out.(*TypeMeta)
+<<<<<<< HEAD
 		out.Kind = in.Kind
 		out.APIVersion = in.APIVersion
+=======
+		*out = *in
+>>>>>>> e88b60f... wip
 		return nil
 	}
 }

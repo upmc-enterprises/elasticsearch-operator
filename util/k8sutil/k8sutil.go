@@ -437,6 +437,9 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 							"role":      role,
 							"name":      deploymentName,
 						},
+						Annotations: map[string]string{
+							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
+						},
 					},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
@@ -478,8 +481,8 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										Value: httpEnable,
 									},
 									v1.EnvVar{
-										Name:  "ES_HEAP_SIZE",
-										Value: "1g",
+										Name:  "ES_JAVA_OPTS",
+										Value: "-Xms1024m -Xmx1024m",
 									},
 								},
 								Ports: []v1.ContainerPort{

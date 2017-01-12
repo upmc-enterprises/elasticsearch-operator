@@ -24,12 +24,20 @@ go_library(
         "types_swagger_doc_generated.go",
         "well_known_labels.go",
         "zz_generated.deepcopy.go",
+<<<<<<< HEAD
+=======
+        "zz_generated.defaults.go",
+>>>>>>> e88b60f... wip
     ],
     tags = ["automanaged"],
     deps = [
         "//pkg/conversion:go_default_library",
         "//pkg/genericapiserver/openapi/common:go_default_library",
         "//pkg/labels:go_default_library",
+<<<<<<< HEAD
+=======
+        "//pkg/runtime:go_default_library",
+>>>>>>> e88b60f... wip
         "//pkg/runtime/schema:go_default_library",
         "//pkg/selection:go_default_library",
         "//pkg/types:go_default_library",
