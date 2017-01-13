@@ -567,7 +567,8 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 				},
 			},
 			Spec: apps.StatefulSetSpec{
-				Replicas: replicas,
+				Replicas:    replicas,
+				ServiceName: "es-data-svc",
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: v1.ObjectMeta{
 						Labels: map[string]string{
@@ -628,7 +629,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 								},
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
-										Name:      "storage",
+										Name:      "es-data",
 										MountPath: "/data",
 									},
 									v1.VolumeMount{
@@ -653,7 +654,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 					v1.PersistentVolumeClaim{
 						ObjectMeta: v1.ObjectMeta{
-							Name: "elasticsearch-data",
+							Name: "es-data",
 							Annotations: map[string]string{
 								"volume.beta.kubernetes.io/storage-class": "default",
 							},
