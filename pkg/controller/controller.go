@@ -81,8 +81,10 @@ func (c *Controller) Run() error {
 				ClientNodeSize: cluster.Spec.ClientNodeSize,
 				MasterNodeSize: cluster.Spec.MasterNodeSize,
 				DataNodeSize:   cluster.Spec.DataNodeSize,
+				Zones:          cluster.Spec.Zones,
 			},
 		}
+		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))
 	}
 
 	logrus.Infof("Found %d existing clusters ", len(c.clusters))

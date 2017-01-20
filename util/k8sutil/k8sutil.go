@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	storage "k8s.io/client-go/pkg/apis/storage/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -62,7 +63,8 @@ const (
 	masterDeploymentName = "es-master"
 	dataDeploymentName   = "es-data"
 
-	secretName = "es-certs"
+	secretName                 = "es-certs"
+	awsStorageClassProvisioner = "kubernetes.io/aws-ebs"
 )
 
 // K8sutil defines the kube object
@@ -96,10 +98,11 @@ type ElasticSearchCluster struct {
 
 // ElasticSearchSpec represents the custom data of the object
 type ElasticSearchSpec struct {
-	ClusterName    string `json: "cluster-name"`
-	ClientNodeSize int32  `json:"client-node-size"`
-	MasterNodeSize int32  `json:"master-node-size"`
-	DataNodeSize   int32  `json:"data-node-size"`
+	ClusterName    string   `json: "cluster-name"`
+	ClientNodeSize int32    `json:"client-node-size"`
+	MasterNodeSize int32    `json:"master-node-size"`
+	DataNodeSize   int      `json:"data-node-size"`
+	Zones          []string `json:"zones"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
@@ -547,23 +550,25 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string) error {
+
+	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
 
 	// Check if StatefulSet exists
-	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(dataDeploymentName)
+	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(statefulSetName)
 
 	if len(statefulSet.Name) == 0 {
 		volumeSize, _ := resource.ParseQuantity("100Gi")
 
-		logrus.Infof("%s not found, creating...", dataDeploymentName)
+		logrus.Infof("%s not found, creating...", statefulSetName)
 
 		statefulSet := &apps.StatefulSet{
 			ObjectMeta: v1.ObjectMeta{
-				Name: dataDeploymentName,
+				Name: statefulSetName,
 				Labels: map[string]string{
 					"component": "elasticsearch",
 					"role":      "data",
-					"name":      dataDeploymentName,
+					"name":      statefulSetName,
 				},
 			},
 			Spec: apps.StatefulSetSpec{
@@ -574,7 +579,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 						Labels: map[string]string{
 							"component": "elasticsearch",
 							"role":      "data",
-							"name":      dataDeploymentName,
+							"name":      statefulSetName,
 						},
 						Annotations: map[string]string{
 							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
@@ -583,7 +588,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
 							v1.Container{
-								Name: dataDeploymentName,
+								Name: statefulSetName,
 								SecurityContext: &v1.SecurityContext{
 									Privileged: &[]bool{true}[0],
 									Capabilities: &v1.Capabilities{
@@ -656,7 +661,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 						ObjectMeta: v1.ObjectMeta{
 							Name: "es-data",
 							Annotations: map[string]string{
-								"volume.beta.kubernetes.io/storage-class": "default",
+								"volume.beta.kubernetes.io/storage-class": storageClass,
 							},
 						},
 						Spec: v1.PersistentVolumeClaimSpec{
@@ -682,6 +687,50 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage string) er
 		}
 	} else if err != nil {
 		logrus.Error("Could not get data stateful set! ", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreatePeristentVolume creates a CreatePeristentVolume
+func (k *K8sutil) CreatePeristentVolume(zone string) error {
+
+	return nil
+}
+
+// CreateStorageClass creates a storage class
+// NOTE: Right now only creating AWS EBS volumes type gp2
+func (k *K8sutil) CreateStorageClass(zone string) error {
+
+	// Check if storage class exists
+	storageClass, err := k.Kclient.StorageClasses().Get(zone)
+
+	if len(storageClass.Name) == 0 {
+		logrus.Infof("StorgeClass %s not found, creating...", zone)
+
+		class := &storage.StorageClass{
+			ObjectMeta: v1.ObjectMeta{
+				Name: zone,
+				Labels: map[string]string{
+					"component": "elasticsearch",
+				},
+			},
+			Provisioner: awsStorageClassProvisioner,
+			Parameters: map[string]string{
+				"type": "gp2",
+				"zone": zone,
+			},
+		}
+
+		_, err := k.Kclient.StorageClasses().Create(class)
+
+		if err != nil {
+			logrus.Error("Could not create storage class: ", err)
+			return err
+		}
+	} else if err != nil {
+		logrus.Error("Could not get storage class! ", err)
 		return err
 	}
 
