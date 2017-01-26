@@ -45,10 +45,14 @@ type ClusterSpec struct {
 	MasterNodeSize int32 `json:"master-node-size"`
 
 	// DataNodeSize defines how many client nodes to have in cluster
-	DataNodeSize int32 `json:"data-node-size"`
+	DataNodeSize int `json:"data-node-size"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
 	// to run on a node, the node must have each of the indicated key-value pairs as
 	// labels.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// Zones specifies a map of key-value pairs. Defines which zones
+	// to deploy persistent volumes for data nodes
+	Zones []string `json:"zones,omitempty"`
 }

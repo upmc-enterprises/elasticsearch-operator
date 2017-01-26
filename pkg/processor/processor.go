@@ -94,15 +94,50 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 			ClientNodeSize: c.Spec.ClientNodeSize,
 			MasterNodeSize: c.Spec.MasterNodeSize,
 			DataNodeSize:   c.Spec.DataNodeSize,
+			Zones:          c.Spec.Zones,
 		},
 	}
 
 	p.k8sclient.CreateDiscoveryService()
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
+
+	// Create Storage Classes
+	for _, sc := range cluster.Spec.Zones {
+		p.k8sclient.CreateStorageClass(sc)
+	}
+
 	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeSize)
 	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeSize)
-	p.k8sclient.CreateDataNodeDeployment(&cluster.Spec.DataNodeSize, p.baseImage)
+
+	var dataReplicas = cluster.Spec.DataNodeSize
+	var zonesCount = len(cluster.Spec.Zones) - 1
+	// const totalZones = 3
+	var zoneDistribution [3]int32
+
+	// for dataReplicas != 0 {
+	// 	zoneDistribution[zonesCount] = zoneDistribution[zonesCount] + 1
+	// 	if zonesCount == 0 {
+	// 		zonesCount = len(cluster.Spec.Zones) - 1
+	// 	} else {
+	// 		zonesCount = zonesCount - 1
+	// 	}
+	// 	dataReplicas = dataReplicas - 1
+	// }
+
+	index := 0
+	for i := 0; i < dataReplicas; i++ {
+		if index > zonesCount {
+			index = 0
+		}
+
+		zoneDistribution[index]++
+		index++
+	}
+
+	for index, count := range zoneDistribution {
+		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, cluster.Spec.Zones[index])
+	}
 
 	return nil
 }
