@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2016, UPMC Enterprises
+Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -91,13 +91,15 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 
 	cluster := &spec.ElasticSearchCluster{
 		Spec: spec.ClusterSpec{
-			ClientNodeSize: c.Spec.ClientNodeSize,
-			MasterNodeSize: c.Spec.MasterNodeSize,
-			DataNodeSize:   c.Spec.DataNodeSize,
-			Zones:          c.Spec.Zones,
+			ClientNodeReplicas: c.Spec.ClientNodeReplicas,
+			MasterNodeReplicas: c.Spec.MasterNodeReplicas,
+			DataNodeReplicas:   c.Spec.DataNodeReplicas,
+			Zones:              c.Spec.Zones,
+			DataDiskSize:       c.Spec.DataDiskSize,
 		},
 	}
 
+	// Create Services
 	p.k8sclient.CreateDiscoveryService()
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
@@ -107,36 +109,13 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 		p.k8sclient.CreateStorageClass(sc)
 	}
 
-	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeSize)
-	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeSize)
+	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeReplicas)
+	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeReplicas)
 
-	var dataReplicas = cluster.Spec.DataNodeSize
-	var zonesCount = len(cluster.Spec.Zones) - 1
-	// const totalZones = 3
-	var zoneDistribution [3]int32
-
-	// for dataReplicas != 0 {
-	// 	zoneDistribution[zonesCount] = zoneDistribution[zonesCount] + 1
-	// 	if zonesCount == 0 {
-	// 		zonesCount = len(cluster.Spec.Zones) - 1
-	// 	} else {
-	// 		zonesCount = zonesCount - 1
-	// 	}
-	// 	dataReplicas = dataReplicas - 1
-	// }
-
-	index := 0
-	for i := 0; i < dataReplicas; i++ {
-		if index > zonesCount {
-			index = 0
-		}
-
-		zoneDistribution[index]++
-		index++
-	}
+	zoneDistribution := p.calculateZoneDistribution(cluster.Spec.DataNodeReplicas, len(cluster.Spec.Zones))
 
 	for index, count := range zoneDistribution {
-		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, cluster.Spec.Zones[index])
+		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, cluster.Spec.Zones[index], c.Spec.DataDiskSize)
 	}
 
 	return nil
@@ -145,4 +124,24 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
 	logrus.Println("--------> ES Deleted!!")
 	return nil
+}
+
+func (p *Processor) calculateZoneDistribution(dataReplicas, zonesCount int) []int32 {
+	if zonesCount == 0 {
+		zonesCount = 1
+	}
+
+	zoneDistribution := make([]int32, zonesCount)
+
+	index := 0
+	for i := 0; i < dataReplicas; i++ {
+		if index >= zonesCount {
+			index = 0
+		}
+
+		zoneDistribution[index]++
+		index++
+	}
+
+	return zoneDistribution
 }

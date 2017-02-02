@@ -18,7 +18,7 @@ push:
 	docker push $(PREFIX)/elasticsearch-controller:$(TAG)
 
 clean:
-	rm -f _output
+	rm -f elasticsearch-controller
 
 test: clean
 	godep go test -v --vmodule=*=4

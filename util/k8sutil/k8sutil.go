@@ -34,6 +34,10 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
+	appsType "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
+	coreType "k8s.io/client-go/kubernetes/typed/core/v1"
+	extensionsType "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	storageType "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
@@ -67,9 +71,18 @@ const (
 	awsStorageClassProvisioner = "kubernetes.io/aws-ebs"
 )
 
+// KubeInterface abstracts the kubernetes client
+type KubeInterface interface {
+	Services(namespace string) coreType.ServiceInterface
+	ThirdPartyResources() extensionsType.ThirdPartyResourceInterface
+	Deployments(namespace string) extensionsType.DeploymentInterface
+	StatefulSets(namespace string) appsType.StatefulSetInterface
+	StorageClasses() storageType.StorageClassInterface
+}
+
 // K8sutil defines the kube object
 type K8sutil struct {
-	Kclient    *kubernetes.Clientset
+	Kclient    KubeInterface
 	MasterHost string
 }
 
@@ -98,11 +111,12 @@ type ElasticSearchCluster struct {
 
 // ElasticSearchSpec represents the custom data of the object
 type ElasticSearchSpec struct {
-	ClusterName    string   `json: "cluster-name"`
-	ClientNodeSize int32    `json:"client-node-size"`
-	MasterNodeSize int32    `json:"master-node-size"`
-	DataNodeSize   int      `json:"data-node-size"`
-	Zones          []string `json:"zones"`
+	ClusterName        string   `json: "clustername"`
+	ClientNodeReplicas int32    `json:"client-node-replicas"`
+	MasterNodeReplicas int32    `json:"master-node-replicas"`
+	DataNodeReplicas   int      `json:"data-node-replicas"`
+	Zones              []string `json:"zones"`
+	DataDiskSize       string   `json:"data-volume-size"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
@@ -124,6 +138,24 @@ type ElasticSearch struct {
 
 // New creates a new instance of k8sutil
 func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
+
+	client, err := newKubeClient(kubeCfgFile)
+
+	if err != nil {
+		logrus.Fatalf("Could not init Kubernetes client! [%s]", err)
+	}
+
+	k := &K8sutil{
+		Kclient:    client,
+		MasterHost: masterHost,
+	}
+
+	return k, nil
+
+}
+
+func newKubeClient(kubeCfgFile string) (KubeInterface, error) {
+
 	var client *kubernetes.Clientset
 	// Should we use in cluster or out of cluster config
 	if len(kubeCfgFile) == 0 {
@@ -155,13 +187,7 @@ func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 		}
 	}
 
-	k := &K8sutil{
-		Kclient:    client,
-		MasterHost: masterHost,
-	}
-
-	return k, nil
-
+	return client, nil
 }
 
 // GetElasticSearchClusters returns a list of custom clusters defined
@@ -550,7 +576,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string) error {
 
 	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
 
@@ -558,9 +584,9 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(statefulSetName)
 
 	if len(statefulSet.Name) == 0 {
-		volumeSize, _ := resource.ParseQuantity("100Gi")
+		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
 
-		logrus.Infof("%s not found, creating...", statefulSetName)
+		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
 		statefulSet := &apps.StatefulSet{
 			ObjectMeta: v1.ObjectMeta{

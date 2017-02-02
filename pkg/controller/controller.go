@@ -78,10 +78,11 @@ func (c *Controller) Run() error {
 		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
 		c.clusters[cluster.Metadata["name"]] = &spec.ElasticSearchCluster{
 			Spec: spec.ClusterSpec{
-				ClientNodeSize: cluster.Spec.ClientNodeSize,
-				MasterNodeSize: cluster.Spec.MasterNodeSize,
-				DataNodeSize:   cluster.Spec.DataNodeSize,
-				Zones:          cluster.Spec.Zones,
+				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
+				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
+				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
+				Zones:              cluster.Spec.Zones,
+				DataDiskSize:       cluster.Spec.DataDiskSize,
 			},
 		}
 		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))

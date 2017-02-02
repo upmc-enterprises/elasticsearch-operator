@@ -39,13 +39,13 @@ type ElasticSearchCluster struct {
 // ClusterSpec defines cluster options
 type ClusterSpec struct {
 	// ClientNodeSize defines how many client nodes to have in cluster
-	ClientNodeSize int32 `json:"client-node-size"`
+	ClientNodeReplicas int32 `json:"client-node-replicas"`
 
 	// MasterNodeSize defines how many client nodes to have in cluster
-	MasterNodeSize int32 `json:"master-node-size"`
+	MasterNodeReplicas int32 `json:"master-node-replicas"`
 
 	// DataNodeSize defines how many client nodes to have in cluster
-	DataNodeSize int `json:"data-node-size"`
+	DataNodeReplicas int `json:"data-node-replicas"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
 	// to run on a node, the node must have each of the indicated key-value pairs as
@@ -55,4 +55,8 @@ type ClusterSpec struct {
 	// Zones specifies a map of key-value pairs. Defines which zones
 	// to deploy persistent volumes for data nodes
 	Zones []string `json:"zones,omitempty"`
+
+	// DataDiskSize specifies how large the persistent volume should be attached
+	// to the data nodes in the ES cluster
+	DataDiskSize string `json:"data-volume-size`
 }
