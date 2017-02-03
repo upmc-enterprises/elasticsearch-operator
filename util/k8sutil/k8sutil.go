@@ -78,6 +78,7 @@ type KubeInterface interface {
 	Deployments(namespace string) extensionsType.DeploymentInterface
 	StatefulSets(namespace string) appsType.StatefulSetInterface
 	StorageClasses() storageType.StorageClassInterface
+	ReplicaSets(namespace string) extensionsType.ReplicaSetInterface
 }
 
 // K8sutil defines the kube object
@@ -422,6 +423,97 @@ func (k *K8sutil) CreateClientService() error {
 	} else if err != nil {
 		logrus.Error("Could not get client service! ", err)
 		return err
+	}
+
+	return nil
+}
+
+// DeleteClientMasterDeployment deletes the client or master deployment
+func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
+
+	labelSelector := ""
+
+	if deploymentType == "client" {
+		labelSelector = "component=elasticsearch,role=client"
+	} else if deploymentType == "master" {
+		labelSelector = "component=elasticsearch,role=master"
+	}
+
+	// Get list of deployments
+	deployments, err := k.Kclient.Deployments(namespace).List(v1.ListOptions{LabelSelector: labelSelector})
+
+	if err != nil {
+		logrus.Error("Could not get deployments! ", err)
+	}
+
+	for _, deployment := range deployments.Items {
+		//Scale the deployment down to zero (https://github.com/kubernetes/client-go/issues/91)
+		deployment.Spec.Replicas = new(int32)
+		deployment, err := k.Kclient.Deployments(namespace).Update(&deployment)
+
+		if err != nil {
+			logrus.Errorf("Could not scale deployment: %s ", deployment.Name)
+		} else {
+			logrus.Infof("Scaled deployment: %s to zero", deployment.Name)
+		}
+
+		err = k.Kclient.Deployments(namespace).Delete(deployment.Name, &v1.DeleteOptions{})
+
+		if err != nil {
+			logrus.Errorf("Could not delete deployments: %s ", deployment.Name)
+		} else {
+			logrus.Infof("Deleted deployment: %s", deployment.Name)
+		}
+	}
+
+	// Get list of ReplicaSets
+	replicaSets, err := k.Kclient.ReplicaSets(namespace).List(v1.ListOptions{LabelSelector: labelSelector})
+
+	if err != nil {
+		logrus.Error("Could not get replica sets! ", err)
+	}
+
+	for _, replicaSet := range replicaSets.Items {
+		err := k.Kclient.ReplicaSets(namespace).Delete(replicaSet.Name, &v1.DeleteOptions{})
+
+		if err != nil {
+			logrus.Errorf("Could not delete replica sets: %s ", replicaSet.Name)
+		} else {
+			logrus.Infof("Deleted replica set: %s", replicaSet.Name)
+		}
+	}
+
+	return nil
+}
+
+// DeleteStatefulSet deletes the data statefulset
+func (k *K8sutil) DeleteStatefulSet() error {
+
+	// Get list of deployments
+	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch,role=data"})
+
+	if err != nil {
+		logrus.Error("Could not get stateful sets! ", err)
+	}
+
+	for _, statefulset := range statefulsets.Items {
+		//Scale the deployment down to zero (https://github.com/kubernetes/client-go/issues/91)
+		statefulset.Spec.Replicas = new(int32)
+		statefulset, err := k.Kclient.StatefulSets(namespace).Update(&statefulset)
+
+		if err != nil {
+			logrus.Errorf("Could not scale statefulset: %s ", statefulset.Name)
+		} else {
+			logrus.Infof("Scaled statefulset: %s to zero", statefulset.Name)
+		}
+
+		err = k.Kclient.StatefulSets(namespace).Delete(statefulset.Name, &v1.DeleteOptions{})
+
+		if err != nil {
+			logrus.Errorf("Could not delete statefulset: %s ", statefulset.Name)
+		} else {
+			logrus.Infof("Deleted statefulset: %s", statefulset.Name)
+		}
 	}
 
 	return nil

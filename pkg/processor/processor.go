@@ -87,7 +87,7 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 }
 
 func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
-	logrus.Println("--------> ES Event!")
+	logrus.Println("--------> ElasticSearch Event!")
 
 	cluster := &spec.ElasticSearchCluster{
 		Spec: spec.ClusterSpec{
@@ -122,7 +122,23 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 }
 
 func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
-	logrus.Println("--------> ES Deleted!!")
+	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
+
+	err := p.k8sclient.DeleteClientMasterDeployment("client")
+	if err != nil {
+		logrus.Error("Could not delete client deployment:", err)
+	}
+
+	err = p.k8sclient.DeleteClientMasterDeployment("master")
+	if err != nil {
+		logrus.Error("Could not delete master deployment:", err)
+	}
+
+	err = p.k8sclient.DeleteStatefulSet()
+	if err != nil {
+		logrus.Error("Could not delete stateful set:", err)
+	}
+
 	return nil
 }
 
