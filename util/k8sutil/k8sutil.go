@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -118,6 +119,7 @@ type ElasticSearchSpec struct {
 	DataNodeReplicas   int      `json:"data-node-replicas"`
 	Zones              []string `json:"zones"`
 	DataDiskSize       string   `json:"data-volume-size"`
+	ElasticSearchImage string   `json:"elastic-search-image"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
@@ -152,12 +154,12 @@ func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 	}
 
 	return k, nil
-
 }
 
 func newKubeClient(kubeCfgFile string) (KubeInterface, error) {
 
 	var client *kubernetes.Clientset
+
 	// Should we use in cluster or out of cluster config
 	if len(kubeCfgFile) == 0 {
 		logrus.Info("Using InCluster k8s config")
@@ -196,7 +198,12 @@ func (k *K8sutil) GetElasticSearchClusters() ([]ElasticSearchCluster, error) {
 	var resp *http.Response
 	var err error
 	for {
-		resp, err = http.Get(k.MasterHost + elasticSearchEndpoint)
+		// TODO: Ignore TLS certs..bad bad bad...
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client := &http.Client{Transport: tr}
+		resp, err = client.Get(k.MasterHost + elasticSearchEndpoint)
 		if err != nil {
 			logrus.Error(err)
 			time.Sleep(5 * time.Second)
@@ -227,7 +234,12 @@ func (k *K8sutil) MonitorElasticSearchEvents() (<-chan ElasticSearchEvent, <-cha
 	errc := make(chan error, 1)
 	go func() {
 		for {
-			resp, err := http.Get(k.MasterHost + elasticSearchWatchEndpoint)
+			// TODO: Ignore TLS certs..bad bad bad...
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			client := &http.Client{Transport: tr}
+			resp, err := client.Get(k.MasterHost + elasticSearchWatchEndpoint)
 			if err != nil {
 				errc <- err
 				time.Sleep(5 * time.Second)
@@ -282,6 +294,33 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 	}
 
 	return nil
+}
+
+// DeleteServices creates the discovery service
+func (k *K8sutil) DeleteServices() {
+
+	// Get services to delete
+	err := k.Kclient.Services(namespace).Delete(discoveryServiceName, &v1.DeleteOptions{})
+	if err != nil {
+		logrus.Error("Could not delete service "+discoveryServiceName+":", err)
+	} else {
+		logrus.Infof("Delete service: %s", discoveryServiceName)
+	}
+
+	err = k.Kclient.Services(namespace).Delete(dataServiceName, &v1.DeleteOptions{})
+	if err != nil {
+		logrus.Error("Could not delete service "+dataServiceName+":", err)
+	} else {
+		logrus.Infof("Delete service: %s", dataServiceName)
+	}
+
+	err = k.Kclient.Services(namespace).Delete(clientServiceName, &v1.DeleteOptions{})
+	if err != nil {
+		logrus.Error("Could not delete service "+clientServiceName+":", err)
+	} else {
+		logrus.Infof("Delete service: %s", clientServiceName)
+	}
+
 }
 
 // CreateDiscoveryService creates the discovery service
@@ -659,9 +698,22 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 			logrus.Error("Could not create client deployment: ", err)
 			return err
 		}
-	} else if err != nil {
-		logrus.Error("Could not get client deployment! ", err)
-		return err
+	} else {
+		if err != nil {
+			logrus.Error("Could not get client deployment! ", err)
+			return err
+		}
+
+		//scale replicas?
+		if deployment.Spec.Replicas != replicas {
+			deployment.Spec.Replicas = replicas
+
+			_, err := k.Kclient.Deployments(namespace).Update(deployment)
+
+			if err != nil {
+				logrus.Error("Could not scale deployment: ", err)
+			}
+		}
 	}
 
 	return nil
@@ -803,16 +855,23 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 			logrus.Error("Could not create data stateful set: ", err)
 			return err
 		}
-	} else if err != nil {
-		logrus.Error("Could not get data stateful set! ", err)
-		return err
+	} else {
+		if err != nil {
+			logrus.Error("Could not get data stateful set! ", err)
+			return err
+		}
+
+		//scale replicas?
+		if statefulSet.Spec.Replicas != replicas {
+			statefulSet.Spec.Replicas = replicas
+
+			_, err := k.Kclient.StatefulSets(namespace).Update(statefulSet)
+
+			if err != nil {
+				logrus.Error("Could not scale statefulSet: ", err)
+			}
+		}
 	}
-
-	return nil
-}
-
-// CreatePeristentVolume creates a CreatePeristentVolume
-func (k *K8sutil) CreatePeristentVolume(zone string) error {
 
 	return nil
 }

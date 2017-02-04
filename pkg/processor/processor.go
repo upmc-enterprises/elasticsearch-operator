@@ -28,7 +28,6 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
@@ -79,6 +78,7 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 	defer processorLock.Unlock()
 	switch {
 	case c.Type == "ADDED":
+	case c.Type == "MODIFIED":
 		return p.processElasticSearchCluster(c.Object)
 	case c.Type == "DELETED":
 		return p.deleteElasticSearchCluster(c.Object)
@@ -89,15 +89,8 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
 	logrus.Println("--------> ElasticSearch Event!")
 
-	cluster := &spec.ElasticSearchCluster{
-		Spec: spec.ClusterSpec{
-			ClientNodeReplicas: c.Spec.ClientNodeReplicas,
-			MasterNodeReplicas: c.Spec.MasterNodeReplicas,
-			DataNodeReplicas:   c.Spec.DataNodeReplicas,
-			Zones:              c.Spec.Zones,
-			DataDiskSize:       c.Spec.DataDiskSize,
-		},
-	}
+	// Is a base image defined in the custom cluster?
+	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
 
 	// Create Services
 	p.k8sclient.CreateDiscoveryService()
@@ -105,17 +98,17 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	p.k8sclient.CreateClientService()
 
 	// Create Storage Classes
-	for _, sc := range cluster.Spec.Zones {
+	for _, sc := range c.Spec.Zones {
 		p.k8sclient.CreateStorageClass(sc)
 	}
 
-	p.k8sclient.CreateClientMasterDeployment("client", p.baseImage, &cluster.Spec.ClientNodeReplicas)
-	p.k8sclient.CreateClientMasterDeployment("master", p.baseImage, &cluster.Spec.MasterNodeReplicas)
+	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas)
+	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas)
 
-	zoneDistribution := p.calculateZoneDistribution(cluster.Spec.DataNodeReplicas, len(cluster.Spec.Zones))
+	zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, len(c.Spec.Zones))
 
 	for index, count := range zoneDistribution {
-		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, cluster.Spec.Zones[index], c.Spec.DataDiskSize)
+		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize)
 	}
 
 	return nil
@@ -139,6 +132,9 @@ func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) e
 		logrus.Error("Could not delete stateful set:", err)
 	}
 
+	p.k8sclient.DeleteServices()
+
+	// Leave PV + PVC's for now?
 	return nil
 }
 
@@ -160,4 +156,12 @@ func (p *Processor) calculateZoneDistribution(dataReplicas, zonesCount int) []in
 	}
 
 	return zoneDistribution
+}
+
+func (p *Processor) calcBaseImage(baseImage, customImage string) string {
+	if len(customImage) > 0 {
+		baseImage = customImage
+	}
+
+	return baseImage
 }

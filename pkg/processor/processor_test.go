@@ -26,6 +26,28 @@ package processor
 
 import "testing"
 
+func TestBaseImage(t *testing.T) {
+	expectedImage := "foo/image"
+	p, _ := New(nil, expectedImage)
+
+	if p.baseImage != expectedImage {
+		t.Error("Expected "+expectedImage+", got ", p.baseImage)
+	}
+
+}
+
+func TestCustomImage(t *testing.T) {
+	expectedImage := "custom/image:tag"
+	p, _ := New(nil, "foo/image")
+
+	p.baseImage = p.calcBaseImage(p.baseImage, expectedImage)
+
+	if p.baseImage != expectedImage {
+		t.Error("Expected "+expectedImage+", got ", p.baseImage)
+	}
+
+}
+
 func TestZones1(t *testing.T) {
 	processor, _ := New(nil, "foo/image")
 

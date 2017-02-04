@@ -1,0 +1,14 @@
+{
+  "apiVersion": "enterprises.upmc.com/v1",
+  "kind": "ElasticsearchCluster",
+  "metadata": {
+    "name": "example-es-cluster"
+  },
+  "spec": {
+  "client-node-replicas": 1,
+  "master-node-replicas": 1,
+  "data-node-replicas": 3,
+  "zones": [ "us-east-1c" , "us-east-1d", "us-east-1e" ],
+  "data-volume-size": "10Gi"
+  }
+}

@@ -83,6 +83,7 @@ func (c *Controller) Run() error {
 				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
 				Zones:              cluster.Spec.Zones,
 				DataDiskSize:       cluster.Spec.DataDiskSize,
+				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
 			},
 		}
 		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))
