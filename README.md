@@ -1,5 +1,7 @@
 # elasticsearch operator
 
+[![Build Status](https://travis-ci.org/upmc-enterprises/elasticsearch-operator.svg?branch=master)](https://travis-ci.org/upmc-enterprises/elasticsearch-operator)
+
 ### Create certs secret
 
 ```
