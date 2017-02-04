@@ -9,4 +9,5 @@ services:
   - docker
 
 script:
+- make test
 - make build

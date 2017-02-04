@@ -21,4 +21,4 @@ clean:
 	rm -f elasticsearch-controller
 
 test: clean
-	godep go test -v --vmodule=*=4
+	go test $$(go list ./... | grep -v /vendor/)
