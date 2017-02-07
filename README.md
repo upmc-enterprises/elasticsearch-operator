@@ -12,7 +12,7 @@ The operator was built and tested on a 1.5.X Kubernetes cluster and is the only 
 
 ## Cloud
 
-The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshots / restores to the  elastic cluster. 
+The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshots / restores to the  elastic cluster. The goal of this prooject is to extend to support additional clouds and scenarios to make it fully featured. 
 
 # Usage
 
@@ -51,13 +51,16 @@ $ kubectl create -f example/controller.yaml
 
 # Create Example ElasticSearch Cluster
 
-To create a sample cluster, 
+```bash
+$ kubectl create -f example/example-es-cluster.json
+```
+_NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
 
 # Resize ElasticSearch Cluster
 
 `kubectl apply` doesn't work for TPR for the moment. See [kubernetes/#29542](https://github.com/kubernetes/kubernetes/issues/29542). As a workaround, we use curl to resize the cluster.
 
-First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: I'm accessing the API service in this example via `kubectl proxy`._ 
+First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: The API is acesssed the API service in this example via [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/)._ 
 
 ```bash
 curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:9005/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
