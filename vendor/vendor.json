@@ -261,6 +261,12 @@
 			"revisionTime": "2017-02-01T03:06:46Z"
 		},
 		{
+			"checksumSHA1": "PphQA6j/DEDbg3WIsdBDYALOOYs=",
+			"path": "github.com/robfig/cron",
+			"revision": "9585fd555638e77bba25f25db5c44b41f264aeb7",
+			"revisionTime": "2016-09-27T16:42:31Z"
+		},
+		{
 			"checksumSHA1": "GxPD7A0NjMDom1xte0mghkpzr0E=",
 			"origin": "k8s.io/client-go/vendor/github.com/spf13/pflag",
 			"path": "github.com/spf13/pflag",

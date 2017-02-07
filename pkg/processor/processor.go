@@ -28,6 +28,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
@@ -85,7 +86,7 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 	return nil
 }
 
-func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
+func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) error {
 	logrus.Println("--------> ElasticSearch Event!")
 
 	// Is a base image defined in the custom cluster?
@@ -116,7 +117,7 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 			p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize)
 		}
 	} else {
-		// No zones defined, rely on current provisioning logic which may break. Other strat to use emptyDir?
+		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		p.k8sclient.CreateStorageClass("es-default")
 		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "es-default", c.Spec.DataDiskSize)
@@ -125,7 +126,7 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	return nil
 }
 
-func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) error {
+func (p *Processor) deleteElasticSearchCluster(c myspec.ElasticSearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
 	err := p.k8sclient.DeleteClientMasterDeployment("client")

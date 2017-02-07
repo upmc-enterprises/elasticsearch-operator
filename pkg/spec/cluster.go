@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2016, UPMC Enterprises
+Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -24,16 +24,12 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 
 package spec
 
-import (
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-)
-
 // ElasticSearchCluster defines the cluster
 type ElasticSearchCluster struct {
-	unversioned.TypeMeta `json:",inline"`
-	api.ObjectMeta       `json:"metadata,omitempty"`
-	Spec                 ClusterSpec `json:"spec"`
+	APIVersion string            `json:"apiVersion"`
+	Kind       string            `json:"kind"`
+	Metadata   map[string]string `json:"metadata"`
+	Spec       ClusterSpec       `json:"spec"`
 }
 
 // ClusterSpec defines cluster options
@@ -62,4 +58,20 @@ type ClusterSpec struct {
 
 	// DataDiskSize specifies the docker image to use (optional)
 	ElasticSearchImage string `json:"elastic-search-image"`
+
+	// Snapshot defines how snapshots are scheduled
+	Snapshot Snapshot `json:"snapshot"`
+}
+
+// Snapshot defines all params to create / store snapshots
+type Snapshot struct {
+	// Enabled determines if snapshots are enabled
+	SchedulerEnabled bool `json:"scheduler-enabled"`
+
+	// BucketName defines the AWS S3 bucket to store snapshots
+	BucketName string `json:"bucket-name"`
+
+	// CronSchedule defines how to run the snapshots
+	// SEE: https://godoc.org/github.com/robfig/cron
+	CronSchedule string `json:"cron-schedule"`
 }

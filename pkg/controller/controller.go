@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2016, UPMC Enterprises
+Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -26,6 +26,7 @@ package controller
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
@@ -56,7 +57,7 @@ func New(name, ns string, k8sclient *k8sutil.K8sutil) (*Controller, error) {
 	return c, nil
 }
 
-// Run get's the party started
+// Run gets the party started
 func (c *Controller) Run() error {
 
 	// Init TPR
@@ -76,6 +77,7 @@ func (c *Controller) Run() error {
 
 	for _, cluster := range currentClusters {
 		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
+
 		c.clusters[cluster.Metadata["name"]] = &spec.ElasticSearchCluster{
 			Spec: spec.ClusterSpec{
 				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
@@ -84,9 +86,21 @@ func (c *Controller) Run() error {
 				Zones:              cluster.Spec.Zones,
 				DataDiskSize:       cluster.Spec.DataDiskSize,
 				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
+				Snapshot: spec.Snapshot{
+					SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
+					BucketName:       cluster.Spec.Snapshot.BucketName,
+					CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
+				},
 			},
 		}
 		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))
+
+		// Setup CronSchedule
+		s, _ := snapshot.New(
+			cluster.Spec.Snapshot.BucketName,
+			cluster.Spec.Snapshot.CronSchedule,
+			cluster.Spec.Snapshot.SchedulerEnabled)
+		s.Run()
 	}
 
 	logrus.Infof("Found %d existing clusters ", len(c.clusters))

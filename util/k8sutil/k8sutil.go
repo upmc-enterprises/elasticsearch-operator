@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2016, UPMC Enterprises
+Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"k8s.io/client-go/kubernetes"
 	appsType "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
 	coreType "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -99,44 +100,16 @@ type ThirdPartyResource struct {
 
 // ElasticSearchEvent stores when a ES needs created
 type ElasticSearchEvent struct {
-	Type   string               `json:"type"`
-	Object ElasticSearchCluster `json:"object"`
-}
-
-// ElasticSearchCluster represents a custom ES object
-type ElasticSearchCluster struct {
-	APIVersion string            `json:"apiVersion"`
-	Kind       string            `json:"kind"`
-	Metadata   map[string]string `json:"metadata"`
-	Spec       ElasticSearchSpec `json:"spec"`
-}
-
-// ElasticSearchSpec represents the custom data of the object
-type ElasticSearchSpec struct {
-	ClusterName        string   `json: "clustername"`
-	ClientNodeReplicas int32    `json:"client-node-replicas"`
-	MasterNodeReplicas int32    `json:"master-node-replicas"`
-	DataNodeReplicas   int      `json:"data-node-replicas"`
-	Zones              []string `json:"zones"`
-	DataDiskSize       string   `json:"data-volume-size"`
-	ElasticSearchImage string   `json:"elastic-search-image"`
+	Type   string                      `json:"type"`
+	Object myspec.ElasticSearchCluster `json:"object"`
 }
 
 // ElasticSearchList represents a list of ES Clusters
 type ElasticSearchList struct {
-	APIVersion string                 `json:"apiVersion"`
-	Kind       string                 `json:"kind"`
-	Metadata   map[string]string      `json:"metadata"`
-	Items      []ElasticSearchCluster `json:"items"`
-}
-
-// ElasticSearch represents a Kubernetes ES type
-type ElasticSearch struct {
-	Kind       string            `json:"kind"`
-	APIVersion string            `json:"apiVersion"`
-	Metadata   map[string]string `json:"metadata"`
-	Data       map[string]string `json:"data"`
-	Type       string            `json:"type"`
+	APIVersion string                        `json:"apiVersion"`
+	Kind       string                        `json:"kind"`
+	Metadata   map[string]string             `json:"metadata"`
+	Items      []myspec.ElasticSearchCluster `json:"items"`
 }
 
 // New creates a new instance of k8sutil
@@ -194,7 +167,7 @@ func newKubeClient(kubeCfgFile string) (KubeInterface, error) {
 }
 
 // GetElasticSearchClusters returns a list of custom clusters defined
-func (k *K8sutil) GetElasticSearchClusters() ([]ElasticSearchCluster, error) {
+func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticSearchCluster, error) {
 	var resp *http.Response
 	var err error
 	for {

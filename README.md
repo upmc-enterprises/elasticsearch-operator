@@ -66,5 +66,46 @@ First update the default example configuration, then send a `PUT` request to the
 curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:9005/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
 ```
 
+# Snapshot
+
+Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 as the backup respository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) which enables this feature in AWS. 
+
+## AWS Setup
+
+To enable the snapshots create a bucket in S3, then apply the following IAM permissions to your EC2 instances replacing `{!YOUR_BUCKET!}` with the correct bucket name. 
+
+```
+{
+    "Statement": [
+        {
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:ListBucketMultipartUploads",
+                "s3:ListBucketVersions"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::{!YOUR_BUCKET!}"
+            ]
+        },
+        {
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:AbortMultipartUpload",
+                "s3:ListMultipartUploadParts"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::{!YOUR_BUCKET!}/*"
+            ]
+        }
+    ],
+    "Version": "2012-10-17"
+}
+```
+
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/
