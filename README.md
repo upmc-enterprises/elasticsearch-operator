@@ -43,19 +43,24 @@ _NOTE: If no image is specified, the default noted previously is used._
 
 # Deploy Operator
 
+To deploy the operator simply deploy to your cluster:
 
+```bash
+$ kubectl create -f example/controller.yaml
+```
 
 # Create Example ElasticSearch Cluster
 
+To create a sample cluster, 
 
 # Resize ElasticSearch Cluster
 
 `kubectl apply` doesn't work for TPR for the moment. See [kubernetes/#29542](https://github.com/kubernetes/kubernetes/issues/29542). As a workaround, we use curl to resize the cluster.
 
-First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: I'm accessing the API service in this example via `kubectl proxy --port 9005`._ 
+First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: I'm accessing the API service in this example via `kubectl proxy`._ 
 
 ```bash
-curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:8001/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
+curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:9005/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
 ```
 
 # About

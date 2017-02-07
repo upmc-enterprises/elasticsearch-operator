@@ -77,8 +77,7 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 	processorLock.Lock()
 	defer processorLock.Unlock()
 	switch {
-	case c.Type == "ADDED":
-	case c.Type == "MODIFIED":
+	case c.Type == "ADDED" || c.Type == "MODIFIED":
 		return p.processElasticSearchCluster(c.Object)
 	case c.Type == "DELETED":
 		return p.deleteElasticSearchCluster(c.Object)
@@ -92,23 +91,35 @@ func (p *Processor) processElasticSearchCluster(c k8sutil.ElasticSearchCluster) 
 	// Is a base image defined in the custom cluster?
 	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
 
+	logrus.Infof("Using [%s] as image for es cluster", baseImage)
+
 	// Create Services
 	p.k8sclient.CreateDiscoveryService()
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
 
-	// Create Storage Classes
-	for _, sc := range c.Spec.Zones {
-		p.k8sclient.CreateStorageClass(sc)
-	}
-
 	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas)
 	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas)
 
-	zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, len(c.Spec.Zones))
+	zoneCount := 0
+	if len(c.Spec.Zones) != 0 {
+		zoneCount = len(c.Spec.Zones)
 
-	for index, count := range zoneDistribution {
-		p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize)
+		// Create Storage Classes
+		for _, sc := range c.Spec.Zones {
+			p.k8sclient.CreateStorageClass(sc)
+		}
+
+		zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
+
+		for index, count := range zoneDistribution {
+			p.k8sclient.CreateDataNodeDeployment(&count, p.baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize)
+		}
+	} else {
+		// No zones defined, rely on current provisioning logic which may break. Other strat to use emptyDir?
+		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
+		p.k8sclient.CreateStorageClass("es-default")
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "es-default", c.Spec.DataDiskSize)
 	}
 
 	return nil
@@ -133,6 +144,7 @@ func (p *Processor) deleteElasticSearchCluster(c k8sutil.ElasticSearchCluster) e
 	}
 
 	p.k8sclient.DeleteServices()
+	p.k8sclient.DeleteStorageClasses()
 
 	// Leave PV + PVC's for now?
 	return nil

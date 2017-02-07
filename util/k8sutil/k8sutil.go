@@ -299,7 +299,6 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 // DeleteServices creates the discovery service
 func (k *K8sutil) DeleteServices() {
 
-	// Get services to delete
 	err := k.Kclient.Services(namespace).Delete(discoveryServiceName, &v1.DeleteOptions{})
 	if err != nil {
 		logrus.Error("Could not delete service "+discoveryServiceName+":", err)
@@ -896,8 +895,11 @@ func (k *K8sutil) CreateStorageClass(zone string) error {
 			Provisioner: awsStorageClassProvisioner,
 			Parameters: map[string]string{
 				"type": "gp2",
-				"zone": zone,
 			},
+		}
+
+		if zone != "es-default" {
+			class.Parameters["zone"] = zone
 		}
 
 		_, err := k.Kclient.StorageClasses().Create(class)
@@ -909,6 +911,19 @@ func (k *K8sutil) CreateStorageClass(zone string) error {
 	} else if err != nil {
 		logrus.Error("Could not get storage class! ", err)
 		return err
+	}
+
+	return nil
+}
+
+// DeleteStorageClasses removes storage classes tied to the operator
+func (k *K8sutil) DeleteStorageClasses() error {
+	err := k.Kclient.StorageClasses().DeleteCollection(&v1.DeleteOptions{}, v1.ListOptions{LabelSelector: "component=elasticsearch"})
+
+	if err != nil {
+		logrus.Error("Could not delete storageclasses: ", err)
+	} else {
+		logrus.Info("Deleted storageclasses")
 	}
 
 	return nil
