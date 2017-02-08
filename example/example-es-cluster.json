@@ -15,5 +15,9 @@
       "bucket-name": "elasticbackup99",
       "cron-schedule": "@every 2m"
     }
+  },
+  "storage": {
+    "type": "gp2",
+    "storage-class-provisioner": "kubernetes.io/aws-ebs"
   }
 }

@@ -108,7 +108,7 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 
 		// Create Storage Classes
 		for _, sc := range c.Spec.Zones {
-			p.k8sclient.CreateStorageClass(sc)
+			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
 		}
 
 		zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
@@ -119,7 +119,7 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
-		p.k8sclient.CreateStorageClass("es-default")
+		p.k8sclient.CreateStorageClass("es-default", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
 		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "es-default", c.Spec.DataDiskSize)
 	}
 

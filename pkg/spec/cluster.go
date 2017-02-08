@@ -61,6 +61,9 @@ type ClusterSpec struct {
 
 	// Snapshot defines how snapshots are scheduled
 	Snapshot Snapshot `json:"snapshot"`
+
+	// Storage defines how volumes are provisioned
+	Storage Storage `json:"storage"`
 }
 
 // Snapshot defines all params to create / store snapshots
@@ -74,4 +77,14 @@ type Snapshot struct {
 	// CronSchedule defines how to run the snapshots
 	// SEE: https://godoc.org/github.com/robfig/cron
 	CronSchedule string `json:"cron-schedule"`
+}
+
+// Storage defines how dynamic volumes are created
+// https://kubernetes.io/docs/user-guide/persistent-volumes/
+type Storage struct {
+	// StorageType is the type of storage to create
+	StorageType string `json:"type"`
+
+	// StorageClassProvisoner is the storage provisioner type
+	StorageClassProvisoner string `json:"storage-class-provisioner"`
 }

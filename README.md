@@ -8,15 +8,15 @@ The ElasticSearch operator is designed to manage one or more elastic search clus
 
 ## Kubernetes
 
-The operator was built and tested on a 1.5.X Kubernetes cluster and is the only version supported. This is because it is utilizing [`StatefulSets`](https://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/) which are not available in previous versions of Kubernetes. 
+The operator was built and tested on a 1.5.X Kubernetes cluster and is the only version supported currently. This is because it is utilizing [`StatefulSets`](https://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/) which are not available in previous versions of Kubernetes. 
 
 ## Cloud
 
-The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshots / restores to the  elastic cluster. The goal of this prooject is to extend to support additional clouds and scenarios to make it fully featured. 
+The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshots / restores to the  elastic cluster. The goal of this project is to extend to support additional clouds and scenarios to make it fully featured. 
 
 # Usage
 
-The operator is built using the controllers + third party resource model. Once the controller is deployed to your cluster, it will automatically create the ThirdPartyResource. Next create a Kubernetes object type `elasticsearchCluster` to deploy the elastic cluster based upon the TPR. 
+The operator is built using the controller + third party resource model. Once the controller is deployed to your cluster, it will automatically create the ThirdPartyResource. Next create a Kubernetes object type `elasticsearchCluster` to deploy the elastic cluster based upon the TPR. 
 
 ## ThirdPartyResource
 
@@ -27,6 +27,14 @@ Following parameters are available to customize the elastic cluster:
 - data-node-replicas: Number of data node replicas
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
+- [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
+  - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
+  - bucket-name: Name of S3 bucket to dump snaptshots
+  - cron-schedule: Cron task definition for intervals to do snapshots
+- storage
+  - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
+  - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
+
 
 ## Certs secret
 

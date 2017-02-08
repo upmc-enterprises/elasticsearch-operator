@@ -91,6 +91,10 @@ func (c *Controller) Run() error {
 					BucketName:       cluster.Spec.Snapshot.BucketName,
 					CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
 				},
+				Storage: spec.Storage{
+					StorageType:            cluster.Spec.Storage.StorageType,
+					StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
+				},
 			},
 		}
 		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))

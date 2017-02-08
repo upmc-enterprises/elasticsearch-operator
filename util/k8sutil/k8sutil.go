@@ -69,8 +69,7 @@ const (
 	masterDeploymentName = "es-master"
 	dataDeploymentName   = "es-data"
 
-	secretName                 = "es-certs"
-	awsStorageClassProvisioner = "kubernetes.io/aws-ebs"
+	secretName = "es-certs"
 )
 
 // KubeInterface abstracts the kubernetes client
@@ -850,7 +849,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 
 // CreateStorageClass creates a storage class
 // NOTE: Right now only creating AWS EBS volumes type gp2
-func (k *K8sutil) CreateStorageClass(zone string) error {
+func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string) error {
 
 	// Check if storage class exists
 	storageClass, err := k.Kclient.StorageClasses().Get(zone)
@@ -865,9 +864,9 @@ func (k *K8sutil) CreateStorageClass(zone string) error {
 					"component": "elasticsearch",
 				},
 			},
-			Provisioner: awsStorageClassProvisioner,
+			Provisioner: storageClassProvisioner,
 			Parameters: map[string]string{
-				"type": "gp2",
+				"type": storageType,
 			},
 		}
 
