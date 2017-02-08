@@ -123,5 +123,11 @@ To enable the snapshots create a bucket in S3, then apply the following IAM perm
 }
 ```
 
+# Access Cluster
+
+Once deployed and all pods are running, the cluster can be accessed internally via https://elasticsearch:9200/ or https://${ELASTICSEARCH_SERVICE_HOST}:9200/
+
+![alt text](docs/images/running-cluster.png "Running Cluster")
+
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/
