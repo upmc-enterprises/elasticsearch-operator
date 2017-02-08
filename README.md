@@ -70,6 +70,12 @@ curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-clust
 
 Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 as the backup respository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) which enables this feature in AWS. 
 
+## Schedule
+
+Snapshots can be scheduled via a Cron syntax by defining the cron schedule in your elastic cluster. See: [https://godoc.org/github.com/robfig/cron](https://godoc.org/github.com/robfig/cron)
+
+_NOTE: Be sure to enable the scheduler as well by setting `scheduler-enabled=true`_ 
+
 ## AWS Setup
 
 To enable the snapshots create a bucket in S3, then apply the following IAM permissions to your EC2 instances replacing `{!YOUR_BUCKET!}` with the correct bucket name. 

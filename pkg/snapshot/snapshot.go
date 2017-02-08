@@ -28,13 +28,15 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	cron "github.com/robfig/cron"
 )
 
-const (
-	elasticURL = "https://elasticsearch:9200/" // Internal service name of cluster
+var (
+	elasticURL = fmt.Sprintf("https://%s:9200/", os.Getenv("ELASTICSEARCH_SERVICE_HOST")) // Internal service name of cluster
 )
 
 // Snapshot stores info about how to snapshot the cluster
@@ -60,10 +62,12 @@ func (s *Snapshot) Run() {
 	logrus.Info("enabled: ", s.enabled)
 	if s.enabled {
 		logrus.Info("-----> Init scheduler")
-		s.CreateSnapshotRepository()
 
 		logrus.Infof("Cron is set to %s", s.cronSchedule)
-		s.cron.AddFunc(s.cronSchedule, func() { s.CreateSnapshot() })
+		s.cron.AddFunc(s.cronSchedule, func() {
+			s.CreateSnapshotRepository()
+			s.CreateSnapshot()
+		})
 		s.cron.Start()
 	} else {
 		logrus.Info("Scheduler is disabled, no snapshots will be scheduled")
@@ -71,28 +75,31 @@ func (s *Snapshot) Run() {
 }
 
 // CreateSnapshotRepository creates a repository to place snapshots
-func (s *Snapshot) CreateSnapshotRepository() error {
+func (s *Snapshot) CreateSnapshotRepository() {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s_snapshot/%s", elasticURL, s.s3bucketName), nil)
+	body := fmt.Sprintf("{ \"type\": \"s3\", \"settings\": { \"bucket\": \"%s\" } }", s.s3bucketName)
+	url := fmt.Sprintf("%s_snapshot/%s", elasticURL, s.s3bucketName)
+	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
 	resp, err := client.Do(req)
 
 	// Some other type of error?
 	if err != nil {
 		logrus.Error("Error attempting to create snapshot repository: ", err)
-		return err
+		return
 	}
 
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("Error creating snapshot repository [httpstatus: %d]", resp.StatusCode)
+		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s] %s", resp.StatusCode, url)
+		return
 	}
 
 	logrus.Infof("Created snapshot repository!")
 
-	return nil
+	return
 }
 
 // CreateSnapshot makes a snapshot of all indexes
@@ -103,7 +110,9 @@ func (s *Snapshot) CreateSnapshot() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s_snapshot/%s/snapshot_1", elasticURL, s.s3bucketName), nil)
+	url := fmt.Sprintf("%s_snapshot/%s/snapshot_1", elasticURL, s.s3bucketName)
+
+	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		logrus.Error("Error attempting to create snapshot: ", err)
 		return
@@ -119,7 +128,7 @@ func (s *Snapshot) CreateSnapshot() {
 
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		logrus.Errorf("Error creating snapshot [httpstatus %d]", resp.StatusCode)
+		logrus.Errorf("Error creating snapshot [httpstatus: %d][url: %s]", resp.StatusCode, url)
 		return
 	}
 
