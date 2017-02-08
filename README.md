@@ -12,7 +12,9 @@ The operator was built and tested on a 1.5.X Kubernetes cluster and is the only 
 
 ## Cloud
 
-The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshots / restores to the  elastic cluster. The goal of this project is to extend to support additional clouds and scenarios to make it fully featured. 
+The operator was also _currently_ designed to leverage [Amazon AWS S3](https://aws.amazon.com/s3/) for snapshot / restore to the  elastic cluster. The goal of this project is to extend to support additional clouds and scenarios to make it fully featured. 
+
+By swapping out the storage types, this can be used in GKE, but snapshots won't work at the moment. 
 
 # Usage
 
@@ -31,7 +33,7 @@ Following parameters are available to customize the elastic cluster:
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
   - bucket-name: Name of S3 bucket to dump snaptshots
   - cron-schedule: Cron task definition for intervals to do snapshots
-- storage
+- [storage](https://kubernetes.io/docs/user-guide/persistent-volumes/)
   - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
   - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
 
