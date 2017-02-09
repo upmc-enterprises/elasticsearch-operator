@@ -56,13 +56,13 @@ _NOTE: If no image is specified, the default noted previously is used._
 To deploy the operator simply deploy to your cluster:
 
 ```bash
-$ kubectl create -f example/controller.yaml
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/controller.yaml
 ```
 
 # Create Example ElasticSearch Cluster
 
 ```bash
-$ kubectl create -f example/example-es-cluster.json
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.json
 ```
 _NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
 
