@@ -84,6 +84,7 @@ func Main() int {
 
 	// Kick it off
 	controller.Run()
+	processor.Run()
 
 	// Watch for events that add, modify, or delete ElasticSearchCluster definitions andlog
 	// process them asynchronously.

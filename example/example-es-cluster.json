@@ -12,7 +12,7 @@
     "data-volume-size": "10Gi",
     "snapshot": {
       "scheduler-enabled": true,
-      "bucket-name": "elasticbackup99",
+      "bucket-name": "elasticsnapshots99",
       "cron-schedule": "@every 2m"
     },
     "storage": {

@@ -28,18 +28,22 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
 // processorLock ensures that reconciliation and event processing does
 // not happen at the same time.
-var processorLock = &sync.Mutex{}
+var (
+	processorLock = &sync.Mutex{}
+)
 
 // Processor object
 type Processor struct {
 	k8sclient *k8sutil.K8sutil
 	baseImage string
+	clusters  map[string]*myspec.ElasticSearchCluster
 }
 
 // New creates new instance of Processor
@@ -47,9 +51,19 @@ func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
 	p := &Processor{
 		k8sclient: kclient,
 		baseImage: baseImage,
+		clusters:  make(map[string]*myspec.ElasticSearchCluster),
 	}
 
 	return p, nil
+}
+
+// Run starts the processor
+func (p *Processor) Run() error {
+
+	p.refreshClusters()
+	logrus.Infof("Found %d existing clusters ", len(p.clusters))
+
+	return nil
 }
 
 // WatchElasticSearchClusterEvents watches for changes to tpr elasticsearch events
@@ -74,6 +88,50 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 	}()
 }
 
+func (p *Processor) refreshClusters() error {
+
+	//Reset
+	p.clusters = make(map[string]*myspec.ElasticSearchCluster)
+
+	// Get existing clusters
+	currentClusters, err := p.k8sclient.GetElasticSearchClusters()
+
+	if err != nil {
+		logrus.Error("Could not get list of clusters: ", err)
+		return err
+	}
+
+	for _, cluster := range currentClusters {
+		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
+
+		p.clusters[cluster.Metadata["name"]] = &myspec.ElasticSearchCluster{
+			Spec: myspec.ClusterSpec{
+				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
+				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
+				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
+				Zones:              cluster.Spec.Zones,
+				DataDiskSize:       cluster.Spec.DataDiskSize,
+				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
+				Snapshot: myspec.Snapshot{
+					SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
+					BucketName:       cluster.Spec.Snapshot.BucketName,
+					CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
+				},
+				Storage: myspec.Storage{
+					StorageType:            cluster.Spec.Storage.StorageType,
+					StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
+				},
+				Scheduler: snapshot.New(
+					cluster.Spec.Snapshot.BucketName,
+					cluster.Spec.Snapshot.CronSchedule,
+					cluster.Spec.Snapshot.SchedulerEnabled),
+			},
+		}
+	}
+
+	return nil
+}
+
 func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEvent) error {
 	processorLock.Lock()
 	defer processorLock.Unlock()
@@ -88,6 +146,9 @@ func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEven
 
 func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) error {
 	logrus.Println("--------> ElasticSearch Event!")
+
+	// Refresh
+	p.refreshClusters()
 
 	// Is a base image defined in the custom cluster?
 	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
@@ -122,6 +183,9 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 		p.k8sclient.CreateStorageClass("es-default", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
 		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "es-default", c.Spec.DataDiskSize)
 	}
+
+	// Setup CronSchedule
+	p.clusters[c.Metadata["name"]].Spec.Scheduler.Run()
 
 	return nil
 }

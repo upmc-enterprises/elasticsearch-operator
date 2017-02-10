@@ -24,6 +24,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 
 package spec
 
+import "github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
+
 // ElasticSearchCluster defines the cluster
 type ElasticSearchCluster struct {
 	APIVersion string            `json:"apiVersion"`
@@ -64,6 +66,8 @@ type ClusterSpec struct {
 
 	// Storage defines how volumes are provisioned
 	Storage Storage `json:"storage"`
+
+	Scheduler *snapshot.Scheduler
 }
 
 // Snapshot defines all params to create / store snapshots

@@ -26,8 +26,6 @@ package controller
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
 	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
@@ -40,7 +38,6 @@ type Config struct {
 // Controller object
 type Controller struct {
 	Config
-	clusters map[string]*spec.ElasticSearchCluster
 }
 
 // New up a Controller
@@ -51,7 +48,6 @@ func New(name, ns string, k8sclient *k8sutil.K8sutil) (*Controller, error) {
 			Namespace: ns,
 			k8sclient: k8sclient,
 		},
-		clusters: make(map[string]*spec.ElasticSearchCluster),
 	}
 
 	return c, nil
@@ -65,49 +61,8 @@ func (c *Controller) Run() error {
 
 	if err != nil {
 		logrus.Error("Error in init(): ", err)
-	}
-
-	// Get existing clusters
-	currentClusters, err := c.k8sclient.GetElasticSearchClusters()
-
-	if err != nil {
-		logrus.Error("Could not get list of clusters: ", err)
 		return err
 	}
-
-	for _, cluster := range currentClusters {
-		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
-
-		c.clusters[cluster.Metadata["name"]] = &spec.ElasticSearchCluster{
-			Spec: spec.ClusterSpec{
-				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
-				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
-				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
-				Zones:              cluster.Spec.Zones,
-				DataDiskSize:       cluster.Spec.DataDiskSize,
-				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
-				Snapshot: spec.Snapshot{
-					SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
-					BucketName:       cluster.Spec.Snapshot.BucketName,
-					CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
-				},
-				Storage: spec.Storage{
-					StorageType:            cluster.Spec.Storage.StorageType,
-					StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
-				},
-			},
-		}
-		logrus.Infof("Found %d zones ", len(cluster.Spec.Zones))
-
-		// Setup CronSchedule
-		s, _ := snapshot.New(
-			cluster.Spec.Snapshot.BucketName,
-			cluster.Spec.Snapshot.CronSchedule,
-			cluster.Spec.Snapshot.SchedulerEnabled)
-		s.Run()
-	}
-
-	logrus.Infof("Found %d existing clusters ", len(c.clusters))
 
 	return nil
 }
