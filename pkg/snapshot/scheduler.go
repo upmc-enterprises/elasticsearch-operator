@@ -28,7 +28,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -37,7 +36,9 @@ import (
 )
 
 var (
-	elasticURL = fmt.Sprintf("https://%s:9200/", os.Getenv("ELASTICSEARCH_SERVICE_HOST")) // Internal service name of cluster
+	// TODO: Right now defaulting to same namespace where controller is running, need to determine which
+	//       namespace each cluster is working in to find the instance of elastic
+	elasticURL = fmt.Sprintf("https://elasticsearch:9200") // Internal service name of cluster
 )
 
 // Scheduler stores info about how to snapshot the cluster
