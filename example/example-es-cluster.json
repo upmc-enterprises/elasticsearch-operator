@@ -5,19 +5,19 @@
     "name": "example-es-cluster"
   },
   "spec": {
-  "client-node-replicas": 3,
-  "master-node-replicas": 2,
-  "data-node-replicas": 3,
-  "zones": [ "us-east-1c" , "us-east-1d", "us-east-1e" ],
-  "data-volume-size": "10Gi",
-  "snapshot": {
+    "client-node-replicas": 3,
+    "master-node-replicas": 2,
+    "data-node-replicas": 3,
+    "zones": ["us-east-1c", "us-east-1d", "us-east-1e"],
+    "data-volume-size": "10Gi",
+    "snapshot": {
       "scheduler-enabled": true,
-      "bucket-name": "elasticbackup99",
+      "bucket-name": "elasticsnapshots99",
       "cron-schedule": "@every 2m"
+    },
+    "storage": {
+      "type": "gp2",
+      "storage-class-provisioner": "kubernetes.io/aws-ebs"
     }
-  },
-  "storage": {
-    "type": "gp2",
-    "storage-class-provisioner": "kubernetes.io/aws-ebs"
   }
 }

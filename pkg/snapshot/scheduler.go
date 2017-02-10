@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	cron "github.com/robfig/cron"
@@ -39,27 +40,26 @@ var (
 	elasticURL = fmt.Sprintf("https://%s:9200/", os.Getenv("ELASTICSEARCH_SERVICE_HOST")) // Internal service name of cluster
 )
 
-// Snapshot stores info about how to snapshot the cluster
-type Snapshot struct {
+// Scheduler stores info about how to snapshot the cluster
+type Scheduler struct {
 	s3bucketName string
 	cronSchedule string
 	enabled      bool
 	cron         *cron.Cron
 }
 
-// New creates an instance of Snapshot
-func New(bucketName, cronSchedule string, enabled bool) (*Snapshot, error) {
-	return &Snapshot{
+// New creates an instance of Scheduler
+func New(bucketName, cronSchedule string, enabled bool) *Scheduler {
+	return &Scheduler{
 		s3bucketName: bucketName,
 		cronSchedule: cronSchedule,
 		cron:         cron.New(),
 		enabled:      enabled,
-	}, nil
+	}
 }
 
 // Run starts the automated scheduler
-func (s *Snapshot) Run() {
-	logrus.Info("enabled: ", s.enabled)
+func (s *Scheduler) Run() {
 	if s.enabled {
 		logrus.Info("-----> Init scheduler")
 
@@ -75,7 +75,7 @@ func (s *Snapshot) Run() {
 }
 
 // CreateSnapshotRepository creates a repository to place snapshots
-func (s *Snapshot) CreateSnapshotRepository() {
+func (s *Scheduler) CreateSnapshotRepository() {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -93,7 +93,7 @@ func (s *Snapshot) CreateSnapshotRepository() {
 
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s] %s", resp.StatusCode, url)
+		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s]", resp.StatusCode, url)
 		return
 	}
 
@@ -103,14 +103,14 @@ func (s *Snapshot) CreateSnapshotRepository() {
 }
 
 // CreateSnapshot makes a snapshot of all indexes
-func (s *Snapshot) CreateSnapshot() {
+func (s *Scheduler) CreateSnapshot() {
 	logrus.Info("About to create snapshot...")
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("%s_snapshot/%s/snapshot_1", elasticURL, s.s3bucketName)
+	url := fmt.Sprintf("%s_snapshot/%s/snapshot_%s", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
 
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
