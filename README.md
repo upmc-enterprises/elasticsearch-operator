@@ -16,6 +16,12 @@ The operator was also _currently_ designed to leverage [Amazon AWS S3](https://a
 
 By swapping out the storage types, this can be used in GKE, but snapshots won't work at the moment. 
 
+
+# Demo
+Watch a demo here:<br>
+[![Elasticsearch Operator Demo](http://img.youtube.com/vi/3HnV7NfgP6A/0.jpg)](http://www.youtube.com/watch?v=3HnV7NfgP6A)<br>
+[https://www.youtube.com/watch?v=3HnV7NfgP6A](https://www.youtube.com/watch?v=3HnV7NfgP6A)
+
 # Usage
 
 The operator is built using the controller + third party resource model. Once the controller is deployed to your cluster, it will automatically create the ThirdPartyResource. Next create a Kubernetes object type `elasticsearchCluster` to deploy the elastic cluster based upon the TPR. 
