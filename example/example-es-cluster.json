@@ -5,9 +5,9 @@
     "name": "example-es-cluster"
   },
   "spec": {
-    "client-node-replicas": 3,
-    "master-node-replicas": 2,
-    "data-node-replicas": 3,
+    "client-node-replicas": 1,
+    "master-node-replicas": 3,
+    "data-node-replicas": 6,
     "zones": ["us-east-1c", "us-east-1d", "us-east-1e"],
     "data-volume-size": "10Gi",
     "snapshot": {

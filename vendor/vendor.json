@@ -498,6 +498,18 @@
 			"revisionTime": "2017-02-01T03:06:46Z"
 		},
 		{
+			"checksumSHA1": "QtAbHtHmDzcf6vOV9eqlCpKgjiw=",
+			"path": "google.golang.org/appengine/internal/urlfetch",
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
+		},
+		{
+			"checksumSHA1": "akOV9pYnCbcPA8wJUutSQVibdyg=",
+			"path": "google.golang.org/appengine/urlfetch",
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
+		},
+		{
 			"checksumSHA1": "pfQwQtWlFezJq0Viroa/L+v+yDM=",
 			"origin": "k8s.io/client-go/vendor/gopkg.in/inf.v0",
 			"path": "gopkg.in/inf.v0",

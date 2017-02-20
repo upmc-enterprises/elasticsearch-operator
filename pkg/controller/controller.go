@@ -73,5 +73,8 @@ func (c *Controller) init() error {
 		return err
 	}
 
+	major, minor, _ := c.k8sclient.GetK8sVersion()
+	logrus.Infof("Server version is: %d.%d", major, minor)
+
 	return nil
 }

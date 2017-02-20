@@ -28,7 +28,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ import (
 )
 
 var (
-	elasticURL = fmt.Sprintf("https://%s:9200/", os.Getenv("ELASTICSEARCH_SERVICE_HOST")) // Internal service name of cluster
+	elasticURL = fmt.Sprintf("https://%s:9200/", "elasticsearch") // Internal service name of cluster
 )
 
 // Scheduler stores info about how to snapshot the cluster

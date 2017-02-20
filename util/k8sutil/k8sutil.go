@@ -31,10 +31,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	appsType "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
 	coreType "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -80,6 +82,7 @@ type KubeInterface interface {
 	StatefulSets(namespace string) appsType.StatefulSetInterface
 	StorageClasses() storageType.StorageClassInterface
 	ReplicaSets(namespace string) extensionsType.ReplicaSetInterface
+	Discovery() discovery.DiscoveryInterface
 }
 
 // K8sutil defines the kube object
@@ -163,6 +166,21 @@ func newKubeClient(kubeCfgFile string) (KubeInterface, error) {
 	}
 
 	return client, nil
+}
+
+// GetK8sVersion returns the version of the cluster running
+func (k *K8sutil) GetK8sVersion() (int, int, error) {
+	version, err := k.Kclient.Discovery().ServerVersion()
+
+	if err != nil {
+		logrus.Error("Error getting server version: ", err)
+		return 0, 0, err
+	}
+
+	major, _ := strconv.Atoi(version.Major)
+	minor, _ := strconv.Atoi(version.Minor)
+
+	return major, minor, nil
 }
 
 // GetElasticSearchClusters returns a list of custom clusters defined
