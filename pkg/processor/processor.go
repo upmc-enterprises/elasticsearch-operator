@@ -112,6 +112,7 @@ func (p *Processor) refreshClusters() error {
 				Zones:              cluster.Spec.Zones,
 				DataDiskSize:       cluster.Spec.DataDiskSize,
 				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
+				JavaOptions:        cluster.Spec.JavaOptions,
 				Snapshot: myspec.Snapshot{
 					SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
 					BucketName:       cluster.Spec.Snapshot.BucketName,
@@ -160,8 +161,8 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 	p.k8sclient.CreateDataService()
 	p.k8sclient.CreateClientService()
 
-	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas)
-	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas)
+	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions)
+	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions)
 
 	zoneCount := 0
 	if len(c.Spec.Zones) != 0 {
@@ -180,8 +181,8 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
-		p.k8sclient.CreateStorageClass("es-default", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
-		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "es-default", c.Spec.DataDiskSize)
+		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), p.baseImage, "standard", c.Spec.DataDiskSize)
 	}
 
 	// Setup CronSchedule

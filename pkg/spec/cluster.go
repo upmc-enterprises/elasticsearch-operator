@@ -67,6 +67,9 @@ type ClusterSpec struct {
 	// Storage defines how volumes are provisioned
 	Storage Storage `json:"storage"`
 
+	// JavaOptions defines args passed to elastic nodes
+	JavaOptions string `json:"java-options"`
+
 	Scheduler *snapshot.Scheduler
 }
 

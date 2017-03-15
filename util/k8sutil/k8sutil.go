@@ -530,7 +530,7 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string) error {
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
@@ -615,7 +615,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
-										Value: "-Xms1024m -Xmx1024m",
+										Value: javaOptions,
 									},
 								},
 								Ports: []v1.ContainerPort{
