@@ -72,6 +72,15 @@ $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticse
 ```
 _NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
 
+# Create Example ElasticSearch Cluster (Minikube)
+
+To run the operator on minikube, this sample file is setup to do that. It sets lower Java memory contraints as well as uses the default storage class in Minikube which writes to hostPath.
+
+```bash
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.json
+```
+_NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
+
 # Resize ElasticSearch Cluster
 
 `kubectl apply` doesn't work for TPR for the moment. See [kubernetes/#29542](https://github.com/kubernetes/kubernetes/issues/29542). As a workaround, we use curl to resize the cluster.
