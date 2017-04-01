@@ -31,7 +31,7 @@ The operator is built using the controller + third party resource model. Once th
 Following parameters are available to customize the elastic cluster:
 
 - client-node-replicas: Number of client node replicas
-- master-node-replicas: Number of client node replicas
+- master-node-replicas: Number of master node replicas
 - data-node-replicas: Number of data node replicas
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
