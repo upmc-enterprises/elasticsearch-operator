@@ -53,7 +53,7 @@ $ kubectl create secret generic es-certs --from-file=./certs/node-keystore.jks -
 ```
 ## Base image
 
-The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.1.1` which can be overriden by addeding to the custom cluster you create _(See: [ThirdPartyResource](#thirdpartyresource) above)_. 
+The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1` which can be overriden by addeding to the custom cluster you create _(See: [ThirdPartyResource](#thirdpartyresource) above)_. 
 
 _NOTE: If no image is specified, the default noted previously is used._
 
@@ -143,6 +143,15 @@ To enable the snapshots create a bucket in S3, then apply the following IAM perm
 Once deployed and all pods are running, the cluster can be accessed internally via https://elasticsearch:9200/ or https://${ELASTICSEARCH_SERVICE_HOST}:9200/
 
 ![alt text](docs/images/running-cluster.png "Running Cluster")
+
+# Development
+
+To run the Operator locally:
+
+```
+$ kubectl proxy
+$ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
+```
 
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/

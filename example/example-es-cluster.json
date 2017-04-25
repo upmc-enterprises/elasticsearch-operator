@@ -10,7 +10,7 @@
     "data-node-replicas": 3,
     "zones": ["us-east-1c", "us-east-1d", "us-east-1e"],
     "data-volume-size": "10Gi",
-    "java-options": "-Xms1024m -Xmx1024m",
+    "java-options": "-Xms256m -Xmx256m",
     "snapshot": {
       "scheduler-enabled": true,
       "bucket-name": "elasticsnapshots99",

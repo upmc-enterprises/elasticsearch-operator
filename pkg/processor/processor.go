@@ -43,7 +43,7 @@ var (
 type Processor struct {
 	k8sclient *k8sutil.K8sutil
 	baseImage string
-	clusters  map[string]*myspec.ElasticSearchCluster
+	clusters  map[string]*myspec.ElasticsearchCluster
 }
 
 // New creates new instance of Processor
@@ -51,7 +51,7 @@ func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
 	p := &Processor{
 		k8sclient: kclient,
 		baseImage: baseImage,
-		clusters:  make(map[string]*myspec.ElasticSearchCluster),
+		clusters:  make(map[string]*myspec.ElasticsearchCluster),
 	}
 
 	return p, nil
@@ -68,7 +68,7 @@ func (p *Processor) Run() error {
 
 // WatchElasticSearchClusterEvents watches for changes to tpr elasticsearch events
 func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync.WaitGroup) {
-	events, watchErrs := p.k8sclient.MonitorElasticSearchEvents()
+	events, watchErrs := p.k8sclient.MonitorElasticSearchEvents(done)
 	go func() {
 		for {
 			select {
@@ -91,7 +91,7 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 func (p *Processor) refreshClusters() error {
 
 	//Reset
-	p.clusters = make(map[string]*myspec.ElasticSearchCluster)
+	p.clusters = make(map[string]*myspec.ElasticsearchCluster)
 
 	// Get existing clusters
 	currentClusters, err := p.k8sclient.GetElasticSearchClusters()
@@ -102,9 +102,9 @@ func (p *Processor) refreshClusters() error {
 	}
 
 	for _, cluster := range currentClusters {
-		logrus.Infof("Found cluster: %s", cluster.Metadata["name"])
+		logrus.Infof("Found cluster: %s", cluster.Metadata.Name)
 
-		p.clusters[cluster.Metadata["name"]] = &myspec.ElasticSearchCluster{
+		p.clusters[cluster.Metadata.Name] = &myspec.ElasticsearchCluster{
 			Spec: myspec.ClusterSpec{
 				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
 				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
@@ -133,19 +133,20 @@ func (p *Processor) refreshClusters() error {
 	return nil
 }
 
-func (p *Processor) processElasticSearchClusterEvent(c k8sutil.ElasticSearchEvent) error {
+func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchCluster) error {
 	processorLock.Lock()
 	defer processorLock.Unlock()
+
 	switch {
-	case c.Type == "ADDED" || c.Type == "MODIFIED":
-		return p.processElasticSearchCluster(c.Object)
+	case c.Type == "ADDED": //|| c.Type == "MODIFIED":
+		return p.processElasticSearchCluster(c)
 	case c.Type == "DELETED":
-		return p.deleteElasticSearchCluster(c.Object)
+		return p.deleteElasticSearchCluster(c)
 	}
 	return nil
 }
 
-func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) error {
+func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Event!")
 
 	// Refresh
@@ -186,12 +187,12 @@ func (p *Processor) processElasticSearchCluster(c myspec.ElasticSearchCluster) e
 	}
 
 	// Setup CronSchedule
-	p.clusters[c.Metadata["name"]].Spec.Scheduler.Run()
+	p.clusters[c.Metadata.ClusterName].Spec.Scheduler.Run()
 
 	return nil
 }
 
-func (p *Processor) deleteElasticSearchCluster(c myspec.ElasticSearchCluster) error {
+func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
 	err := p.k8sclient.DeleteClientMasterDeployment("client")
