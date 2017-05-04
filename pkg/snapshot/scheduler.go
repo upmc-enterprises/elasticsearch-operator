@@ -111,7 +111,7 @@ func (s *Scheduler) CreateSnapshot() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("%s_snapshot/%s/snapshot_%s", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
+	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
 
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
