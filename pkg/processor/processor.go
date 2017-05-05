@@ -187,7 +187,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	// Setup CronSchedule
-	p.clusters[c.Metadata.ClusterName].Spec.Scheduler.Run()
+	p.clusters[c.Metadata.Name].Spec.Scheduler.Run()
 
 	return nil
 }
