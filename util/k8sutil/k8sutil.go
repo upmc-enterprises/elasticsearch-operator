@@ -25,13 +25,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
-	"crypto/tls"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"time"
+
+	"k8s.io/client-go/pkg/fields"
+
+	k8serrors "k8s.io/client-go/pkg/api/errors"
 
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
@@ -40,12 +40,17 @@ import (
 	coreType "k8s.io/client-go/kubernetes/typed/core/v1"
 	extensionsType "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	storageType "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
+	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	storage "k8s.io/client-go/pkg/apis/storage/v1beta1"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -84,6 +89,8 @@ type KubeInterface interface {
 
 // K8sutil defines the kube object
 type K8sutil struct {
+	Config     *rest.Config
+	TprClient  *rest.RESTClient
 	Kclient    KubeInterface
 	MasterHost string
 }
@@ -97,24 +104,10 @@ type ThirdPartyResource struct {
 	Versions    [1]map[string]string `json:"versions,omitempty"`
 }
 
-// ElasticSearchEvent stores when a ES needs created
-type ElasticSearchEvent struct {
-	Type   string                      `json:"type"`
-	Object myspec.ElasticSearchCluster `json:"object"`
-}
-
-// ElasticSearchList represents a list of ES Clusters
-type ElasticSearchList struct {
-	APIVersion string                        `json:"apiVersion"`
-	Kind       string                        `json:"kind"`
-	Metadata   map[string]string             `json:"metadata"`
-	Items      []myspec.ElasticSearchCluster `json:"items"`
-}
-
 // New creates a new instance of k8sutil
 func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 
-	client, err := newKubeClient(kubeCfgFile)
+	client, tprclient, err := newKubeClient(kubeCfgFile)
 
 	if err != nil {
 		logrus.Fatalf("Could not init Kubernetes client! [%s]", err)
@@ -122,61 +115,89 @@ func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 
 	k := &K8sutil{
 		Kclient:    client,
+		TprClient:  tprclient,
 		MasterHost: masterHost,
 	}
 
 	return k, nil
 }
 
-func newKubeClient(kubeCfgFile string) (KubeInterface, error) {
-
-	var client *kubernetes.Clientset
-
-	// Should we use in cluster or out of cluster config
-	if len(kubeCfgFile) == 0 {
-		logrus.Info("Using InCluster k8s config")
-		cfg, err := rest.InClusterConfig()
-
-		if err != nil {
-			return nil, err
-		}
-
-		client, err = kubernetes.NewForConfig(cfg)
-
-		if err != nil {
-			return nil, err
-		}
-	} else {
+func buildConfig(kubeCfgFile string) (*rest.Config, error) {
+	if kubeCfgFile != "" {
 		logrus.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
-		cfg, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
-
-		if err != nil {
-			logrus.Error("Got error trying to create client: ", err)
-			return nil, err
-		}
-
-		client, err = kubernetes.NewForConfig(cfg)
-
-		if err != nil {
-			return nil, err
-		}
+		return clientcmd.BuildConfigFromFlags("", kubeCfgFile)
 	}
 
-	return client, nil
+	logrus.Info("Using InCluster k8s config")
+	return rest.InClusterConfig()
+}
+
+func configureTPRClient(config *rest.Config) {
+	groupversion := unversioned.GroupVersion{
+		Group:   "enterprises.upmc.com",
+		Version: "v1",
+	}
+
+	config.GroupVersion = &groupversion
+	config.APIPath = "/apis"
+	config.ContentType = runtime.ContentTypeJSON
+	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
+
+	schemeBuilder := runtime.NewSchemeBuilder(
+		func(scheme *runtime.Scheme) error {
+			scheme.AddKnownTypes(
+				unversioned.GroupVersion{Group: "enterprises.upmc.com", Version: "v1"},
+				&myspec.ElasticsearchCluster{},
+				&myspec.ElasticsearchClusterList{},
+				&api.ListOptions{},
+				&api.DeleteOptions{},
+			)
+			return nil
+		})
+
+	schemeBuilder.AddToScheme(api.Scheme)
+}
+
+func newKubeClient(kubeCfgFile string) (KubeInterface, *rest.RESTClient, error) {
+
+	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
+	Config, err := buildConfig(kubeCfgFile)
+	if err != nil {
+		panic(err)
+	}
+
+	client, err := kubernetes.NewForConfig(Config)
+	if err != nil {
+		panic(err)
+	}
+
+	// make a new config for our extension's API group, using the first config as a baseline
+	var tprconfig *rest.Config
+	tprconfig = Config
+
+	configureTPRClient(tprconfig)
+
+	tprclient, err := rest.RESTClientFor(tprconfig)
+	if err != nil {
+		logrus.Error(err.Error())
+		logrus.Error("can not get client to TPR")
+		os.Exit(2)
+	}
+
+	return client, tprclient, nil
 }
 
 // GetElasticSearchClusters returns a list of custom clusters defined
-func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticSearchCluster, error) {
-	var resp *http.Response
+func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticsearchCluster, error) {
+	// var resp *http.Response
+	elasticSearchList := myspec.ElasticsearchClusterList{}
 	var err error
+
 	for {
-		// TODO: Ignore TLS certs..bad bad bad...
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		client := &http.Client{Transport: tr}
-		resp, err = client.Get(k.MasterHost + elasticSearchEndpoint)
+		err = k.TprClient.Get().Resource("ElasticsearchClusters").Do().Into(&elasticSearchList)
+
 		if err != nil {
+			logrus.Error("error getting elasticsearch clusters")
 			logrus.Error(err)
 			time.Sleep(5 * time.Second)
 			continue
@@ -184,85 +205,79 @@ func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticSearchCluster, err
 		break
 	}
 
-	var elasticSearchList ElasticSearchList
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&elasticSearchList)
-	if err != nil {
-		logrus.Error("Could not get list of elasticsearch clusters: ", err)
-		return nil, err
-	}
-
 	return elasticSearchList.Items, nil
 }
 
 // MonitorElasticSearchEvents watches for new or removed clusters
-func (k *K8sutil) MonitorElasticSearchEvents() (<-chan ElasticSearchEvent, <-chan error) {
+func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *myspec.ElasticsearchCluster, <-chan error) {
 	// Validate Namespace exists
 	if len(namespace) == 0 {
 		logrus.Errorln("WARNING: No namespace found! Events will not be able to be watched!")
 	}
 
-	events := make(chan ElasticSearchEvent)
+	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
-	go func() {
-		for {
-			// TODO: Ignore TLS certs..bad bad bad...
-			tr := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			client := &http.Client{Transport: tr}
-			resp, err := client.Get(k.MasterHost + elasticSearchWatchEndpoint)
-			if err != nil {
-				errc <- err
-				time.Sleep(5 * time.Second)
-				continue
-			}
-			if resp.StatusCode != 200 {
-				errc <- errors.New("Invalid status code: " + resp.Status)
-				time.Sleep(5 * time.Second)
-				continue
-			}
 
-			decoder := json.NewDecoder(resp.Body)
-			for {
-				var event ElasticSearchEvent
-				err = decoder.Decode(&event)
-				if err != nil {
-					errc <- err
-					break
-				}
-				events <- event
-			}
-		}
-	}()
+	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", api.NamespaceAll, fields.Everything())
+
+	createAddHandler := func(obj interface{}) {
+		event := obj.(*myspec.ElasticsearchCluster)
+		event.Type = "ADDED"
+		events <- event
+	}
+	createDeleteHandler := func(obj interface{}) {
+		event := obj.(*myspec.ElasticsearchCluster)
+		event.Type = "DELETED"
+		events <- event
+	}
+
+	updateHandler := func(old interface{}, obj interface{}) {
+		event := obj.(*myspec.ElasticsearchCluster)
+		event.Type = "MODIFIED"
+		events <- event
+	}
+
+	_, controller := cache.NewInformer(
+		source,
+		&myspec.ElasticsearchCluster{},
+		time.Second*10,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    createAddHandler,
+			UpdateFunc: updateHandler,
+			DeleteFunc: createDeleteHandler,
+		})
+
+	go controller.Run(stopchan)
 
 	return events, errc
 }
 
 // CreateKubernetesThirdPartyResource checks if ElasticSearch TPR exists. If not, create
 func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
-	tprResult, _ := k.Kclient.ThirdPartyResources().Get(tprName)
 
-	if len(tprResult.Name) == 0 {
-		logrus.Info("ElasticSearchCluster ThirdPartyResource not found, creating...")
+	tpr, err := k.Kclient.ThirdPartyResources().Get(tprName)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			tpr := &v1beta1.ThirdPartyResource{
+				ObjectMeta: v1.ObjectMeta{
+					Name: tprName,
+				},
+				Versions: []v1beta1.APIVersion{
+					{Name: "v1"},
+				},
+				Description: "Managed elasticsearch clusters",
+			}
 
-		tpr := &v1beta1.ThirdPartyResource{
-			ObjectMeta: v1.ObjectMeta{
-				Name: tprName,
-			},
-			Versions: []v1beta1.APIVersion{
-				{Name: "v1"},
-			},
-			Description: "Managed elasticsearch clusters",
-		}
-
-		_, err := k.Kclient.ThirdPartyResources().Create(tpr)
-		if err != nil {
-			logrus.Error("Error creating ThirdPartyResource: ", err)
-			return err
+			result, err := k.Kclient.ThirdPartyResources().Create(tpr)
+			if err != nil {
+				panic(err)
+			}
+			logrus.Infof("CREATED: %#v\nFROM: %#v\n", result, tpr)
+		} else {
+			panic(err)
 		}
 	} else {
-		logrus.Info("Elastic Search TPR already existing...")
+		logrus.Infof("SKIPPING: already exists %#v\n", tpr.ObjectMeta.Name)
 	}
 
 	return nil

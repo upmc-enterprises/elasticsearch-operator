@@ -24,14 +24,24 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 
 package spec
 
-import "github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
+import (
+	"encoding/json"
 
-// ElasticSearchCluster defines the cluster
-type ElasticSearchCluster struct {
-	APIVersion string            `json:"apiVersion"`
-	Kind       string            `json:"kind"`
-	Metadata   map[string]string `json:"metadata"`
-	Spec       ClusterSpec       `json:"spec"`
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/meta"
+	"k8s.io/client-go/pkg/api/unversioned"
+)
+
+// ElasticsearchCluster defines the cluster
+type ElasticsearchCluster struct {
+	unversioned.TypeMeta `json:",inline"`
+	Metadata             api.ObjectMeta `json:"metadata"`
+
+	APIVersion string      `json:"apiVersion"`
+	Type       string      `json:"type"`
+	Kind       string      `json:"kind"`
+	Spec       ClusterSpec `json:"spec"`
 }
 
 // ClusterSpec defines cluster options
@@ -94,4 +104,27 @@ type Storage struct {
 
 	// StorageClassProvisoner is the storage provisioner type
 	StorageClassProvisoner string `json:"storage-class-provisioner"`
+}
+
+// Required to satisfy Object interface
+func (e *ElasticsearchCluster) GetObjectKind() unversioned.ObjectKind {
+	return &e.TypeMeta
+}
+
+// Required to satisfy ObjectMetaAccessor interface
+func (e *ElasticsearchCluster) GetObjectMeta() meta.Object {
+	return &e.Metadata
+}
+
+type ElasticsearchClusterCopy ElasticsearchCluster
+
+func (e *ElasticsearchCluster) UnmarshalJSON(data []byte) error {
+	tmp := ElasticsearchClusterCopy{}
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		return err
+	}
+	tmp2 := ElasticsearchCluster(tmp)
+	*e = tmp2
+	return nil
 }

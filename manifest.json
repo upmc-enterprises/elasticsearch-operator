@@ -1,0 +1,16 @@
+{
+    "dependencies": {
+        "github.com/Sirupsen/logrus": {
+            "branch": "master"
+        },
+        "github.com/robfig/cron": {
+            "branch": "master"
+        },
+        "k8s.io/apimachinery": {
+            "branch": "master"
+        },
+        "k8s.io/client-go": {
+            "version": "^2.0.0"
+        }
+    }
+}

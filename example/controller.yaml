@@ -11,14 +11,10 @@ spec:
     spec:
       containers:
       - name: operator
-        image: upmcenterprises/elasticsearch-operator:0.0.2-beta
+        image: upmcenterprises/elasticsearch-operator:0.0.2-alpha
         imagePullPolicy: Always
         env:
         - name: NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-      - name: kubectl
-        image: kelseyhightower/kubectl:1.3.4
-        args:
-          - "proxy"
