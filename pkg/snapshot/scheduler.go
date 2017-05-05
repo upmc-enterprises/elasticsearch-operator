@@ -82,7 +82,7 @@ func (s *Scheduler) CreateSnapshotRepository() {
 	}
 	client := &http.Client{Transport: tr}
 	body := fmt.Sprintf("{ \"type\": \"s3\", \"settings\": { \"bucket\": \"%s\" } }", s.s3bucketName)
-	url := fmt.Sprintf("%s_snapshot/%s", elasticURL, s.s3bucketName)
+	url := fmt.Sprintf("%s/_snapshot/%s", elasticURL, s.s3bucketName)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
 	resp, err := client.Do(req)
 
