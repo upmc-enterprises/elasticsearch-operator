@@ -240,7 +240,7 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 	_, controller := cache.NewInformer(
 		source,
 		&myspec.ElasticsearchCluster{},
-		time.Second*10,
+		time.Minute*60,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    createAddHandler,
 			UpdateFunc: updateHandler,
