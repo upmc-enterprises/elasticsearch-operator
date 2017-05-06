@@ -138,7 +138,7 @@ func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchClus
 	defer processorLock.Unlock()
 
 	switch {
-	case c.Type == "ADDED": //|| c.Type == "MODIFIED":
+	case c.Type == "ADDED" || c.Type == "MODIFIED":
 		return p.processElasticSearchCluster(c)
 	case c.Type == "DELETED":
 		return p.deleteElasticSearchCluster(c)
