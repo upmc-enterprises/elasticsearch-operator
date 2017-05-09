@@ -5,8 +5,8 @@
     "name": "example-es-cluster"
   },
   "spec": {
-    "client-node-replicas": 3,
-    "master-node-replicas": 2,
+    "client-node-replicas": 1,
+    "master-node-replicas": 1,
     "data-node-replicas": 3,
     "zones": ["us-east-1c", "us-east-1d", "us-east-1e"],
     "data-volume-size": "10Gi",
@@ -19,6 +19,16 @@
     "storage": {
       "type": "gp2",
       "storage-class-provisioner": "kubernetes.io/aws-ebs"
+    },
+    "resources": {
+      "requests": {
+         "memory": "512Mi",
+         "cpu": "500m"
+      },
+      "limits": {
+        "memory": "1024Mi",
+        "cpu": "1"
+      }
     }
   }
 }
