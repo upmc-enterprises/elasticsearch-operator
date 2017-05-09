@@ -545,7 +545,7 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources) error {
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
@@ -566,6 +566,12 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 
 	if len(deployment.Name) == 0 {
 		logrus.Infof("%s not found, creating...", deploymentName)
+
+		// Parse CPU / Memory
+		limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
+		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		deployment := &v1beta1.Deployment{
 			ObjectMeta: v1.ObjectMeta{
@@ -655,6 +661,16 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    limitCPU,
+										"memory": limitMemory,
+									},
+									Requests: v1.ResourceList{
+										"cpu":    requestCPU,
+										"memory": requestMemory,
+									},
+								},
 							},
 						},
 						Volumes: []v1.Volume{
@@ -706,7 +722,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources) error {
 
 	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
 
@@ -715,6 +731,12 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 
 	if len(statefulSet.Name) == 0 {
 		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
+
+		// Parse CPU / Memory
+		// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+		// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
+		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
@@ -796,6 +818,16 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									v1.VolumeMount{
 										Name:      "es-certs",
 										MountPath: "/elasticsearch/config/certs",
+									},
+								},
+								Resources: v1.ResourceRequirements{
+									// Limits: v1.ResourceList{
+									// 	"cpu":    limitCPU,
+									// 	"memory": limitMemory,
+									// },
+									Requests: v1.ResourceList{
+										"cpu":    requestCPU,
+										"memory": requestMemory,
 									},
 								},
 							},

@@ -80,6 +80,9 @@ type ClusterSpec struct {
 	// JavaOptions defines args passed to elastic nodes
 	JavaOptions string `json:"java-options"`
 
+	// Resources defines memory / cpu constraints
+	Resources Resources `json:"resources"`
+
 	Scheduler *snapshot.Scheduler
 }
 
@@ -104,6 +107,21 @@ type Storage struct {
 
 	// StorageClassProvisoner is the storage provisioner type
 	StorageClassProvisoner string `json:"storage-class-provisioner"`
+}
+
+// Resources defines CPU / Memory restrictions on pods
+type Resources struct {
+	Requests MemoryCPU `json:"requests"`
+	Limits   MemoryCPU `json:"limits"`
+}
+
+// MemoryCPU defines memory cpu options
+type MemoryCPU struct {
+	// Memory defines max amount of memory
+	Memory string `json:"memory"`
+
+	// CPU defines max amount of CPU
+	CPU string `json:"cpu"`
 }
 
 // Required to satisfy Object interface

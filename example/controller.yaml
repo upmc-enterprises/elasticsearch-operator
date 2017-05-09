@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: operator
-        image: upmcenterprises/elasticsearch-operator:0.0.2-alpha
+        image: upmcenterprises/elasticsearch-operator:0.0.3-alpha
         imagePullPolicy: Always
         env:
         - name: NAMESPACE
