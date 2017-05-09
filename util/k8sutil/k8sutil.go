@@ -92,15 +92,6 @@ type K8sutil struct {
 	MasterHost string
 }
 
-// ThirdPartyResource in Kubernetes
-type ThirdPartyResource struct {
-	APIVersion  string               `json:"apiVersion"`
-	Kind        string               `json:"kind"`
-	Description string               `json:"description"`
-	Metadata    map[string]string    `json:"metadata"`
-	Versions    [1]map[string]string `json:"versions,omitempty"`
-}
-
 // New creates a new instance of k8sutil
 func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 
