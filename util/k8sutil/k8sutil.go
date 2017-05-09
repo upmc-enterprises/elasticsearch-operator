@@ -55,11 +55,8 @@ import (
 )
 
 var (
-	namespace                  = os.Getenv("NAMESPACE")
-	tprName                    = "elasticsearch-cluster.enterprises.upmc.com"
-	elasticSearchEndpoint      = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters", namespace)
-	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/watch/namespaces/%s/elasticsearchclusters", namespace)
-	tprEndpoint                = "/apis/extensions/v1beta1/thirdpartyresources"
+	namespace = os.Getenv("NAMESPACE")
+	tprName   = "elasticsearch-cluster.enterprises.upmc.com"
 )
 
 const (
