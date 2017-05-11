@@ -55,11 +55,8 @@ import (
 )
 
 var (
-	namespace                  = os.Getenv("NAMESPACE")
-	tprName                    = "elasticsearch-cluster.enterprises.upmc.com"
-	elasticSearchEndpoint      = fmt.Sprintf("/apis/enterprises.upmc.com/v1/namespaces/%s/elasticsearchclusters", namespace)
-	elasticSearchWatchEndpoint = fmt.Sprintf("/apis/enterprises.upmc.com/v1/watch/namespaces/%s/elasticsearchclusters", namespace)
-	tprEndpoint                = "/apis/extensions/v1beta1/thirdpartyresources"
+	namespace = os.Getenv("NAMESPACE")
+	tprName   = "elasticsearch-cluster.enterprises.upmc.com"
 )
 
 const (
@@ -93,15 +90,6 @@ type K8sutil struct {
 	TprClient  *rest.RESTClient
 	Kclient    KubeInterface
 	MasterHost string
-}
-
-// ThirdPartyResource in Kubernetes
-type ThirdPartyResource struct {
-	APIVersion  string               `json:"apiVersion"`
-	Kind        string               `json:"kind"`
-	Description string               `json:"description"`
-	Metadata    map[string]string    `json:"metadata"`
-	Versions    [1]map[string]string `json:"versions,omitempty"`
 }
 
 // New creates a new instance of k8sutil
@@ -545,7 +533,7 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
@@ -566,6 +554,12 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 
 	if len(deployment.Name) == 0 {
 		logrus.Infof("%s not found, creating...", deploymentName)
+
+		// Parse CPU / Memory
+		limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
+		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		deployment := &v1beta1.Deployment{
 			ObjectMeta: v1.ObjectMeta{
@@ -655,6 +649,16 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    limitCPU,
+										"memory": limitMemory,
+									},
+									Requests: v1.ResourceList{
+										"cpu":    requestCPU,
+										"memory": requestMemory,
+									},
+								},
 							},
 						},
 						Volumes: []v1.Volume{
@@ -718,7 +722,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
 
 	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
 
@@ -727,6 +731,12 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 
 	if len(statefulSet.Name) == 0 {
 		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
+
+		// Parse CPU / Memory
+		// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+		// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
+		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
@@ -808,6 +818,16 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									v1.VolumeMount{
 										Name:      "es-certs",
 										MountPath: "/elasticsearch/config/certs",
+									},
+								},
+								Resources: v1.ResourceRequirements{
+									// Limits: v1.ResourceList{
+									// 	"cpu":    limitCPU,
+									// 	"memory": limitMemory,
+									// },
+									Requests: v1.ResourceList{
+										"cpu":    requestCPU,
+										"memory": requestMemory,
 									},
 								},
 							},

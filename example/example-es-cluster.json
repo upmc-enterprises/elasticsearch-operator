@@ -19,6 +19,16 @@
     "storage": {
       "type": "gp2",
       "storage-class-provisioner": "kubernetes.io/aws-ebs"
+    },
+    "resources": {
+      "requests": {
+         "memory": "512Mi",
+         "cpu": "500m"
+      },
+      "limits": {
+        "memory": "1024Mi",
+        "cpu": "1"
+      }
     }
   }
 }
