@@ -80,7 +80,16 @@ type ClusterSpec struct {
 	// JavaOptions defines args passed to elastic nodes
 	JavaOptions string `json:"java-options"`
 
+	// ImagePullSecrets defines credentials to pull image from private repository (optional)
+	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
+
 	Scheduler *snapshot.Scheduler
+}
+
+// ImagePullSecrets defines credentials to pull image from private repository
+type ImagePullSecrets struct {
+	// Name defines the name of the secret file that will be used
+	Name string `json:"name"`
 }
 
 // Snapshot defines all params to create / store snapshots
