@@ -125,7 +125,10 @@ func (p *Processor) refreshClusters() error {
 				Scheduler: snapshot.New(
 					cluster.Spec.Snapshot.BucketName,
 					cluster.Spec.Snapshot.CronSchedule,
-					cluster.Spec.Snapshot.SchedulerEnabled),
+					cluster.Spec.Snapshot.SchedulerEnabled,
+					cluster.Spec.Snapshot.Authentication.UserName,
+					cluster.Spec.Snapshot.Authentication.Password,
+				),
 				Resources: myspec.Resources{
 					Limits: myspec.MemoryCPU{
 						Memory: cluster.Spec.Resources.Limits.Memory,
@@ -193,7 +196,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
-		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources,  c.Spec.ImagePullSecrets)
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets)
 	}
 
 	// Setup CronSchedule

@@ -106,6 +106,15 @@ type Snapshot struct {
 	// CronSchedule defines how to run the snapshots
 	// SEE: https://godoc.org/github.com/robfig/cron
 	CronSchedule string `json:"cron-schedule"`
+
+	// Authentication defines credentials for snapshot requests
+	Authentication Authentication `json:"authentication"`
+}
+
+// Authentication defines credentials for snapshot requests
+type Authentication struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
 }
 
 // Storage defines how dynamic volumes are created

@@ -47,15 +47,23 @@ type Scheduler struct {
 	cronSchedule string
 	enabled      bool
 	cron         *cron.Cron
+	auth         Authentication
+}
+
+// Authentication stores credentials used to authenticate against snapshot endpoint
+type Authentication struct {
+	userName string
+	password string
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password string) *Scheduler {
 	return &Scheduler{
 		s3bucketName: bucketName,
 		cronSchedule: cronSchedule,
 		cron:         cron.New(),
 		enabled:      enabled,
+		auth:         Authentication{userName, password},
 	}
 }
 
@@ -117,6 +125,11 @@ func (s *Scheduler) CreateSnapshot() {
 	if err != nil {
 		logrus.Error("Error attempting to create snapshot: ", err)
 		return
+	}
+
+	// if authentication is specified, provide Auth to Client
+	if s.auth != (Authentication{}) {
+		req.SetBasicAuth(s.auth.userName, s.auth.password)
 	}
 
 	resp, err := client.Do(req)
