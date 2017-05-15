@@ -163,7 +163,7 @@ To enable the snapshots create a bucket in S3, then apply the following IAM perm
 ```
 
 ## Snapshot Authentication
-If you are using an elasticsearch image that requiress authentication for the snapshot url, you can specify basic auth credentials.
+If you are using an elasticsearch image that requires authentication for the snapshot url, you can specify basic auth credentials.
 
 ```
 spec:
