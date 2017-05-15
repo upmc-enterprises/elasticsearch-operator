@@ -533,7 +533,7 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
@@ -677,6 +677,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 								},
 							},
 						},
+						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
 					},
 				},
 			},
@@ -709,8 +710,19 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 	return nil
 }
 
+func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectReference {
+	var outSecrets []v1.LocalObjectReference
+
+	for _, s := range ips {
+		outSecrets = append(outSecrets, v1.LocalObjectReference{
+			Name: s.Name,
+		})
+	}
+	return outSecrets
+}
+
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
 
 	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
 
@@ -830,6 +842,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 								},
 							},
 						},
+						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
 					},
 				},
 				VolumeClaimTemplates: []v1.PersistentVolumeClaim{

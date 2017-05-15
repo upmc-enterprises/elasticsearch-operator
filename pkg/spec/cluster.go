@@ -80,10 +80,19 @@ type ClusterSpec struct {
 	// JavaOptions defines args passed to elastic nodes
 	JavaOptions string `json:"java-options"`
 
+	// ImagePullSecrets defines credentials to pull image from private repository (optional)
+	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
+
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
 
 	Scheduler *snapshot.Scheduler
+}
+
+// ImagePullSecrets defines credentials to pull image from private repository
+type ImagePullSecrets struct {
+	// Name defines the name of the secret file that will be used
+	Name string `json:"name"`
 }
 
 // Snapshot defines all params to create / store snapshots
@@ -97,6 +106,15 @@ type Snapshot struct {
 	// CronSchedule defines how to run the snapshots
 	// SEE: https://godoc.org/github.com/robfig/cron
 	CronSchedule string `json:"cron-schedule"`
+
+	// Authentication defines credentials for snapshot requests
+	Authentication Authentication `json:"authentication"`
+}
+
+// Authentication defines credentials for snapshot requests
+type Authentication struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
 }
 
 // Storage defines how dynamic volumes are created
