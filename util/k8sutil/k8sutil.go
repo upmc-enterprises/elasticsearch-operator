@@ -206,7 +206,7 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
-	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", api.NamespaceAll, fields.Everything())
+	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", namespace, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
