@@ -57,6 +57,30 @@ The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1` w
 
 _NOTE: If no image is specified, the default noted previously is used._
 
+## Image pull secret
+If you are using a private repository you can add a pull secret under spec in your ElasticsearchCluster manifest
+```
+spec:
+  client-node-replicas: 3
+  data-node-replicas: 3
+  data-volume-size: 10Gi
+  java-options: -Xms256m -Xmx256m
+  master-node-replicas: 2
+  image-pull-secrets:
+    - name: pull-secret-name
+  snapshot:
+    bucket-name: elasticsnapshots99
+    cron-schedule: '@every 2m'
+    scheduler-enabled: false
+  storage:
+    storage-class-provisioner: kubernetes.io/aws-ebs
+    type: gp2
+  zones:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+```
+
 # Deploy Operator
 
 To deploy the operator simply deploy to your cluster:
@@ -137,6 +161,32 @@ To enable the snapshots create a bucket in S3, then apply the following IAM perm
     "Version": "2012-10-17"
 }
 ```
+
+## Snapshot Authentication
+If you are using an elasticsearch image that requiress authentication for the snapshot url, you can specify basic auth credentials.
+
+```
+spec:
+  client-node-replicas: 3
+  data-node-replicas: 3
+  data-volume-size: 10Gi
+  java-options: -Xms256m -Xmx256m
+  master-node-replicas: 2
+  snapshot:
+    bucket-name: elasticsnapshots99
+    cron-schedule: '@every 2m'
+    scheduler-enabled: false
+    authentication:
+     password: betterpasswordneeded
+     username: basicauthadmin
+  storage:
+    storage-class-provisioner: kubernetes.io/aws-ebs
+    type: gp2
+  zones:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+```  
 
 # Access Cluster
 
