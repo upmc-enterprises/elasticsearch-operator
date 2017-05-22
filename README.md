@@ -35,6 +35,7 @@ Following parameters are available to customize the elastic cluster:
 - data-node-replicas: Number of data node replicas
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
+- elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1`)
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
   - bucket-name: Name of S3 bucket to dump snaptshots
@@ -42,7 +43,6 @@ Following parameters are available to customize the elastic cluster:
 - [storage](https://kubernetes.io/docs/user-guide/persistent-volumes/)
   - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
   - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
-  - elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1`)
 
 ## Certs secret
 
