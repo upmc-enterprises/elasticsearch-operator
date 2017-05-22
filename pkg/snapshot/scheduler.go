@@ -85,6 +85,11 @@ func (s *Scheduler) Run() {
 	}
 }
 
+// Cleans up Cron and maybe something else in the future
+func (s *Scheduler) Stop() {
+	s.cron.Stop()
+}
+
 // CreateSnapshotRepository creates a repository to place snapshots
 func (s *Scheduler) CreateSnapshotRepository() {
 	tr := &http.Transport{

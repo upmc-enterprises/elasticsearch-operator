@@ -90,6 +90,11 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 
 func (p *Processor) refreshClusters() error {
 
+	for key, cluster := range p.clusters {
+		logrus.Infof("-----> Stop scheduler %s", key)
+		cluster.Spec.Scheduler.Stop()
+	}
+
 	//Reset
 	p.clusters = make(map[string]*myspec.ElasticsearchCluster)
 
@@ -149,7 +154,7 @@ func (p *Processor) refreshClusters() error {
 func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchCluster) error {
 	processorLock.Lock()
 	defer processorLock.Unlock()
-
+	logrus.Infof("Process Elasticsearch Event %v", c.Type)
 	switch {
 	case c.Type == "ADDED" || c.Type == "MODIFIED":
 		return p.processElasticSearchCluster(c)
@@ -207,6 +212,9 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
+
+	// Stop scheduler/cron
+	c.Spec.Scheduler.Stop()
 
 	err := p.k8sclient.DeleteClientMasterDeployment("client")
 	if err != nil {
