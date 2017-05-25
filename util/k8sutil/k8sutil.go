@@ -395,7 +395,7 @@ func (k *K8sutil) CreateDataService() error {
 }
 
 // CreateClientService creates the client service
-func (k *K8sutil) CreateClientService() error {
+func (k *K8sutil) CreateClientService(nodePort int32) error {
 
 	// Check if service exists
 	svc, err := k.Kclient.Services(namespace).Get(clientServiceName)
@@ -425,6 +425,11 @@ func (k *K8sutil) CreateClientService() error {
 					},
 				},
 			},
+		}
+		if nodePort > 0 {
+			clientSvc.Spec.ClusterIP = v1.ClusterIPNone
+			clientSvc.Spec.Type =  v1.ServiceTypeNodePort
+			clientSvc.Spec.Ports[0].NodePort =  nodePort
 		}
 
 		_, err := k.Kclient.Services(namespace).Create(clientSvc)
