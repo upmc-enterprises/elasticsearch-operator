@@ -171,12 +171,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	logrus.Infof("Using [%s] as image for es cluster", baseImage)
 
 	// Create Services
-	p.k8sclient.CreateDiscoveryService()
-	p.k8sclient.CreateDataService()
-	p.k8sclient.CreateClientService()
+	p.k8sclient.CreateDiscoveryService(c.Metadata.Name)
+	p.k8sclient.CreateDataService(c.Metadata.Name)
+	p.k8sclient.CreateClientService(c.Metadata.Name)
 
-	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets)
-	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets)
+	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
+	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
 
 	zoneCount := 0
 	if len(c.Spec.Zones) != 0 {
@@ -184,19 +184,19 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Storage Classes
 		for _, sc := range c.Spec.Zones {
-			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
+			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.Metadata.Name)
 		}
 
 		zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
 
 		for index, count := range zoneDistribution {
-			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets)
+			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
 		}
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
-		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType)
-		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets)
+		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.Metadata.Name)
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
 	}
 
 	// Setup CronSchedule
@@ -208,23 +208,23 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
-	err := p.k8sclient.DeleteClientMasterDeployment("client")
+	err := p.k8sclient.DeleteClientMasterDeployment("client", c.Metadata.Name)
 	if err != nil {
 		logrus.Error("Could not delete client deployment:", err)
 	}
 
-	err = p.k8sclient.DeleteClientMasterDeployment("master")
+	err = p.k8sclient.DeleteClientMasterDeployment("master", c.Metadata.Name)
 	if err != nil {
 		logrus.Error("Could not delete master deployment:", err)
 	}
 
-	err = p.k8sclient.DeleteStatefulSet()
+	err = p.k8sclient.DeleteStatefulSet(c.Metadata.Name)
 	if err != nil {
 		logrus.Error("Could not delete stateful set:", err)
 	}
 
-	p.k8sclient.DeleteServices()
-	p.k8sclient.DeleteStorageClasses()
+	p.k8sclient.DeleteServices(c.Metadata.Name)
+	p.k8sclient.DeleteStorageClasses(c.Metadata.Name)
 
 	// Leave PV + PVC's for now?
 	return nil
