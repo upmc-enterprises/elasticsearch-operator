@@ -82,6 +82,7 @@ type KubeInterface interface {
 	StatefulSets(namespace string) appsType.StatefulSetInterface
 	StorageClasses() storageType.StorageClassInterface
 	ReplicaSets(namespace string) extensionsType.ReplicaSetInterface
+	PersistentVolumes() coreType.PersistentVolumeInterface
 }
 
 // K8sutil defines the kube object
@@ -852,6 +853,11 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 							Annotations: map[string]string{
 								"volume.beta.kubernetes.io/storage-class": storageClass,
 							},
+							Labels: map[string]string{
+								"component": "elasticsearch",
+								"role":      "data",
+								"name":      statefulSetName,
+							},
 						},
 						Spec: v1.PersistentVolumeClaimSpec{
 							AccessModes: []v1.PersistentVolumeAccessMode{
@@ -947,4 +953,47 @@ func (k *K8sutil) DeleteStorageClasses() error {
 	}
 
 	return nil
+}
+
+// UpdateVolumeReclaimPolicy updates the policy of the volume after it's created:
+// See: https://github.com/kubernetes/kubernetes/issues/38192
+func (k *K8sutil) UpdateVolumeReclaimPolicy(policy string) {
+
+	var policyType v1.PersistentVolumeReclaimPolicy
+
+	switch policy {
+	case "Delete":
+		policyType = v1.PersistentVolumeReclaimDelete
+		break
+	case "Retain":
+		policyType = v1.PersistentVolumeReclaimRetain
+		break
+	}
+
+	// Get list of statefulsets
+	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch,role=data"})
+
+	if err != nil {
+		logrus.Error("Could not get stateful sets! ", err)
+	}
+
+	for _, s := range statefulsets.Items {
+		pv, err := k.Kclient.PersistentVolumes().Get(fmt.Sprintf("%s/%s", namespace, s.Name))
+
+		if err != nil {
+			logrus.Error("Could not get pv! ", err)
+			continue
+		}
+
+		// Set the policy to retain
+		pv.Spec.PersistentVolumeReclaimPolicy = policyType
+
+		_, err = k.Kclient.PersistentVolumes().Update(pv)
+
+		if err != nil {
+			logrus.Error("Could not update pv! ", err)
+			continue
+		}
+	}
+
 }
