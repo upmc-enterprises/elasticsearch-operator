@@ -26,7 +26,7 @@ package controller
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 )
 
 // Config defines properties of the controller

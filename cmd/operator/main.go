@@ -34,8 +34,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/processor"
-	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
 var (
