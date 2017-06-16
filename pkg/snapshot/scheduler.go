@@ -27,6 +27,7 @@ package snapshot
 import (
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -77,10 +78,16 @@ func (s *Scheduler) Run() {
 			s.CreateSnapshotRepository()
 			s.CreateSnapshot()
 		})
+
 		s.cron.Start()
 	} else {
 		logrus.Info("Scheduler is disabled, no snapshots will be scheduled")
 	}
+}
+
+// Cleans up Cron and maybe something else in the future
+func (s *Scheduler) Stop() {
+	s.cron.Stop()
 }
 
 // CreateSnapshotRepository creates a repository to place snapshots
@@ -92,6 +99,13 @@ func (s *Scheduler) CreateSnapshotRepository() {
 	body := fmt.Sprintf("{ \"type\": \"s3\", \"settings\": { \"bucket\": \"%s\" } }", s.s3bucketName)
 	url := fmt.Sprintf("%s/_snapshot/%s", elasticURL, s.s3bucketName)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
+
+	// if authentication is specified, provide Auth to Client
+	if s.auth != (Authentication{}) {
+		logrus.Infof("Using basic Auth Credentials %s", s.auth.userName)
+		req.SetBasicAuth(s.auth.userName, s.auth.password)
+	}
+
 	resp, err := client.Do(req)
 
 	// Some other type of error?
@@ -102,7 +116,8 @@ func (s *Scheduler) CreateSnapshotRepository() {
 
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s]", resp.StatusCode, url)
+		body, _ := ioutil.ReadAll(resp.Body)
+		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s] ", resp.StatusCode, url, string(body))
 		return
 	}
 
@@ -119,7 +134,7 @@ func (s *Scheduler) CreateSnapshot() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
+	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s?wait_for_completion=true", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
 
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
@@ -129,6 +144,7 @@ func (s *Scheduler) CreateSnapshot() {
 
 	// if authentication is specified, provide Auth to Client
 	if s.auth != (Authentication{}) {
+		logrus.Infof("Using basic Auth Credentials %s", s.auth.userName)
 		req.SetBasicAuth(s.auth.userName, s.auth.password)
 	}
 
@@ -142,7 +158,8 @@ func (s *Scheduler) CreateSnapshot() {
 
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		logrus.Errorf("Error creating snapshot [httpstatus: %d][url: %s]", resp.StatusCode, url)
+		body, _ := ioutil.ReadAll(resp.Body)
+		logrus.Errorf("Error creating snapshot [httpstatus: %d][url: %s] %s", resp.StatusCode, url, string(body))
 		return
 	}
 
