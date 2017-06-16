@@ -27,39 +27,35 @@ package spec
 import (
 	"encoding/json"
 
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ElasticsearchClusterList represents a list of ES Clusters
 type ElasticsearchClusterList struct {
-	APIVersion           string `json:"apiVersion"`
-	Kind                 string `json:"kind"`
-	unversioned.TypeMeta `json:",inline"`
-	Metadata             api.ObjectMeta `json:"metadata"`
-
-	Items []ElasticsearchCluster `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ElasticsearchCluster `json:"items"`
 }
 
-// GetObjectKind required to satisfy Object interface
-func (el *ElasticsearchClusterList) GetObjectKind() unversioned.ObjectKind {
-	return &el.TypeMeta
-}
+// // Required to satisfy Object interface
+// func (e *ElasticsearchCluster) GetObjectKind() runtime.ObjectKind {
+// 	return &e.TypeMeta
+// }
 
-// GetListMeta required to satisfy ListMetaAccessor interface
-func (el *ElasticsearchClusterList) GetListMeta() unversioned.List {
-	return &el.Metadata
-}
+// // Required to satisfy ObjectMetaAccessor interface
+// func (e *ElasticsearchCluster) GetObjectMeta() metav1.Object {
+// 	return &e.Metadata
+// }
 
 type ElasticsearchClusterListCopy ElasticsearchClusterList
 
-func (el *ElasticsearchClusterList) UnmarshalJSON(data []byte) error {
+func (c *ElasticsearchClusterList) UnmarshalJSON(data []byte) error {
 	tmp := ElasticsearchClusterListCopy{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
 	tmp2 := ElasticsearchClusterList(tmp)
-	*el = tmp2
+	*c = tmp2
 	return nil
 }
