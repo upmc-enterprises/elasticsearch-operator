@@ -112,7 +112,7 @@ _NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. 
 First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: The API is acesssed the API service in this example via [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/)._ 
 
 ```bash
-curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:9005/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
+curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:8001/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
 ```
 
 # Snapshot
