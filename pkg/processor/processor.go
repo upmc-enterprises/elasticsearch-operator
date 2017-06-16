@@ -28,9 +28,9 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
-	"github.com/upmc-enterprises/elasticsearch-operator/util/k8sutil"
 )
 
 // processorLock ensures that reconciliation and event processing does
