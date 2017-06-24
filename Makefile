@@ -3,8 +3,8 @@
 
 .PHONY: all build container push clean test
 
-TAG ?= 0.0.3
-PREFIX ?= upmcenterprises
+TAG ?= 0.0.3-1
+PREFIX ?= innoq
 
 all: container
 
