@@ -3,3 +3,4 @@ debug
 .vscode/
 .DS_Store
 .idea/
+*.a
