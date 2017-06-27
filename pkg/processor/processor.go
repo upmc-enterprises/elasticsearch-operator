@@ -213,9 +213,6 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
-	// Stop scheduler/cron
-	c.Spec.Scheduler.Stop()
-
 	err := p.k8sclient.DeleteClientMasterDeployment("client", c.Metadata.Name)
 	if err != nil {
 		logrus.Error("Could not delete client deployment:", err)
