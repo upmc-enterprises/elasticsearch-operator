@@ -178,7 +178,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	// Create Services
 	p.k8sclient.CreateDiscoveryService(c.Metadata.Name)
 	p.k8sclient.CreateDataService(c.Metadata.Name)
-	p.k8sclient.CreateClientService(c.Metadata.Name)
+	p.k8sclient.CreateClientService(c.Metadata.Name, c.Spec.NodePort)
 
 	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
 	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name)
