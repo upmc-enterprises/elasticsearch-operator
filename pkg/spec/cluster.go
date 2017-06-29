@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
@@ -88,7 +89,10 @@ type ClusterSpec struct {
 
 	// Instrumentation defines metrics for the cluster
 	Instrumentation Instrumentation `json:"instrumentation"`
-
+	
+	//NodePort
+	NodePort int32 `json:"nodePort"`
+	
 	Scheduler *snapshot.Scheduler
 }
 
