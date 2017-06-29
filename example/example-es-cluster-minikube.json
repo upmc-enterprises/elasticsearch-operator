@@ -5,6 +5,7 @@
     "name": "example-es-cluster"
   },
   "spec": {
+    "elastic-search-image": "upmcenterprises/docker-elasticsearch-kubernetes:5.3.1",
     "client-node-replicas": 1,
     "master-node-replicas": 1,
     "data-node-replicas": 3,

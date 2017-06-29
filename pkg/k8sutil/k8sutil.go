@@ -274,7 +274,7 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 // DeleteServices creates the discovery service
 func (k *K8sutil) DeleteServices(clusterName string) {
 
-	fullDiscoveryServiceName := discoveryServiceName + "-" + clusterName
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	err := k.Kclient.Services(namespace).Delete(fullDiscoveryServiceName, &v1.DeleteOptions{})
 	if err != nil {
 		logrus.Error("Could not delete service "+fullDiscoveryServiceName+":", err)
@@ -303,7 +303,7 @@ func (k *K8sutil) DeleteServices(clusterName string) {
 // CreateDiscoveryService creates the discovery service
 func (k *K8sutil) CreateDiscoveryService(clusterName string) error {
 
-	fullDiscoveryServiceName := discoveryServiceName + "-" + clusterName
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
 	svc, err := k.Kclient.Services(namespace).Get(fullDiscoveryServiceName)
@@ -541,9 +541,12 @@ func (k *K8sutil) DeleteStatefulSet(clusterName string) error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName string) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
 
-	component := "elasticsearch" + "-" + clusterName
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+
 	var deploymentName, role, isNodeMaster, httpEnable string
 
 	if deploymentType == "client" {
@@ -634,6 +637,14 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
+									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
 									},
 								},
 								Ports: []v1.ContainerPort{
@@ -731,10 +742,12 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName string) error {
-	fullDataDeploymentName := dataDeploymentName + "-" + clusterName
-	component := "elasticsearch" + "-" + clusterName
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
 
+	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	statefulSetName := fmt.Sprintf("%s-%s", fullDataDeploymentName, storageClass)
 
 	// Check if StatefulSet exists
@@ -812,6 +825,14 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: "-Xms1024m -Xmx1024m",
+									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
 									},
 								},
 								Ports: []v1.ContainerPort{

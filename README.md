@@ -43,6 +43,8 @@ Following parameters are available to customize the elastic cluster:
 - [storage](https://kubernetes.io/docs/user-guide/persistent-volumes/)
   - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
   - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
+- instrumentation
+  - statsd-host: Sets the statsd host to send metrics to if enabled
 
 ## Certs secret
 
