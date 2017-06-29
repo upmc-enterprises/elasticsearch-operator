@@ -86,6 +86,9 @@ type ClusterSpec struct {
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
 
+	//NodePort
+	NodePort int32 `json:"nodePort"`
+
 	Scheduler *snapshot.Scheduler
 }
 
