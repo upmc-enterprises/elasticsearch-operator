@@ -401,7 +401,7 @@ func (k *K8sutil) CreateDataService(clusterName string) error {
 }
 
 // CreateClientService creates the client service
-func (k *K8sutil) CreateClientService(clusterName string) error {
+func (k *K8sutil) CreateClientService(clusterName string, nodePort int32) error {
 
 	fullClientServiceName := clientServiceName + "-" + clusterName
 	component := "elasticsearch" + "-" + clusterName
@@ -434,7 +434,10 @@ func (k *K8sutil) CreateClientService(clusterName string) error {
 				},
 			},
 		}
-
+		if nodePort > 0 {
+			clientSvc.Spec.Type = v1.ServiceTypeNodePort
+			clientSvc.Spec.Ports[0].NodePort = nodePort
+		}
 		_, err := k.Kclient.Services(namespace).Create(clientSvc)
 
 		if err != nil {
