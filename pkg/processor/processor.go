@@ -133,6 +133,7 @@ func (p *Processor) refreshClusters() error {
 					cluster.Spec.Snapshot.SchedulerEnabled,
 					cluster.Spec.Snapshot.Authentication.UserName,
 					cluster.Spec.Snapshot.Authentication.Password,
+					p.k8sclient.GetClientServiceName(cluster.Metadata.Name),
 				),
 				Resources: myspec.Resources{
 					Limits: myspec.MemoryCPU{
