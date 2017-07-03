@@ -550,7 +550,7 @@ func (k *K8sutil) DeleteStatefulSet(clusterName string) error {
 
 // CreateClientMasterDeployment creates the client or master deployment
 func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string, networkHost string) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -654,6 +654,10 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										Name:  "DISCOVERY_SERVICE",
 										Value: discoveryServiceNameCluster,
 									},
+									v1.EnvVar{
+										Name:  "NETWORK_HOST",
+										Value: networkHost,
+									},
 								},
 								Ports: []v1.ContainerPort{
 									v1.ContainerPort{
@@ -751,7 +755,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string, networkHost string) error {
 
 	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
@@ -841,6 +845,10 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									v1.EnvVar{
 										Name:  "DISCOVERY_SERVICE",
 										Value: discoveryServiceNameCluster,
+									},
+									v1.EnvVar{
+										Name:  "NETWORK_HOST",
+										Value: networkHost,
 									},
 								},
 								Ports: []v1.ContainerPort{
