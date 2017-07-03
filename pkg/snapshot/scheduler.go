@@ -36,12 +36,6 @@ import (
 	cron "github.com/robfig/cron"
 )
 
-var (
-	// TODO: Right now defaulting to same namespace where controller is running, need to determine which
-	//       namespace each cluster is working in to find the instance of elastic
-	elasticURL = fmt.Sprintf("https://elasticsearch:9200") // Internal service name of cluster
-)
-
 // Scheduler stores info about how to snapshot the cluster
 type Scheduler struct {
 	s3bucketName string
@@ -49,6 +43,7 @@ type Scheduler struct {
 	enabled      bool
 	cron         *cron.Cron
 	auth         Authentication
+	elasticURL   string
 }
 
 // Authentication stores credentials used to authenticate against snapshot endpoint
@@ -58,12 +53,17 @@ type Authentication struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password string) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password string, svcURL string) *Scheduler {
+	// TODO: Right now defaulting to same namespace where controller is running, need to determine which
+	//       namespace each cluster is working in to find the instance of elastic
+	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
+
 	return &Scheduler{
 		s3bucketName: bucketName,
 		cronSchedule: cronSchedule,
 		cron:         cron.New(),
 		enabled:      enabled,
+		elasticURL:   elasticURL,
 		auth:         Authentication{userName, password},
 	}
 }
@@ -97,7 +97,7 @@ func (s *Scheduler) CreateSnapshotRepository() {
 	}
 	client := &http.Client{Transport: tr}
 	body := fmt.Sprintf("{ \"type\": \"s3\", \"settings\": { \"bucket\": \"%s\" } }", s.s3bucketName)
-	url := fmt.Sprintf("%s/_snapshot/%s", elasticURL, s.s3bucketName)
+	url := fmt.Sprintf("%s/_snapshot/%s", s.elasticURL, s.s3bucketName)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
 
 	// if authentication is specified, provide Auth to Client
@@ -117,7 +117,7 @@ func (s *Scheduler) CreateSnapshotRepository() {
 	// Non 2XX status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := ioutil.ReadAll(resp.Body)
-		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s] ", resp.StatusCode, url, string(body))
+		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s][body: %s] ", resp.StatusCode, url, string(body))
 		return
 	}
 
@@ -134,7 +134,7 @@ func (s *Scheduler) CreateSnapshot() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s?wait_for_completion=true", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
+	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s?wait_for_completion=true", s.elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
 
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {

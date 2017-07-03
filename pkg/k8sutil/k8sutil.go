@@ -400,10 +400,15 @@ func (k *K8sutil) CreateDataService(clusterName string) error {
 	return nil
 }
 
+// GetClientServiceName return the name of the client service
+func (k *K8sutil) GetClientServiceName(clusterName string) string {
+	return fmt.Sprintf("%s-%s", clientServiceName, clusterName)
+}
+
 // CreateClientService creates the client service
 func (k *K8sutil) CreateClientService(clusterName string, nodePort int32) error {
 
-	fullClientServiceName := clientServiceName + "-" + clusterName
+	fullClientServiceName := k.GetClientServiceName(clusterName)
 	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
 	svc, err := k.Kclient.Services(namespace).Get(fullClientServiceName)
