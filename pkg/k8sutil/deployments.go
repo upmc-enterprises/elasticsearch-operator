@@ -93,7 +93,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 }
 
 // CreateClientDeployment creates the client deployment
-func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
+func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string, enableSSL bool,
 	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)

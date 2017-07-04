@@ -62,8 +62,12 @@ type Authentication struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, svcURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password, svcURL, clusterName, namespace string, kc kubernetes.Interface, enableSSL bool) *Scheduler {
 	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
+
+	if !enableSSL {
+		elasticURL = fmt.Sprintf("http://%s:9200", svcURL) // Internal service name of cluster
+	}
 
 	return &Scheduler{
 		s3bucketName: bucketName,

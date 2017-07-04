@@ -26,6 +26,7 @@ package k8sutil
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -355,7 +356,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
+	enableSSL bool, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
 
 	var deploymentName, role, isNodeMaster, isNodeData string
 
@@ -472,6 +473,14 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
 										Value: "true",
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
