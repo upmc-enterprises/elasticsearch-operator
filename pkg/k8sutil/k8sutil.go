@@ -69,19 +69,6 @@ const (
 	secretName = "es-certs"
 )
 
-// // KubeInterface abstracts the kubernetes client
-// type KubeInterface interface {
-// 	Services(namespace string) coreType.ServiceInterface
-// 	ThirdPartyResources() extensionsType.ThirdPartyResourceInterface
-// 	Deployments(namespace string) appsType.DeploymentInterface
-// 	StatefulSets(namespace string) appsType.StatefulSetInterface
-// 	StorageClasses() storageType.StorageClassInterface
-// 	ReplicaSets(namespace string) extensionsType.ReplicaSetInterface
-// 	PersistentVolumes() coreType.PersistentVolumeInterface
-// 	PersistentVolumeClaims(namespace string) coreType.PersistentVolumeClaimInterface
-// 	Core() coreType.CoreV1Interface
-// }
-
 // K8sutil defines the kube object
 type K8sutil struct {
 	Config     *rest.Config
