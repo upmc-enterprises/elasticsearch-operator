@@ -91,6 +91,8 @@ func Main() int {
 	logrus.Info("Watching for elastic search events...")
 	wg.Add(1)
 	processor.WatchElasticSearchClusterEvents(doneChan, &wg)
+	wg.Add(1)
+	processor.WatchDataPodEvents(doneChan, &wg)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)

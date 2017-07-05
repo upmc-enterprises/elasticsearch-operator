@@ -27,6 +27,8 @@ package processor
 import (
 	"sync"
 
+	"k8s.io/client-go/pkg/api/v1"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
@@ -88,6 +90,28 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 	}()
 }
 
+// WatchDataPodEvents watches for changes to pods
+func (p *Processor) WatchDataPodEvents(done chan struct{}, wg *sync.WaitGroup) {
+	events, watchErrs := p.k8sclient.MonitorDataPods(done)
+	go func() {
+		for {
+			select {
+			case event := <-events:
+				err := p.processPodEvent(event)
+				if err != nil {
+					logrus.Errorln(err)
+				}
+			case err := <-watchErrs:
+				logrus.Errorln(err)
+			case <-done:
+				wg.Done()
+				logrus.Println("Stopped data pod event watcher.")
+				return
+			}
+		}
+	}()
+}
+
 func (p *Processor) refreshClusters() error {
 
 	for key, cluster := range p.clusters {
@@ -107,9 +131,9 @@ func (p *Processor) refreshClusters() error {
 	}
 
 	for _, cluster := range currentClusters {
-		logrus.Infof("Found cluster: %s", cluster.Metadata.Name)
+		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
 
-		p.clusters[cluster.Metadata.Name] = &myspec.ElasticsearchCluster{
+		p.clusters[cluster.ObjectMeta.Name] = &myspec.ElasticsearchCluster{
 			Spec: myspec.ClusterSpec{
 				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
 				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
@@ -134,7 +158,7 @@ func (p *Processor) refreshClusters() error {
 					cluster.Spec.Snapshot.SchedulerEnabled,
 					cluster.Spec.Snapshot.Authentication.UserName,
 					cluster.Spec.Snapshot.Authentication.Password,
-					p.k8sclient.GetClientServiceName(cluster.Metadata.Name),
+					p.k8sclient.GetClientServiceName(cluster.ObjectMeta.Name),
 				),
 				Resources: myspec.Resources{
 					Limits: myspec.MemoryCPU{
@@ -169,6 +193,16 @@ func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchClus
 	return nil
 }
 
+func (p *Processor) processPodEvent(c *v1.Pod) error {
+	processorLock.Lock()
+	defer processorLock.Unlock()
+
+	// Set the policy to retain
+	p.k8sclient.UpdateVolumeReclaimPolicy("Retain")
+
+	return nil
+}
+
 func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Event!")
 
@@ -181,12 +215,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	logrus.Infof("Using [%s] as image for es cluster", baseImage)
 
 	// Create Services
-	p.k8sclient.CreateDiscoveryService(c.Metadata.Name)
-	p.k8sclient.CreateDataService(c.Metadata.Name)
-	p.k8sclient.CreateClientService(c.Metadata.Name, c.Spec.NodePort)
+	p.k8sclient.CreateDiscoveryService(c.ObjectMeta.Name)
+	p.k8sclient.CreateDataService(c.ObjectMeta.Name)
+	p.k8sclient.CreateClientService(c.ObjectMeta.Name, c.Spec.NodePort)
 
-	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
-	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
+	p.k8sclient.CreateClientMasterDeployment("client", baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
+	p.k8sclient.CreateClientMasterDeployment("master", baseImage, &c.Spec.MasterNodeReplicas, c.Spec.JavaOptions, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
 
 	zoneCount := 0
 	if len(c.Spec.Zones) != 0 {
@@ -194,23 +228,23 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Storage Classes
 		for _, sc := range c.Spec.Zones {
-			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.Metadata.Name)
+			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
 		}
 
 		zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
 
 		for index, count := range zoneDistribution {
-			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
+			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
 		}
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
-		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.Metadata.Name)
-		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Metadata.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
+		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard", c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost)
 	}
 
 	// Setup CronSchedule
-	p.clusters[c.Metadata.Name].Spec.Scheduler.Run()
+	p.clusters[c.ObjectMeta.Name].Spec.Scheduler.Run()
 
 	return nil
 }
@@ -218,25 +252,24 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
-	err := p.k8sclient.DeleteClientMasterDeployment("client", c.Metadata.Name)
+	err := p.k8sclient.DeleteClientMasterDeployment("client", c.ObjectMeta.Name)
 	if err != nil {
 		logrus.Error("Could not delete client deployment:", err)
 	}
 
-	err = p.k8sclient.DeleteClientMasterDeployment("master", c.Metadata.Name)
+	err = p.k8sclient.DeleteClientMasterDeployment("master", c.ObjectMeta.Name)
 	if err != nil {
 		logrus.Error("Could not delete master deployment:", err)
 	}
 
-	err = p.k8sclient.DeleteStatefulSet(c.Metadata.Name)
+	err = p.k8sclient.DeleteStatefulSet(c.ObjectMeta.Name)
 	if err != nil {
 		logrus.Error("Could not delete stateful set:", err)
 	}
 
-	p.k8sclient.DeleteServices(c.Metadata.Name)
-	p.k8sclient.DeleteStorageClasses(c.Metadata.Name)
+	p.k8sclient.DeleteServices(c.ObjectMeta.Name)
+	p.k8sclient.DeleteStorageClasses(c.ObjectMeta.Name)
 
-	// Leave PV + PVC's for now?
 	return nil
 }
 
