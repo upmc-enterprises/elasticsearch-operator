@@ -262,16 +262,11 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		return err
 	}
 
-<<<<<<< HEAD
-	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
+	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.EnableSSL,
 		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace); err != nil {
 		logrus.Error("Error creating client deployment ", err)
 		return err
 	}
-=======
-	p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.EnableSSL,
-		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
->>>>>>> add cluster spec to enable/disable ssl
 
 	zoneCount := 0
 	if len(c.Spec.Zones) != 0 {
@@ -290,35 +285,26 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		for index, count := range zoneDistributionMaster {
-<<<<<<< HEAD
 			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
 				return err
 			}
-=======
-			p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, c.Spec.JavaOptions)
->>>>>>> add cluster spec to enable/disable ssl
+
 		}
 
 		// Create Data Nodes
 		for index, count := range zoneDistributionData {
-<<<<<<< HEAD
+
 			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 
 				return err
 			}
-=======
-			p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, c.Spec.JavaOptions)
->>>>>>> add cluster spec to enable/disable ssl
+
 		}
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
@@ -332,6 +318,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
+
 			return err
 		}
 

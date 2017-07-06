@@ -577,7 +577,6 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				"volume.beta.kubernetes.io/storage-class": storageClass,
 			}
 		}
-
 		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
 
 		if err != nil {
@@ -617,8 +616,6 @@ play.ws.ssl {
                 ]
         }
 }
-//play.crypto.secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
-//play.http.secret.key = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 # Application base path
 basePath = "/"
@@ -632,7 +629,6 @@ pidfile.path=/dev/null
 rest.history.size = 50 // defaults to 50 if not specified
 
 # Path of local database file
-#data.path: "/var/lib/cerebro/cerebro.db"
 data.path = "./cerebro.db"
 hosts = [
 {
@@ -640,7 +636,6 @@ hosts = [
 	name = "es-servers"
 }
 ]
-		`, elasticsearchCertspath, elasticsearchCertspath, fmt.Sprintf("https://%s:9200",
-		fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName))))
+		`, elasticsearchCertspath, elasticsearchCertspath, k.GetClientServiceName(clusterName))
 	return x
 }
