@@ -9,6 +9,7 @@
     "client-node-replicas": 1,
     "master-node-replicas": 1,
     "data-node-replicas": 3,
+    "network-host": "_local_",
     "zones": [],
     "data-volume-size": "10Gi",
     "java-options": "-Xms256m -Xmx256m",

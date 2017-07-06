@@ -31,7 +31,6 @@ import (
 
 // Config defines properties of the controller
 type Config struct {
-	Namespace string
 	k8sclient *k8sutil.K8sutil
 }
 
@@ -41,11 +40,10 @@ type Controller struct {
 }
 
 // New up a Controller
-func New(name, ns string, k8sclient *k8sutil.K8sutil) (*Controller, error) {
+func New(name string, k8sclient *k8sutil.K8sutil) (*Controller, error) {
 
 	c := &Controller{
 		Config: Config{
-			Namespace: ns,
 			k8sclient: k8sclient,
 		},
 	}

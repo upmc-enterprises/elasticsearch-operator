@@ -50,8 +50,7 @@ import (
 )
 
 var (
-	namespace = os.Getenv("NAMESPACE")
-	tprName   = "elasticsearch-cluster.enterprises.upmc.com"
+	tprName = "elasticsearch-cluster.enterprises.upmc.com"
 )
 
 const (
@@ -183,15 +182,10 @@ func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticsearchCluster, err
 
 // MonitorElasticSearchEvents watches for new or removed clusters
 func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *myspec.ElasticsearchCluster, <-chan error) {
-	// Validate Namespace exists
-	if len(namespace) == 0 {
-		logrus.Errorln("WARNING: No namespace found! Events will not be able to be watched!")
-	}
-
 	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
-	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", namespace, fields.Everything())
+	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
@@ -228,16 +222,11 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 
 // MonitorDataPods watches for new or changed data node pods
 func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-chan error) {
-	// Validate Namespace exists
-	if len(namespace) == 0 {
-		logrus.Errorln("WARNING: No namespace found! Data pod events will not be able to be watched!")
-	}
-
 	events := make(chan *v1.Pod)
 	errc := make(chan error, 1)
 
 	// create the pod watcher
-	podListWatcher := cache.NewListWatchFromClient(k.Kclient.Core().RESTClient(), "pods", namespace, fields.Everything())
+	podListWatcher := cache.NewListWatchFromClient(k.Kclient.Core().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*v1.Pod)
@@ -303,7 +292,7 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 }
 
 // DeleteServices creates the discovery service
-func (k *K8sutil) DeleteServices(clusterName string) {
+func (k *K8sutil) DeleteServices(clusterName, namespace string) {
 
 	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	err := k.Kclient.CoreV1().Services(namespace).Delete(fullDiscoveryServiceName, &metav1.DeleteOptions{})
@@ -332,7 +321,7 @@ func (k *K8sutil) DeleteServices(clusterName string) {
 }
 
 // CreateDiscoveryService creates the discovery service
-func (k *K8sutil) CreateDiscoveryService(clusterName string) error {
+func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 
 	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	component := "elasticsearch" + "-" + clusterName
@@ -381,7 +370,7 @@ func (k *K8sutil) CreateDiscoveryService(clusterName string) error {
 }
 
 // CreateDataService creates the data service
-func (k *K8sutil) CreateDataService(clusterName string) error {
+func (k *K8sutil) CreateDataService(clusterName, namespace string) error {
 	fullDataServiceName := dataServiceName + "-" + clusterName
 	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
@@ -431,13 +420,18 @@ func (k *K8sutil) CreateDataService(clusterName string) error {
 	return nil
 }
 
+// GetClientServiceNameFullDNS return the full DNS name of the client service
+func (k *K8sutil) GetClientServiceNameFullDNS(clusterName, namespace string) string {
+	return fmt.Sprintf("%s.%s.svc.cluster.local", k.GetClientServiceName(clusterName), namespace)
+}
+
 // GetClientServiceName return the name of the client service
 func (k *K8sutil) GetClientServiceName(clusterName string) string {
 	return fmt.Sprintf("%s-%s", clientServiceName, clusterName)
 }
 
 // CreateClientService creates the client service
-func (k *K8sutil) CreateClientService(clusterName string, nodePort int32) error {
+func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort int32) error {
 
 	fullClientServiceName := k.GetClientServiceName(clusterName)
 	component := "elasticsearch" + "-" + clusterName
@@ -490,7 +484,7 @@ func (k *K8sutil) CreateClientService(clusterName string, nodePort int32) error 
 }
 
 // DeleteClientMasterDeployment deletes the client or master deployment
-func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string, clusterName string) error {
+func (k *K8sutil) DeleteClientMasterDeployment(deploymentType, clusterName, namespace string) error {
 
 	labelSelector := ""
 
@@ -548,7 +542,7 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string, clusterNam
 }
 
 // DeleteStatefulSet deletes the data statefulset
-func (k *K8sutil) DeleteStatefulSet(clusterName string) error {
+func (k *K8sutil) DeleteStatefulSet(clusterName, namespace string) error {
 
 	// Get list of deployments
 	statefulsets, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: "component=elasticsearch" + "-" + clusterName + ",role=data"})
@@ -587,7 +581,7 @@ func (k *K8sutil) DeleteStatefulSet(clusterName string) error {
 
 // CreateClientMasterDeployment creates the client or master deployment
 func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string, networkHost string) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -792,7 +786,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string, networkHost string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
 	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
@@ -1043,7 +1037,7 @@ func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
 
 // UpdateVolumeReclaimPolicy updates the policy of the volume after it's created:
 // See: https://github.com/kubernetes/kubernetes/issues/38192
-func (k *K8sutil) UpdateVolumeReclaimPolicy(policy string) {
+func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 
 	var policyType v1.PersistentVolumeReclaimPolicy
 
@@ -1084,5 +1078,4 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy string) {
 		}
 
 	}
-
 }
