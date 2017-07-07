@@ -45,7 +45,6 @@ var (
 	baseImage    string
 	kubeCfgFile  string
 	masterHost   string
-	namespace    = os.Getenv("NAMESPACE")
 )
 
 func init() {
@@ -71,7 +70,7 @@ func Main() int {
 
 	// Init
 	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost)
-	controller, err := controller.New("elasticcluster", namespace, k8sclient)
+	controller, err := controller.New("elasticcluster", k8sclient)
 	processor, err := processor.New(k8sclient, baseImage)
 
 	if err != nil {
