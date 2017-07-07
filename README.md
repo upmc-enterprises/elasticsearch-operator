@@ -8,7 +8,7 @@ The ElasticSearch operator is designed to manage one or more elastic search clus
 
 ## Kubernetes
 
-The operator was built and tested on a 1.5.X Kubernetes cluster and is the only version supported currently. This is because it is utilizing [`StatefulSets`](https://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/) which are not available in previous versions of Kubernetes. 
+The operator was built and tested on a 1.6.X Kubernetes cluster and is the only version supported currently. This is because it is utilizing [`StatefulSets`](https://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/) as well as [`CronJobs`](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) which are not available in previous versions of Kubernetes. 
 
 ## Cloud
 
