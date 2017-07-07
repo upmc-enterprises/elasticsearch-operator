@@ -98,11 +98,24 @@ func (s *Scheduler) CreateSnapshot() {
 
 // Stop cleans up Cron
 func (s *Scheduler) Stop() {
-	// TODO:
+	s.deleteCronJob(s.namespace, s.clusterName)
 }
 
 // DeleteCronJob deletes a cron job
-func (s *Scheduler) DeleteCronJob(namespace, clusterName, action string) {
+func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
+	// Repository CronJob
+	snapshotName := getSnapshotname(clusterName, CRON_ACTION_REPOSITORY)
+	err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+	if err != nil {
+		logrus.Error("Could not delete Repository CronJob! ", err)
+	}
+
+	// Snapshot CronJob
+	snapshotName = getSnapshotname(clusterName, CRON_ACTION_SNAPSHOT)
+	err = s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+	if err != nil {
+		logrus.Error("Could not delete CronJob! ", err)
+	}
 }
 
 // CreateCronJob creates a cron job
@@ -140,9 +153,6 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 											},
 										},
 										Args: []string{
-											// "/bin/sh",
-											// "-c",
-											// "/usr/local/bin/elasticsearch-cron",
 											fmt.Sprintf("--action=%s", action),
 											fmt.Sprintf("--s3-bucket-name=%s", s.s3bucketName),
 											fmt.Sprintf("--elastic-url=%s", s.elasticURL),

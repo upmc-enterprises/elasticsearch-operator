@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package processor
 
 import (
+	"fmt"
 	"sync"
 
 	"k8s.io/client-go/pkg/api/v1"
@@ -133,7 +134,7 @@ func (p *Processor) refreshClusters() error {
 	for _, cluster := range currentClusters {
 		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
 
-		p.clusters[cluster.ObjectMeta.Name] = &myspec.ElasticsearchCluster{
+		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = &myspec.ElasticsearchCluster{
 			Spec: myspec.ClusterSpec{
 				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
 				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
@@ -251,7 +252,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	// Setup CronSchedule
-	p.clusters[c.ObjectMeta.Name].Spec.Scheduler.Init()
+	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Init()
 
 	return nil
 }
@@ -276,6 +277,8 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) e
 
 	p.k8sclient.DeleteServices(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
 	p.k8sclient.DeleteStorageClasses(c.ObjectMeta.Name)
+
+	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Stop()
 
 	return nil
 }
