@@ -240,7 +240,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		zoneDistribution := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
 
 		for index, count := range zoneDistribution {
-			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
+			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.DataNodeResources,
 				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
 		}
 	} else {
@@ -248,7 +248,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
 		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard",
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
+			c.Spec.DataDiskSize, c.Spec.DataNodeResources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
 	}
 
 	// Setup CronSchedule

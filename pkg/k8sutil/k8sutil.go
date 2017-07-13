@@ -800,8 +800,8 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
 
 		// Parse CPU / Memory
-		// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
-		// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+		limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
@@ -900,10 +900,10 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									},
 								},
 								Resources: v1.ResourceRequirements{
-									// Limits: v1.ResourceList{
-									// 	"cpu":    limitCPU,
-									// 	"memory": limitMemory,
-									// },
+									Limits: v1.ResourceList{
+										"cpu":    limitCPU,
+										"memory": limitMemory,
+									},
 									Requests: v1.ResourceList{
 										"cpu":    requestCPU,
 										"memory": requestMemory,

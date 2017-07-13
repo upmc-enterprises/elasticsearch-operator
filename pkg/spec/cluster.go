@@ -81,6 +81,9 @@ type ClusterSpec struct {
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
 
+	// Resources for data nodes
+	DataNodeResources Resources `json:"data-node-resources"`
+
 	// Instrumentation defines metrics for the cluster
 	Instrumentation Instrumentation `json:"instrumentation"`
 
