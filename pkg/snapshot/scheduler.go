@@ -73,16 +73,20 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, svcU
 		Kclient:      kc,
 		namespace:    namespace,
 		clusterName:  clusterName,
+		enabled:      enabled,
 	}
 }
 
 // Init creates the snapshot repository cronjob
 func (s *Scheduler) Init() {
-	// Init repository
-	s.CreateSnapshotRepository()
 
-	// Init snapshot
-	s.CreateSnapshot()
+	if s.enabled {
+		// Init repository
+		s.CreateSnapshotRepository()
+
+		// Init snapshot
+		s.CreateSnapshot()
+	}
 }
 
 // CreateSnapshotRepository creates the snapshot repository cronjob

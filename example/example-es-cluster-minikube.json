@@ -14,7 +14,7 @@
     "data-volume-size": "10Gi",
     "java-options": "-Xms256m -Xmx256m",
     "snapshot": {
-      "scheduler-enabled": true,
+      "scheduler-enabled": false,
       "bucket-name": "elasticsnapshots99",
       "cron-schedule": "@every 2m"
     },

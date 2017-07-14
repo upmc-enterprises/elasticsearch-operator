@@ -218,6 +218,13 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 	logrus.Infof("Using [%s] as image for es cluster", baseImage)
 
+	if p.k8sclient.CertsSecretExists(c.ObjectMeta.Namespace, c.ObjectMeta.Name) == false {
+		// Create certs
+		logrus.Info("Creating new certs!")
+		p.k8sclient.GenerateCerts("/tmp/certs/config", "/tmp/certs/certs", c.ObjectMeta.Namespace, c.ObjectMeta.Name)
+		p.k8sclient.CreateCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name, "/tmp/certs/certs")
+	}
+
 	// Create Services
 	p.k8sclient.CreateDiscoveryService(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
 	p.k8sclient.CreateDataService(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
@@ -279,6 +286,8 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) e
 	p.k8sclient.DeleteStorageClasses(c.ObjectMeta.Name)
 
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Stop()
+
+	p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name)
 
 	return nil
 }
