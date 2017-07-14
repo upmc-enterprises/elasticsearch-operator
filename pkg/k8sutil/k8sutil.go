@@ -434,7 +434,7 @@ func (k *K8sutil) GetClientServiceName(clusterName string) string {
 func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort int32) error {
 
 	fullClientServiceName := k.GetClientServiceName(clusterName)
-	component := "elasticsearch" + "-" + clusterName
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	// Check if service exists
 	svc, err := k.Kclient.CoreV1().Services(namespace).Get(fullClientServiceName, metav1.GetOptions{})
 
@@ -708,7 +708,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										MountPath: "/data",
 									},
 									v1.VolumeMount{
-										Name:      "es-certs",
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
@@ -732,10 +732,10 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 								},
 							},
 							v1.Volume{
-								Name: "es-certs",
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 								VolumeSource: v1.VolumeSource{
 									Secret: &v1.SecretVolumeSource{
-										SecretName: "es-certs",
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
 									},
 								},
 							},
@@ -895,7 +895,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 										MountPath: "/data",
 									},
 									v1.VolumeMount{
-										Name:      "es-certs",
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
@@ -913,10 +913,10 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 						},
 						Volumes: []v1.Volume{
 							v1.Volume{
-								Name: "es-certs",
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 								VolumeSource: v1.VolumeSource{
 									Secret: &v1.SecretVolumeSource{
-										SecretName: "es-certs",
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
 									},
 								},
 							},
@@ -1055,7 +1055,6 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 	})
 
 	if err != nil {
-		logrus.Error("Could not get pvc! ", err)
 		return
 	}
 
@@ -1063,7 +1062,6 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 		pv, err := k.Kclient.CoreV1().PersistentVolumes().Get(v.Spec.VolumeName, metav1.GetOptions{})
 
 		if err != nil {
-			logrus.Error("Could not get pv! ", err)
 			continue
 		}
 
