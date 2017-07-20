@@ -199,7 +199,7 @@ To run the Operator locally:
 
 ```
 $ kubectl proxy
-$ NAMESPACE=default go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
+$ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
 
 # About
