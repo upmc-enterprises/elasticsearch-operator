@@ -165,7 +165,7 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 
 	// Generate CA Cert
 	logrus.Info("Creating ca cert...")
-	cmdCA1 := exec.Command("cfssl", "genkey", "-initca", fmt.Sprintf("%s/ca-csr.json", configDir))
+	cmdCA1 := exec.Command("cfssl", "gencert", "-initca", fmt.Sprintf("%s/ca-csr.json", configDir))
 	cmdCA2 := exec.Command("cfssljson", "-bare", fmt.Sprintf("%s/ca", certsDir))
 	_, err := pipeCommands(cmdCA1, cmdCA2)
 	if err != nil {
@@ -174,30 +174,23 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 
 	// Generate Node Cert
 	logrus.Info("Creating node cert...")
-	cmdNode1 := exec.Command("cfssl", "gencert", "-ca", fmt.Sprintf("%s/ca.pem", certsDir), "-ca-key", fmt.Sprintf("%s/ca-key.pem", certsDir), "-config", fmt.Sprintf("%s/ca-config.json", configDir), fmt.Sprintf("%s/req-csr.json", configDir))
+	cmdNode1 := exec.Command("cfssl", "gencert", "-ca", fmt.Sprintf("%s/ca.pem", certsDir), "-ca-key", fmt.Sprintf("%s/ca-key.pem", certsDir), "-config", fmt.Sprintf("%s/ca-config.json", configDir), "-profile=server", fmt.Sprintf("%s/req-csr.json", configDir))
 	cmdNode2 := exec.Command("cfssljson", "-bare", fmt.Sprintf("%s/node", certsDir))
 	_, err = pipeCommands(cmdNode1, cmdNode2)
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	logrus.Info("Converting ca to pkcs12...")
-	cmdConvertCA := exec.Command("openssl", "pkcs12", "-export", "-inkey", fmt.Sprintf("%s/ca-key.pem", certsDir), "-in", fmt.Sprintf("%s/ca.pem", certsDir), "-out", fmt.Sprintf("%s/ca.pkcs12", certsDir), "-password", "pass:changeit")
-	out, err := cmdConvertCA.Output()
-	if err != nil {
-		logrus.Error(string(out))
-	}
-
 	logrus.Info("Converting node to pkcs12...")
-	cmdConvertNode := exec.Command("openssl", "pkcs12", "-export", "-inkey", fmt.Sprintf("%s/node-key.pem", certsDir), "-in", fmt.Sprintf("%s/node.pem", certsDir), "-out", fmt.Sprintf("%s/node.pkcs12", certsDir), "-password", "pass:changeit")
-	out, err = cmdConvertNode.Output()
+	cmdConvertNode := exec.Command("openssl", "pkcs12", "-export", "-inkey", fmt.Sprintf("%s/node-key.pem", certsDir), "-in", fmt.Sprintf("%s/node.pem", certsDir), "-out", fmt.Sprintf("%s/node.pkcs12", certsDir), "-password", "pass:changeit", "-certfile", fmt.Sprintf("%s/ca.pem", certsDir))
+	out, err := cmdConvertNode.Output()
 	if err != nil {
 		logrus.Error(string(out))
 	}
 
 	logrus.Info("Converting ca cert to jks...")
-	cmdCAJKS := exec.Command("keytool", "-importkeystore", "-srckeystore", fmt.Sprintf("%s/ca.pkcs12", certsDir), "-srcalias", "1", "-destkeystore", fmt.Sprintf("%s/truststore.jks", certsDir),
-		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-srcstorepass", "changeit", "-destalias", "elasticsearch-ca")
+	cmdCAJKS := exec.Command("keytool", "-import", "-file", fmt.Sprintf("%s/ca.pem", certsDir), "-alias", "root-ca", "-keystore", fmt.Sprintf("%s/truststore.jks", certsDir),
+		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-noprompt")
 	out, err = cmdCAJKS.Output()
 	if err != nil {
 		logrus.Error(string(out))

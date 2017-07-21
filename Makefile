@@ -3,7 +3,7 @@
 
 .PHONY: all build container push clean test
 
-TAG ?= 0.0.5
+TAG ?= 0.0.6
 PREFIX ?= upmcenterprises
 
 all: container
