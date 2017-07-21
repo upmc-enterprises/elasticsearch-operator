@@ -1,4 +1,4 @@
-# Makefile for the Docker image upmcenterprises/elasticsearch-controller
+# Makefile for the Docker image upmcenterprises/elasticsearch-operator
 # MAINTAINER: Steve Sloka <slokas@upmc.edu>
 
 .PHONY: all build container push clean test
