@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"sync"
 
+	elastic "github.com/upmc-enterprises/elasticsearch-operator/pkg/elastic"
+
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/Sirupsen/logrus"
@@ -44,17 +46,21 @@ var (
 
 // Processor object
 type Processor struct {
-	k8sclient *k8sutil.K8sutil
-	baseImage string
-	clusters  map[string]*myspec.ElasticsearchCluster
+	k8sclient     *k8sutil.K8sutil
+	elasticClient *elastic.Client
+	baseImage     string
+	clusters      map[string]*myspec.ElasticsearchCluster
 }
 
 // New creates new instance of Processor
 func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
+	esClient, _ := elastic.New()
+
 	p := &Processor{
-		k8sclient: kclient,
-		baseImage: baseImage,
-		clusters:  make(map[string]*myspec.ElasticsearchCluster),
+		k8sclient:     kclient,
+		baseImage:     baseImage,
+		clusters:      make(map[string]*myspec.ElasticsearchCluster),
+		elasticClient: esClient,
 	}
 
 	return p, nil
@@ -85,6 +91,28 @@ func (p *Processor) WatchElasticSearchClusterEvents(done chan struct{}, wg *sync
 			case <-done:
 				wg.Done()
 				logrus.Println("Stopped elasticsearch event watcher.")
+				return
+			}
+		}
+	}()
+}
+
+// WatchElasticSearchClusterHealthEvents watches for elasticsearch health events
+func (p *Processor) WatchElasticSearchClusterHealthEvents(done chan struct{}, wg *sync.WaitGroup) {
+	events, watchErrs := p.elasticClient.MonitorElasticClusterStatus(done)
+	go func() {
+		for {
+			select {
+			case event := <-events:
+				err := p.processElasticSearchClusterHealthEvent(event)
+				if err != nil {
+					logrus.Errorln(err)
+				}
+			case err := <-watchErrs:
+				logrus.Errorln(err)
+			case <-done:
+				wg.Done()
+				logrus.Println("Stopped elasticsearch health event watcher.")
 				return
 			}
 		}
@@ -194,6 +222,13 @@ func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchClus
 	case c.Type == "DELETED":
 		return p.deleteElasticSearchCluster(c)
 	}
+	return nil
+}
+
+func (p *Processor) processElasticSearchClusterHealthEvent(c *elastic.StatusEvent) error {
+	processorLock.Lock()
+	defer processorLock.Unlock()
+	logrus.Infof("Process Elasticsearch Health Event %v", c.Status)
 	return nil
 }
 
