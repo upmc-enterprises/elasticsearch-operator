@@ -100,18 +100,8 @@ func (c *Client) MonitorElasticClusterStatus(stopchan chan struct{}) (<-chan *St
 				c.HealthStatus = event.HealthStatus
 			}
 
-			// for {
-			// 	var event StatusEvent
-			// 	err = decoder.Decode(&event)
-			// 	if err != nil {
-			// 		errc <- err
-			// 		break
-			// 	}
-			// 	events <- &event
-			// }
-
 			// Zzz...zzzzzZZzzz...zzzZZZzzzz...
-			time.Sleep(5 * time.Second)
+			time.Sleep(c.checkInterval)
 		}
 	}()
 

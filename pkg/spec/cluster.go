@@ -27,6 +27,7 @@ package spec
 import (
 	"encoding/json"
 
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/elastic"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -91,6 +92,8 @@ type ClusterSpec struct {
 	NodePort int32 `json:"nodePort"`
 
 	Scheduler *snapshot.Scheduler
+
+	ElasticClient elastic.Interface
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository

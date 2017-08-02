@@ -40,6 +40,7 @@ type Client struct {
 	elasticURL string
 	HealthStatus
 	checkInterval time.Duration
+	caCert        []byte
 }
 
 // HealthStatus represents the response from Elastic health endpoint
@@ -62,12 +63,13 @@ type HealthStatus struct {
 }
 
 // New creates a new instance of k8sutil
-func New() (*Client, error) {
+func New(elasticURL string, caCert []byte) (Interface, error) {
 
 	k := &Client{
-		elasticURL:    "https://elasticsearch-example-es-cluster.default:9200",
+		elasticURL:    elasticURL,
 		HealthStatus:  HealthStatus{},
 		checkInterval: time.Second * 5,
+		caCert:        caCert,
 	}
 	return k, nil
 }

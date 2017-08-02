@@ -47,20 +47,17 @@ var (
 // Processor object
 type Processor struct {
 	k8sclient     *k8sutil.K8sutil
-	elasticClient *elastic.Client
+	elasticClient *elastic.Interface
 	baseImage     string
 	clusters      map[string]*myspec.ElasticsearchCluster
 }
 
 // New creates new instance of Processor
 func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
-	esClient, _ := elastic.New()
-
 	p := &Processor{
-		k8sclient:     kclient,
-		baseImage:     baseImage,
-		clusters:      make(map[string]*myspec.ElasticsearchCluster),
-		elasticClient: esClient,
+		k8sclient: kclient,
+		baseImage: baseImage,
+		clusters:  make(map[string]*myspec.ElasticsearchCluster),
 	}
 
 	return p, nil
@@ -162,6 +159,10 @@ func (p *Processor) refreshClusters() error {
 	for _, cluster := range currentClusters {
 		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
 
+		esClient, _ := elastic.New(fmt.Sprintf("https://%s:9200", p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)),
+			p.k8sclient.GetSecretValue(cluster.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", "es-certs", cluster.ObjectMeta.Name), "ca.pem"),
+		)
+
 		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = &myspec.ElasticsearchCluster{
 			Spec: myspec.ClusterSpec{
 				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
@@ -205,6 +206,7 @@ func (p *Processor) refreshClusters() error {
 				Instrumentation: myspec.Instrumentation{
 					StatsdHost: cluster.Spec.Instrumentation.StatsdHost,
 				},
+				ElasticClient: esClient,
 			},
 		}
 	}
