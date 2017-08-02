@@ -3,20 +3,26 @@ kind: ServiceAccount
 metadata:
   name: elasticsearch-operator
 ---
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: elasticsearch-operator
 rules:
 - apiGroups: ["extensions"]
-  resources: ["deployments", "thirdpartyresources"]
-  verbs: ["create", "get", "update", "delete"]
+  resources: ["deployments", "thirdpartyresources", "replicasets"]
+  verbs: ["create", "get", "update", "delete", "list"]
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
-  verbs: ["get", "list", "create", "delete"]
+  verbs: ["get", "list", "create", "delete", "deletecollection"]
 - apiGroups: [""]
-  resources: ["services"]
+  resources: ["services", "secrets"]
   verbs: ["create", "get", "update", "delete"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs", "jobs"]
+  verbs: ["create", "get", "deletecollection", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "watch"]
 - apiGroups: ["apps"]
   resources: ["statefulsets"]
   verbs: ["*"]
@@ -24,10 +30,11 @@ rules:
   resources: ["elasticsearchclusters"]
   verbs: ["*"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1alpha1
-kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
   name: elasticsearch-operator
+  namespace: operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -35,11 +42,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: elasticsearch-operator
+  namespace: operator
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: elasticsearch-operator
+  namespace: operator
 spec:
   replicas: 1
   template:
