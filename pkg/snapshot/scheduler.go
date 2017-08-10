@@ -25,21 +25,22 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package snapshot
 
 import (
-	"crypto/tls"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
+
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/Sirupsen/logrus"
-	cron "github.com/robfig/cron"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/client-go/pkg/api/v1"
+	batchv1 "k8s.io/client-go/pkg/apis/batch/v1"
+	batch "k8s.io/client-go/pkg/apis/batch/v2alpha1"
 )
 
-var (
-	// TODO: Right now defaulting to same namespace where controller is running, need to determine which
-	//       namespace each cluster is working in to find the instance of elastic
-	elasticURL = fmt.Sprintf("https://elasticsearch:9200") // Internal service name of cluster
+const (
+	baseCronImage          = "upmcenterprises/elasticsearch-cron:0.0.1"
+	CRON_ACTION_REPOSITORY = "create-repository"
+	CRON_ACTION_SNAPSHOT   = "snapshot"
 )
 
 // Scheduler stores info about how to snapshot the cluster
@@ -47,8 +48,11 @@ type Scheduler struct {
 	s3bucketName string
 	cronSchedule string
 	enabled      bool
-	cron         *cron.Cron
 	auth         Authentication
+	elasticURL   string
+	Kclient      kubernetes.Interface
+	namespace    string
+	clusterName  string
 }
 
 // Authentication stores credentials used to authenticate against snapshot endpoint
@@ -58,112 +62,127 @@ type Authentication struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password string) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password, svcURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
+
 	return &Scheduler{
 		s3bucketName: bucketName,
 		cronSchedule: cronSchedule,
-		cron:         cron.New(),
-		enabled:      enabled,
+		elasticURL:   elasticURL,
 		auth:         Authentication{userName, password},
+		Kclient:      kc,
+		namespace:    namespace,
+		clusterName:  clusterName,
+		enabled:      enabled,
 	}
 }
 
-// Run starts the automated scheduler
-func (s *Scheduler) Run() {
+// Init creates the snapshot repository cronjob
+func (s *Scheduler) Init() {
+
 	if s.enabled {
-		logrus.Info("-----> Init scheduler")
+		// Init repository
+		s.CreateSnapshotRepository()
 
-		logrus.Infof("Cron is set to %s", s.cronSchedule)
-		s.cron.AddFunc(s.cronSchedule, func() {
-			s.CreateSnapshotRepository()
-			s.CreateSnapshot()
-		})
-
-		s.cron.Start()
-	} else {
-		logrus.Info("Scheduler is disabled, no snapshots will be scheduled")
+		// Init snapshot
+		s.CreateSnapshot()
 	}
 }
 
-// Cleans up Cron and maybe something else in the future
-func (s *Scheduler) Stop() {
-	s.cron.Stop()
-}
-
-// CreateSnapshotRepository creates a repository to place snapshots
+// CreateSnapshotRepository creates the snapshot repository cronjob
 func (s *Scheduler) CreateSnapshotRepository() {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	body := fmt.Sprintf("{ \"type\": \"s3\", \"settings\": { \"bucket\": \"%s\" } }", s.s3bucketName)
-	url := fmt.Sprintf("%s/_snapshot/%s", elasticURL, s.s3bucketName)
-	req, err := http.NewRequest("PUT", url, strings.NewReader(body))
-
-	// if authentication is specified, provide Auth to Client
-	if s.auth != (Authentication{}) {
-		logrus.Infof("Using basic Auth Credentials %s", s.auth.userName)
-		req.SetBasicAuth(s.auth.userName, s.auth.password)
-	}
-
-	resp, err := client.Do(req)
-
-	// Some other type of error?
-	if err != nil {
-		logrus.Error("Error attempting to create snapshot repository: ", err)
-		return
-	}
-
-	// Non 2XX status code
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		logrus.Errorf("Error creating snapshot repository [httpstatus: %d][url: %s] ", resp.StatusCode, url, string(body))
-		return
-	}
-
-	logrus.Infof("Created snapshot repository!")
-
-	return
+	// TODO: This should wait until the api goes green and cluster is healthy
+	s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_REPOSITORY, s.cronSchedule)
 }
 
-// CreateSnapshot makes a snapshot of all indexes
+// CreateSnapshot creates snapshot cronjob
 func (s *Scheduler) CreateSnapshot() {
-	logrus.Info("About to create snapshot...")
+	s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_SNAPSHOT, s.cronSchedule)
+}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("%s/_snapshot/%s/snapshot_%s?wait_for_completion=true", elasticURL, s.s3bucketName, fmt.Sprintf(time.Now().Format("2006-01-02-15-04-05")))
+// Stop cleans up Cron
+func (s *Scheduler) Stop() {
+	s.deleteCronJob(s.namespace, s.clusterName)
+}
 
-	req, err := http.NewRequest("PUT", url, nil)
+// DeleteCronJob deletes a cron job
+func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
+	// Repository CronJob
+	snapshotName := getSnapshotname(clusterName, CRON_ACTION_REPOSITORY)
+	err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Error attempting to create snapshot: ", err)
-		return
+		logrus.Error("Could not delete Repository CronJob! ", err)
 	}
 
-	// if authentication is specified, provide Auth to Client
-	if s.auth != (Authentication{}) {
-		logrus.Infof("Using basic Auth Credentials %s", s.auth.userName)
-		req.SetBasicAuth(s.auth.userName, s.auth.password)
-	}
-
-	resp, err := client.Do(req)
-
-	// Some other type of error?
+	// Snapshot CronJob
+	snapshotName = getSnapshotname(clusterName, CRON_ACTION_SNAPSHOT)
+	err = s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Error attempting to create snapshot: ", err)
-		return
+		logrus.Error("Could not delete CronJob! ", err)
 	}
+}
 
-	// Non 2XX status code
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		logrus.Errorf("Error creating snapshot [httpstatus: %d][url: %s] %s", resp.StatusCode, url, string(body))
-		return
+// CreateCronJob creates a cron job
+func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule string) {
+	snapshotName := getSnapshotname(clusterName, action)
+
+	// Check if CronJob exists
+	cronJob, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Get(snapshotName, metav1.GetOptions{})
+
+	if len(cronJob.Name) == 0 {
+
+		requestCPU, _ := resource.ParseQuantity("100m")
+		requestMemory, _ := resource.ParseQuantity("256mbi")
+
+		job := &batch.CronJob{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: snapshotName,
+			},
+			Spec: batch.CronJobSpec{
+				Schedule: cronSchedule,
+				JobTemplate: batch.JobTemplateSpec{
+					Spec: batchv1.JobSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								RestartPolicy: "OnFailure",
+								Containers: []apiv1.Container{
+									apiv1.Container{
+										Name:            snapshotName,
+										Image:           baseCronImage,
+										ImagePullPolicy: "Always",
+										Resources: apiv1.ResourceRequirements{
+											Requests: apiv1.ResourceList{
+												"cpu":    requestCPU,
+												"memory": requestMemory,
+											},
+										},
+										Args: []string{
+											fmt.Sprintf("--action=%s", action),
+											fmt.Sprintf("--s3-bucket-name=%s", s.s3bucketName),
+											fmt.Sprintf("--elastic-url=%s", s.elasticURL),
+											fmt.Sprintf("--auth-username=%s", s.auth.userName),
+											fmt.Sprintf("--auth-password=%s", s.auth.password),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		_, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Create(job)
+
+		if err != nil {
+			logrus.Error("Could not create CronJob! ", err)
+		}
+	} else if err != nil {
+		logrus.Error("Could not get cron job! ", err)
 	}
+}
 
-	logrus.Infof("Created snapshot!")
-
-	return
+// GetSnapshotname gets the name of the snapshot cron job
+func getSnapshotname(clusterName, action string) string {
+	return fmt.Sprintf("elastic-%s-%s", clusterName, action)
 }
