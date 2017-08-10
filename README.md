@@ -86,8 +86,12 @@ spec:
 To deploy the operator simply deploy to your cluster:
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/controller.yaml
+$ kubectl create ns operator
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/controller.yaml -n operator
 ```
+
+_NOTE: In the example we're putting the operator into the namespace `operator`. If you want to change this, then make sure to update the RBAC rules in the [example/controller.yaml](example/controller.yaml
+ ) spec to match the namespace desired._
 
 # Create Example ElasticSearch Cluster
 
