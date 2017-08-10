@@ -103,6 +103,20 @@ func (s *Scheduler) CreateSnapshot() {
 // Stop cleans up Cron
 func (s *Scheduler) Stop() {
 	s.deleteCronJob(s.namespace, s.clusterName)
+	s.deleteJobs(s.namespace, s.clusterName)
+}
+
+// DeleteJobs cleans up an remaining jobs started by the cronjob
+func (s *Scheduler) deleteJobs(namespace, clusterName string) {
+	err := s.Kclient.BatchV1().Jobs(namespace).DeleteCollection(
+		&metav1.DeleteOptions{},
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=elasticsearch-operator,clusterName=%s", clusterName),
+		})
+
+	if err != nil {
+		logrus.Error("Could not delete Jobs! ", err)
+	}
 }
 
 // DeleteCronJob deletes a cron job
@@ -137,12 +151,24 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 		job := &batch.CronJob{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: snapshotName,
+				Labels: map[string]string{
+					"app":         "elasticsearch-operator",
+					"clusterName": clusterName,
+					"name":        snapshotName,
+				},
 			},
 			Spec: batch.CronJobSpec{
 				Schedule: cronSchedule,
 				JobTemplate: batch.JobTemplateSpec{
 					Spec: batchv1.JobSpec{
 						Template: apiv1.PodTemplateSpec{
+							ObjectMeta: metav1.ObjectMeta{
+								Labels: map[string]string{
+									"app":         "elasticsearch-operator",
+									"name":        snapshotName,
+									"clusterName": clusterName,
+								},
+							},
 							Spec: apiv1.PodSpec{
 								RestartPolicy: "OnFailure",
 								Containers: []apiv1.Container{

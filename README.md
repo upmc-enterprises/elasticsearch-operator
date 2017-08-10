@@ -200,7 +200,10 @@ To run the Operator locally:
 
 ```
 $ kubectl proxy
-$ NAMESPACE=default go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
+$ mkdir -p /tmp/certs/config && mkdir -p /tmp/certs/certs
+$ go get -u github.com/cloudflare/cfssl/cmd/cfssl
+$ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
+$ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
 
 # About

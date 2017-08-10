@@ -49,7 +49,7 @@ spec:
     spec:
       containers:
       - name: operator
-        image: upmcenterprises/elasticsearch-operator:0.0.5
+        image: upmcenterprises/elasticsearch-operator:0.0.6
         imagePullPolicy: Always
         env:
         - name: NAMESPACE
