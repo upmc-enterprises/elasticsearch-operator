@@ -29,34 +29,28 @@ import (
 	"os"
 	"time"
 
-	"k8s.io/client-go/pkg/fields"
-
-	k8serrors "k8s.io/client-go/pkg/api/errors"
-
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
-	appsType "k8s.io/client-go/kubernetes/typed/apps/v1beta1"
-	coreType "k8s.io/client-go/kubernetes/typed/core/v1"
-	extensionsType "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
-	storageType "k8s.io/client-go/kubernetes/typed/storage/v1beta1"
 	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/resource"
-	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	storage "k8s.io/client-go/pkg/apis/storage/v1beta1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
-	namespace = os.Getenv("NAMESPACE")
-	tprName   = "elasticsearch-cluster.enterprises.upmc.com"
+	tprName = "elasticsearch-cluster.enterprises.upmc.com"
 )
 
 const (
@@ -74,22 +68,11 @@ const (
 	secretName = "es-certs"
 )
 
-// KubeInterface abstracts the kubernetes client
-type KubeInterface interface {
-	Services(namespace string) coreType.ServiceInterface
-	ThirdPartyResources() extensionsType.ThirdPartyResourceInterface
-	Deployments(namespace string) extensionsType.DeploymentInterface
-	StatefulSets(namespace string) appsType.StatefulSetInterface
-	StorageClasses() storageType.StorageClassInterface
-	ReplicaSets(namespace string) extensionsType.ReplicaSetInterface
-	PersistentVolumes() coreType.PersistentVolumeInterface
-}
-
 // K8sutil defines the kube object
 type K8sutil struct {
 	Config     *rest.Config
 	TprClient  *rest.RESTClient
-	Kclient    KubeInterface
+	Kclient    kubernetes.Interface
 	MasterHost string
 }
 
@@ -122,7 +105,7 @@ func buildConfig(kubeCfgFile string) (*rest.Config, error) {
 }
 
 func configureTPRClient(config *rest.Config) {
-	groupversion := unversioned.GroupVersion{
+	groupversion := schema.GroupVersion{
 		Group:   "enterprises.upmc.com",
 		Version: "v1",
 	}
@@ -135,7 +118,7 @@ func configureTPRClient(config *rest.Config) {
 	schemeBuilder := runtime.NewSchemeBuilder(
 		func(scheme *runtime.Scheme) error {
 			scheme.AddKnownTypes(
-				unversioned.GroupVersion{Group: "enterprises.upmc.com", Version: "v1"},
+				schema.GroupVersion{Group: "enterprises.upmc.com", Version: "v1"},
 				&myspec.ElasticsearchCluster{},
 				&myspec.ElasticsearchClusterList{},
 				&api.ListOptions{},
@@ -147,7 +130,7 @@ func configureTPRClient(config *rest.Config) {
 	schemeBuilder.AddToScheme(api.Scheme)
 }
 
-func newKubeClient(kubeCfgFile string) (KubeInterface, *rest.RESTClient, error) {
+func newKubeClient(kubeCfgFile string) (kubernetes.Interface, *rest.RESTClient, error) {
 
 	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
 	Config, err := buildConfig(kubeCfgFile)
@@ -199,21 +182,17 @@ func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticsearchCluster, err
 
 // MonitorElasticSearchEvents watches for new or removed clusters
 func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *myspec.ElasticsearchCluster, <-chan error) {
-	// Validate Namespace exists
-	if len(namespace) == 0 {
-		logrus.Errorln("WARNING: No namespace found! Events will not be able to be watched!")
-	}
-
 	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
-	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", namespace, fields.Everything())
+	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
 		event.Type = "ADDED"
 		events <- event
 	}
+
 	createDeleteHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
 		event.Type = "DELETED"
@@ -241,14 +220,54 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 	return events, errc
 }
 
+// MonitorDataPods watches for new or changed data node pods
+func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-chan error) {
+	events := make(chan *v1.Pod)
+	errc := make(chan error, 1)
+
+	// create the pod watcher
+	podListWatcher := cache.NewListWatchFromClient(k.Kclient.Core().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
+
+	createAddHandler := func(obj interface{}) {
+		event := obj.(*v1.Pod)
+
+		for k, v := range event.ObjectMeta.Labels {
+			if k == "role" && v == "data" {
+				events <- event
+				break
+			}
+		}
+	}
+
+	updateHandler := func(old interface{}, obj interface{}) {
+		event := obj.(*v1.Pod)
+		for k, v := range event.ObjectMeta.Labels {
+			if k == "role" && v == "data" {
+				events <- event
+				break
+			}
+		}
+	}
+
+	_, controller := cache.NewIndexerInformer(podListWatcher, &v1.Pod{}, 0, cache.ResourceEventHandlerFuncs{
+		AddFunc:    createAddHandler,
+		UpdateFunc: updateHandler,
+		DeleteFunc: func(obj interface{}) {},
+	}, cache.Indexers{})
+
+	go controller.Run(stopchan)
+
+	return events, errc
+}
+
 // CreateKubernetesThirdPartyResource checks if ElasticSearch TPR exists. If not, create
 func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 
-	tpr, err := k.Kclient.ThirdPartyResources().Get(tprName)
+	tpr, err := k.Kclient.ExtensionsV1beta1().ThirdPartyResources().Get(tprName, metav1.GetOptions{})
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			tpr := &v1beta1.ThirdPartyResource{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: tprName,
 				},
 				Versions: []v1beta1.APIVersion{
@@ -257,11 +276,11 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 				Description: "Managed elasticsearch clusters",
 			}
 
-			result, err := k.Kclient.ThirdPartyResources().Create(tpr)
+			_, err := k.Kclient.ExtensionsV1beta1().ThirdPartyResources().Create(tpr)
 			if err != nil {
 				panic(err)
 			}
-			logrus.Infof("CREATED: %#v\nFROM: %#v\n", result, tpr)
+			logrus.Info("Created missing TPR")
 		} else {
 			panic(err)
 		}
@@ -273,52 +292,57 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 }
 
 // DeleteServices creates the discovery service
-func (k *K8sutil) DeleteServices() {
+func (k *K8sutil) DeleteServices(clusterName, namespace string) {
 
-	err := k.Kclient.Services(namespace).Delete(discoveryServiceName, &v1.DeleteOptions{})
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	err := k.Kclient.CoreV1().Services(namespace).Delete(fullDiscoveryServiceName, &metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+discoveryServiceName+":", err)
+		logrus.Error("Could not delete service "+fullDiscoveryServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", discoveryServiceName)
+		logrus.Infof("Delete service: %s", fullDiscoveryServiceName)
 	}
 
-	err = k.Kclient.Services(namespace).Delete(dataServiceName, &v1.DeleteOptions{})
+	fullDataServiceName := dataServiceName + "-" + clusterName
+	err = k.Kclient.CoreV1().Services(namespace).Delete(fullDataServiceName, &metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+dataServiceName+":", err)
+		logrus.Error("Could not delete service "+fullDataServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", dataServiceName)
+		logrus.Infof("Delete service: %s", fullDataServiceName)
 	}
 
-	err = k.Kclient.Services(namespace).Delete(clientServiceName, &v1.DeleteOptions{})
+	fullClientServiceName := clientServiceName + "-" + clusterName
+	err = k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+clientServiceName+":", err)
+		logrus.Error("Could not delete service "+fullClientServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", clientServiceName)
+		logrus.Infof("Delete service: %s", fullClientServiceName)
 	}
 
 }
 
 // CreateDiscoveryService creates the discovery service
-func (k *K8sutil) CreateDiscoveryService() error {
+func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(discoveryServiceName)
+	svc, err := k.Kclient.CoreV1().Services(namespace).Get(fullDiscoveryServiceName, metav1.GetOptions{})
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
 		logrus.Info("Discovery Service not found, creating...")
 
 		discoverySvc := &v1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name: discoveryServiceName,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fullDiscoveryServiceName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "master",
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "master",
 				},
 				Ports: []v1.ServicePort{
@@ -331,7 +355,7 @@ func (k *K8sutil) CreateDiscoveryService() error {
 			},
 		}
 
-		_, err := k.Kclient.Services(namespace).Create(discoverySvc)
+		_, err := k.Kclient.CoreV1().Services(namespace).Create(discoverySvc)
 
 		if err != nil {
 			logrus.Error("Could not create discovery service! ", err)
@@ -346,29 +370,30 @@ func (k *K8sutil) CreateDiscoveryService() error {
 }
 
 // CreateDataService creates the data service
-func (k *K8sutil) CreateDataService() error {
-
+func (k *K8sutil) CreateDataService(clusterName, namespace string) error {
+	fullDataServiceName := dataServiceName + "-" + clusterName
+	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(dataServiceName)
+	svc, err := k.Kclient.CoreV1().Services(namespace).Get(fullDataServiceName, metav1.GetOptions{})
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
-		logrus.Infof("%s not found, creating...", dataServiceName)
+		logrus.Infof("%s not found, creating...", fullDataServiceName)
 
 		dataService := &v1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name: dataServiceName,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fullDataServiceName,
 				Labels: map[string]string{
 					"service.alpha.kubernetes.io/tolerate-unready-endpoints": "true",
 				},
 				Annotations: map[string]string{
-					"component": "elasticsearch",
-					"name":      dataServiceName,
+					"component": component,
+					"name":      fullDataServiceName,
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "data",
 				},
 				Ports: []v1.ServicePort{
@@ -381,7 +406,7 @@ func (k *K8sutil) CreateDataService() error {
 			},
 		}
 
-		_, err := k.Kclient.Services(namespace).Create(dataService)
+		_, err := k.Kclient.CoreV1().Services(namespace).Create(dataService)
 
 		if err != nil {
 			logrus.Error("Could not create data service", err)
@@ -395,27 +420,39 @@ func (k *K8sutil) CreateDataService() error {
 	return nil
 }
 
-// CreateClientService creates the client service
-func (k *K8sutil) CreateClientService() error {
+// GetClientServiceNameFullDNS return the full DNS name of the client service
+func (k *K8sutil) GetClientServiceNameFullDNS(clusterName, namespace string) string {
+	return fmt.Sprintf("%s.%s.svc.cluster.local", k.GetClientServiceName(clusterName), namespace)
+}
 
+// GetClientServiceName return the name of the client service
+func (k *K8sutil) GetClientServiceName(clusterName string) string {
+	return fmt.Sprintf("%s-%s", clientServiceName, clusterName)
+}
+
+// CreateClientService creates the client service
+func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort int32) error {
+
+	fullClientServiceName := k.GetClientServiceName(clusterName)
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(clientServiceName)
+	svc, err := k.Kclient.CoreV1().Services(namespace).Get(fullClientServiceName, metav1.GetOptions{})
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
-		logrus.Infof("%s not found, creating...", clientServiceName)
+		logrus.Infof("%s not found, creating...", fullClientServiceName)
 
 		clientSvc := &v1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name: clientServiceName,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fullClientServiceName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "client",
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "client",
 				},
 				Ports: []v1.ServicePort{
@@ -427,8 +464,12 @@ func (k *K8sutil) CreateClientService() error {
 				},
 			},
 		}
+		if nodePort > 0 {
+			clientSvc.Spec.Type = v1.ServiceTypeNodePort
+			clientSvc.Spec.Ports[0].NodePort = nodePort
+		}
 
-		_, err := k.Kclient.Services(namespace).Create(clientSvc)
+		_, err := k.Kclient.CoreV1().Services(namespace).Create(clientSvc)
 
 		if err != nil {
 			logrus.Error("Could not create client service", err)
@@ -443,18 +484,18 @@ func (k *K8sutil) CreateClientService() error {
 }
 
 // DeleteClientMasterDeployment deletes the client or master deployment
-func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
+func (k *K8sutil) DeleteClientMasterDeployment(deploymentType, clusterName, namespace string) error {
 
 	labelSelector := ""
 
 	if deploymentType == "client" {
-		labelSelector = "component=elasticsearch,role=client"
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=client"
 	} else if deploymentType == "master" {
-		labelSelector = "component=elasticsearch,role=master"
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=master"
 	}
 
 	// Get list of deployments
-	deployments, err := k.Kclient.Deployments(namespace).List(v1.ListOptions{LabelSelector: labelSelector})
+	deployments, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get deployments! ", err)
@@ -463,7 +504,7 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
 	for _, deployment := range deployments.Items {
 		//Scale the deployment down to zero (https://github.com/kubernetes/client-go/issues/91)
 		deployment.Spec.Replicas = new(int32)
-		deployment, err := k.Kclient.Deployments(namespace).Update(&deployment)
+		deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(&deployment)
 
 		if err != nil {
 			logrus.Errorf("Could not scale deployment: %s ", deployment.Name)
@@ -471,7 +512,7 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
 			logrus.Infof("Scaled deployment: %s to zero", deployment.Name)
 		}
 
-		err = k.Kclient.Deployments(namespace).Delete(deployment.Name, &v1.DeleteOptions{})
+		err = k.Kclient.ExtensionsV1beta1().Deployments(namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
 
 		if err != nil {
 			logrus.Errorf("Could not delete deployments: %s ", deployment.Name)
@@ -481,14 +522,14 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
 	}
 
 	// Get list of ReplicaSets
-	replicaSets, err := k.Kclient.ReplicaSets(namespace).List(v1.ListOptions{LabelSelector: labelSelector})
+	replicaSets, err := k.Kclient.ExtensionsV1beta1().ReplicaSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get replica sets! ", err)
 	}
 
 	for _, replicaSet := range replicaSets.Items {
-		err := k.Kclient.ReplicaSets(namespace).Delete(replicaSet.Name, &v1.DeleteOptions{})
+		err := k.Kclient.ExtensionsV1beta1().ReplicaSets(namespace).Delete(replicaSet.Name, &metav1.DeleteOptions{})
 
 		if err != nil {
 			logrus.Errorf("Could not delete replica sets: %s ", replicaSet.Name)
@@ -501,10 +542,10 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
 }
 
 // DeleteStatefulSet deletes the data statefulset
-func (k *K8sutil) DeleteStatefulSet() error {
+func (k *K8sutil) DeleteStatefulSet(clusterName, namespace string) error {
 
 	// Get list of deployments
-	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch,role=data"})
+	statefulsets, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: "component=elasticsearch" + "-" + clusterName + ",role=data"})
 
 	if err != nil {
 		logrus.Error("Could not get stateful sets! ", err)
@@ -513,7 +554,7 @@ func (k *K8sutil) DeleteStatefulSet() error {
 	for _, statefulset := range statefulsets.Items {
 		//Scale the deployment down to zero (https://github.com/kubernetes/client-go/issues/91)
 		statefulset.Spec.Replicas = new(int32)
-		statefulset, err := k.Kclient.StatefulSets(namespace).Update(&statefulset)
+		statefulset, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Update(&statefulset)
 
 		if err != nil {
 			logrus.Errorf("Could not scale statefulset: %s ", statefulset.Name)
@@ -521,7 +562,12 @@ func (k *K8sutil) DeleteStatefulSet() error {
 			logrus.Infof("Scaled statefulset: %s to zero", statefulset.Name)
 		}
 
-		err = k.Kclient.StatefulSets(namespace).Delete(statefulset.Name, &v1.DeleteOptions{})
+		err = k.Kclient.AppsV1beta1().StatefulSets(namespace).Delete(statefulset.Name, &metav1.DeleteOptions{
+			PropagationPolicy: func() *metav1.DeletionPropagation {
+				foreground := metav1.DeletePropagationForeground
+				return &foreground
+			}(),
+		})
 
 		if err != nil {
 			logrus.Errorf("Could not delete statefulset: %s ", statefulset.Name)
@@ -534,24 +580,28 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
+
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
 	if deploymentType == "client" {
 		httpEnable = "true"
-		deploymentName = clientDeploymentName
+		deploymentName = clientDeploymentName + "-" + clusterName
 		isNodeMaster = "false"
 		role = "client"
 	} else if deploymentType == "master" {
 		httpEnable = "false"
-		deploymentName = masterDeploymentName
+		deploymentName = masterDeploymentName + "-" + clusterName
 		isNodeMaster = "true"
 		role = "master"
 	}
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.Deployments(namespace).Get(deploymentName)
+	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
 	if len(deployment.Name) == 0 {
 		logrus.Infof("%s not found, creating...", deploymentName)
@@ -563,10 +613,10 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		deployment := &v1beta1.Deployment{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      role,
 					"name":      deploymentName,
 				},
@@ -574,9 +624,9 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 			Spec: v1beta1.DeploymentSpec{
 				Replicas: replicas,
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
-							"component": "elasticsearch",
+							"component": component,
 							"role":      role,
 							"name":      deploymentName,
 						},
@@ -627,6 +677,18 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
 									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
+									},
+									v1.EnvVar{
+										Name:  "NETWORK_HOST",
+										Value: networkHost,
+									},
 								},
 								Ports: []v1.ContainerPort{
 									v1.ContainerPort{
@@ -646,7 +708,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 										MountPath: "/data",
 									},
 									v1.VolumeMount{
-										Name:      "es-certs",
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
@@ -670,10 +732,10 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 								},
 							},
 							v1.Volume{
-								Name: "es-certs",
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 								VolumeSource: v1.VolumeSource{
 									Secret: &v1.SecretVolumeSource{
-										SecretName: "es-certs",
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
 									},
 								},
 							},
@@ -684,7 +746,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 			},
 		}
 
-		_, err := k.Kclient.Deployments(namespace).Create(deployment)
+		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
 			logrus.Error("Could not create client deployment: ", err)
@@ -700,7 +762,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 		if deployment.Spec.Replicas != replicas {
 			deployment.Spec.Replicas = replicas
 
-			_, err := k.Kclient.Deployments(namespace).Update(deployment)
+			_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(deployment)
 
 			if err != nil {
 				logrus.Error("Could not scale deployment: ", err)
@@ -723,12 +785,16 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
-	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
+	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	statefulSetName := fmt.Sprintf("%s-%s", fullDataDeploymentName, storageClass)
 
 	// Check if StatefulSet exists
-	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(statefulSetName)
+	statefulSet, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 
 	if len(statefulSet.Name) == 0 {
 		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
@@ -742,21 +808,21 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
 		statefulSet := &apps.StatefulSet{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: statefulSetName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "data",
 					"name":      statefulSetName,
 				},
 			},
 			Spec: apps.StatefulSetSpec{
 				Replicas:    replicas,
-				ServiceName: "es-data-svc",
+				ServiceName: "es-data-svc" + "-" + clusterName,
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
-							"component": "elasticsearch",
+							"component": component,
 							"role":      "data",
 							"name":      statefulSetName,
 						},
@@ -803,6 +869,18 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 										Name:  "ES_JAVA_OPTS",
 										Value: "-Xms1024m -Xmx1024m",
 									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
+									},
+									v1.EnvVar{
+										Name:  "NETWORK_HOST",
+										Value: networkHost,
+									},
 								},
 								Ports: []v1.ContainerPort{
 									v1.ContainerPort{
@@ -817,7 +895,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 										MountPath: "/data",
 									},
 									v1.VolumeMount{
-										Name:      "es-certs",
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
 										MountPath: "/elasticsearch/config/certs",
 									},
 								},
@@ -835,10 +913,10 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 						},
 						Volumes: []v1.Volume{
 							v1.Volume{
-								Name: "es-certs",
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 								VolumeSource: v1.VolumeSource{
 									Secret: &v1.SecretVolumeSource{
-										SecretName: "es-certs",
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
 									},
 								},
 							},
@@ -848,7 +926,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 				},
 				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 					v1.PersistentVolumeClaim{
-						ObjectMeta: v1.ObjectMeta{
+						ObjectMeta: metav1.ObjectMeta{
 							Name: "es-data",
 							Annotations: map[string]string{
 								"volume.beta.kubernetes.io/storage-class": storageClass,
@@ -874,7 +952,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 			},
 		}
 
-		_, err := k.Kclient.StatefulSets(namespace).Create(statefulSet)
+		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
 
 		if err != nil {
 			logrus.Error("Could not create data stateful set: ", err)
@@ -890,7 +968,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 		if statefulSet.Spec.Replicas != replicas {
 			statefulSet.Spec.Replicas = replicas
 
-			_, err := k.Kclient.StatefulSets(namespace).Update(statefulSet)
+			_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Update(statefulSet)
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
@@ -903,19 +981,20 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 
 // CreateStorageClass creates a storage class
 // NOTE: Right now only creating AWS EBS volumes type gp2
-func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string) error {
+func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string, clusterName string) error {
 
+	component := "elasticsearch" + "-" + clusterName
 	// Check if storage class exists
-	storageClass, err := k.Kclient.StorageClasses().Get(zone)
+	storageClass, err := k.Kclient.StorageV1beta1().StorageClasses().Get(zone, metav1.GetOptions{})
 
 	if len(storageClass.Name) == 0 {
 		logrus.Infof("StorgeClass %s not found, creating...", zone)
 
 		class := &storage.StorageClass{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: zone,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 				},
 			},
 			Provisioner: storageClassProvisioner,
@@ -928,7 +1007,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 			class.Parameters["zone"] = zone
 		}
 
-		_, err := k.Kclient.StorageClasses().Create(class)
+		_, err := k.Kclient.StorageV1beta1().StorageClasses().Create(class)
 
 		if err != nil {
 			logrus.Error("Could not create storage class: ", err)
@@ -943,8 +1022,9 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 }
 
 // DeleteStorageClasses removes storage classes tied to the operator
-func (k *K8sutil) DeleteStorageClasses() error {
-	err := k.Kclient.StorageClasses().DeleteCollection(&v1.DeleteOptions{}, v1.ListOptions{LabelSelector: "component=elasticsearch"})
+func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
+	component := "elasticsearch" + "-" + clusterName
+	err := k.Kclient.StorageV1beta1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: component})
 
 	if err != nil {
 		logrus.Error("Could not delete storageclasses: ", err)
@@ -957,7 +1037,7 @@ func (k *K8sutil) DeleteStorageClasses() error {
 
 // UpdateVolumeReclaimPolicy updates the policy of the volume after it's created:
 // See: https://github.com/kubernetes/kubernetes/issues/38192
-func (k *K8sutil) UpdateVolumeReclaimPolicy(policy string) {
+func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 
 	var policyType v1.PersistentVolumeReclaimPolicy
 
@@ -970,25 +1050,25 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy string) {
 		break
 	}
 
-	// Get list of statefulsets
-	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch,role=data"})
+	pvc, err := k.Kclient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{
+		LabelSelector: "role=data",
+	})
 
 	if err != nil {
-		logrus.Error("Could not get stateful sets! ", err)
+		return
 	}
 
-	for _, s := range statefulsets.Items {
-		pv, err := k.Kclient.PersistentVolumes().Get(fmt.Sprintf("%s/%s", namespace, s.Name))
+	for _, v := range pvc.Items {
+		pv, err := k.Kclient.CoreV1().PersistentVolumes().Get(v.Spec.VolumeName, metav1.GetOptions{})
 
 		if err != nil {
-			logrus.Error("Could not get pv! ", err)
 			continue
 		}
 
-		// Set the policy to retain
+		// Set the policy
 		pv.Spec.PersistentVolumeReclaimPolicy = policyType
 
-		_, err = k.Kclient.PersistentVolumes().Update(pv)
+		_, err = k.Kclient.CoreV1().PersistentVolumes().Update(pv)
 
 		if err != nil {
 			logrus.Error("Could not update pv! ", err)

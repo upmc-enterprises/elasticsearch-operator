@@ -1,7 +1,54 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elasticsearch-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: elasticsearch-operator
+rules:
+- apiGroups: ["extensions"]
+  resources: ["deployments", "thirdpartyresources", "replicasets"]
+  verbs: ["create", "get", "update", "delete", "list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "create", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["services", "secrets"]
+  verbs: ["create", "get", "update", "delete"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs", "jobs"]
+  verbs: ["create", "get", "deletecollection", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["*"]
+- apiGroups: ["enterprises.upmc.com"]
+  resources: ["elasticsearchclusters"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: elasticsearch-operator
+  namespace: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: elasticsearch-operator
+subjects:
+- kind: ServiceAccount
+  name: elasticsearch-operator
+  namespace: operator
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: elasticsearch-operator
+  namespace: operator
 spec:
   replicas: 1
   template:
@@ -11,10 +58,11 @@ spec:
     spec:
       containers:
       - name: operator
-        image: upmcenterprises/elasticsearch-operator:0.0.3
+        image: upmcenterprises/elasticsearch-operator:0.0.6
         imagePullPolicy: Always
         env:
         - name: NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+      serviceAccount: elasticsearch-operator

@@ -28,20 +28,15 @@ import (
 	"encoding/json"
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/meta"
-	"k8s.io/client-go/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ElasticsearchCluster defines the cluster
 type ElasticsearchCluster struct {
-	unversioned.TypeMeta `json:",inline"`
-	Metadata             api.ObjectMeta `json:"metadata"`
-
-	APIVersion string      `json:"apiVersion"`
-	Type       string      `json:"type"`
-	Kind       string      `json:"kind"`
-	Spec       ClusterSpec `json:"spec"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Type              string      `json:"type"`
+	Spec              ClusterSpec `json:"spec"`
 }
 
 // ClusterSpec defines cluster options
@@ -85,6 +80,15 @@ type ClusterSpec struct {
 
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
+
+	// Instrumentation defines metrics for the cluster
+	Instrumentation Instrumentation `json:"instrumentation"`
+
+	// Specify how the container binds to network ports
+	NetworkHost string `json:"network-host"`
+
+	//NodePort
+	NodePort int32 `json:"nodePort"`
 
 	Scheduler *snapshot.Scheduler
 }
@@ -145,25 +149,20 @@ type MemoryCPU struct {
 	CPU string `json:"cpu"`
 }
 
-// Required to satisfy Object interface
-func (e *ElasticsearchCluster) GetObjectKind() unversioned.ObjectKind {
-	return &e.TypeMeta
-}
-
-// Required to satisfy ObjectMetaAccessor interface
-func (e *ElasticsearchCluster) GetObjectMeta() meta.Object {
-	return &e.Metadata
+// Instrumentation handles all metrics for the cluster
+type Instrumentation struct {
+	StatsdHost string `json:"statsd-host"`
 }
 
 type ElasticsearchClusterCopy ElasticsearchCluster
 
-func (e *ElasticsearchCluster) UnmarshalJSON(data []byte) error {
+func (c *ElasticsearchCluster) UnmarshalJSON(data []byte) error {
 	tmp := ElasticsearchClusterCopy{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
 	tmp2 := ElasticsearchCluster(tmp)
-	*e = tmp2
+	*c = tmp2
 	return nil
 }

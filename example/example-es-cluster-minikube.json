@@ -5,14 +5,16 @@
     "name": "example-es-cluster"
   },
   "spec": {
+    "elastic-search-image": "upmcenterprises/docker-elasticsearch-kubernetes:5.3.1",
     "client-node-replicas": 1,
     "master-node-replicas": 1,
     "data-node-replicas": 3,
+    "network-host": "_local_",
     "zones": [],
     "data-volume-size": "10Gi",
     "java-options": "-Xms256m -Xmx256m",
     "snapshot": {
-      "scheduler-enabled": true,
+      "scheduler-enabled": false,
       "bucket-name": "elasticsnapshots99",
       "cron-schedule": "@every 2m"
     },
