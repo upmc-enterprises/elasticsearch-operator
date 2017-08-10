@@ -44,6 +44,8 @@ Following parameters are available to customize the elastic cluster:
   - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
   - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
   - storage-class: Defines the name of an existing StorageClass object to use
+- instrumentation
+  - statsd-host: Sets the statsd host to send metrics to if enabled
 
 ## Certs secret
 
@@ -201,7 +203,7 @@ To run the Operator locally:
 
 ```
 $ kubectl proxy
-$ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
+$ NAMESPACE=default go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
 
 # About

@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2017, UPMC Enterprises
 All rights reserved.
@@ -86,6 +87,12 @@ type ClusterSpec struct {
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
 
+	// Instrumentation defines metrics for the cluster
+	Instrumentation Instrumentation `json:"instrumentation"`
+	
+	//NodePort
+	NodePort int32 `json:"nodePort"`
+	
 	Scheduler *snapshot.Scheduler
 }
 
@@ -143,6 +150,11 @@ type MemoryCPU struct {
 
 	// CPU defines max amount of CPU
 	CPU string `json:"cpu"`
+}
+
+// Instrumentation handles all metrics for the cluster
+type Instrumentation struct {
+	StatsdHost string `json:"statsd-host"`
 }
 
 // Required to satisfy Object interface

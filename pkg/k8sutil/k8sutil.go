@@ -273,36 +273,41 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 }
 
 // DeleteServices creates the discovery service
-func (k *K8sutil) DeleteServices() {
+func (k *K8sutil) DeleteServices(clusterName string) {
 
-	err := k.Kclient.Services(namespace).Delete(discoveryServiceName, &v1.DeleteOptions{})
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	err := k.Kclient.Services(namespace).Delete(fullDiscoveryServiceName, &v1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+discoveryServiceName+":", err)
+		logrus.Error("Could not delete service "+fullDiscoveryServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", discoveryServiceName)
+		logrus.Infof("Delete service: %s", fullDiscoveryServiceName)
 	}
 
-	err = k.Kclient.Services(namespace).Delete(dataServiceName, &v1.DeleteOptions{})
+	fullDataServiceName := dataServiceName + "-" + clusterName
+	err = k.Kclient.Services(namespace).Delete(fullDataServiceName, &v1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+dataServiceName+":", err)
+		logrus.Error("Could not delete service "+fullDataServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", dataServiceName)
+		logrus.Infof("Delete service: %s", fullDataServiceName)
 	}
 
-	err = k.Kclient.Services(namespace).Delete(clientServiceName, &v1.DeleteOptions{})
+	fullClientServiceName := clientServiceName + "-" + clusterName
+	err = k.Kclient.Services(namespace).Delete(fullClientServiceName, &v1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("Could not delete service "+clientServiceName+":", err)
+		logrus.Error("Could not delete service "+fullClientServiceName+":", err)
 	} else {
-		logrus.Infof("Delete service: %s", clientServiceName)
+		logrus.Infof("Delete service: %s", fullClientServiceName)
 	}
 
 }
 
 // CreateDiscoveryService creates the discovery service
-func (k *K8sutil) CreateDiscoveryService() error {
+func (k *K8sutil) CreateDiscoveryService(clusterName string) error {
 
+	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(discoveryServiceName)
+	svc, err := k.Kclient.Services(namespace).Get(fullDiscoveryServiceName)
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
@@ -310,15 +315,15 @@ func (k *K8sutil) CreateDiscoveryService() error {
 
 		discoverySvc := &v1.Service{
 			ObjectMeta: v1.ObjectMeta{
-				Name: discoveryServiceName,
+				Name: fullDiscoveryServiceName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "master",
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "master",
 				},
 				Ports: []v1.ServicePort{
@@ -346,29 +351,30 @@ func (k *K8sutil) CreateDiscoveryService() error {
 }
 
 // CreateDataService creates the data service
-func (k *K8sutil) CreateDataService() error {
-
+func (k *K8sutil) CreateDataService(clusterName string) error {
+	fullDataServiceName := dataServiceName + "-" + clusterName
+	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(dataServiceName)
+	svc, err := k.Kclient.Services(namespace).Get(fullDataServiceName)
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
-		logrus.Infof("%s not found, creating...", dataServiceName)
+		logrus.Infof("%s not found, creating...", fullDataServiceName)
 
 		dataService := &v1.Service{
 			ObjectMeta: v1.ObjectMeta{
-				Name: dataServiceName,
+				Name: fullDataServiceName,
 				Labels: map[string]string{
 					"service.alpha.kubernetes.io/tolerate-unready-endpoints": "true",
 				},
 				Annotations: map[string]string{
-					"component": "elasticsearch",
-					"name":      dataServiceName,
+					"component": component,
+					"name":      fullDataServiceName,
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "data",
 				},
 				Ports: []v1.ServicePort{
@@ -396,26 +402,28 @@ func (k *K8sutil) CreateDataService() error {
 }
 
 // CreateClientService creates the client service
-func (k *K8sutil) CreateClientService() error {
+func (k *K8sutil) CreateClientService(clusterName string, nodePort int32) error {
 
+	fullClientServiceName := clientServiceName + "-" + clusterName
+	component := "elasticsearch" + "-" + clusterName
 	// Check if service exists
-	svc, err := k.Kclient.Services(namespace).Get(clientServiceName)
+	svc, err := k.Kclient.Services(namespace).Get(fullClientServiceName)
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
-		logrus.Infof("%s not found, creating...", clientServiceName)
+		logrus.Infof("%s not found, creating...", fullClientServiceName)
 
 		clientSvc := &v1.Service{
 			ObjectMeta: v1.ObjectMeta{
-				Name: clientServiceName,
+				Name: fullClientServiceName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "client",
 				},
 			},
 			Spec: v1.ServiceSpec{
 				Selector: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "client",
 				},
 				Ports: []v1.ServicePort{
@@ -427,7 +435,10 @@ func (k *K8sutil) CreateClientService() error {
 				},
 			},
 		}
-
+		if nodePort > 0 {
+			clientSvc.Spec.Type = v1.ServiceTypeNodePort
+			clientSvc.Spec.Ports[0].NodePort = nodePort
+		}
 		_, err := k.Kclient.Services(namespace).Create(clientSvc)
 
 		if err != nil {
@@ -443,14 +454,14 @@ func (k *K8sutil) CreateClientService() error {
 }
 
 // DeleteClientMasterDeployment deletes the client or master deployment
-func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
+func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string, clusterName string) error {
 
 	labelSelector := ""
 
 	if deploymentType == "client" {
-		labelSelector = "component=elasticsearch,role=client"
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=client"
 	} else if deploymentType == "master" {
-		labelSelector = "component=elasticsearch,role=master"
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=master"
 	}
 
 	// Get list of deployments
@@ -501,10 +512,10 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType string) error {
 }
 
 // DeleteStatefulSet deletes the data statefulset
-func (k *K8sutil) DeleteStatefulSet() error {
+func (k *K8sutil) DeleteStatefulSet(clusterName string) error {
 
 	// Get list of deployments
-	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch,role=data"})
+	statefulsets, err := k.Kclient.StatefulSets(namespace).List(v1.ListOptions{LabelSelector: "component=elasticsearch" + "-" + clusterName + ",role=data"})
 
 	if err != nil {
 		logrus.Error("Could not get stateful sets! ", err)
@@ -534,18 +545,22 @@ func (k *K8sutil) DeleteStatefulSet() error {
 }
 
 // CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
+
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 
 	var deploymentName, role, isNodeMaster, httpEnable string
 
 	if deploymentType == "client" {
 		httpEnable = "true"
-		deploymentName = clientDeploymentName
+		deploymentName = clientDeploymentName + "-" + clusterName
 		isNodeMaster = "false"
 		role = "client"
 	} else if deploymentType == "master" {
 		httpEnable = "false"
-		deploymentName = masterDeploymentName
+		deploymentName = masterDeploymentName + "-" + clusterName
 		isNodeMaster = "true"
 		role = "master"
 	}
@@ -566,7 +581,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 			ObjectMeta: v1.ObjectMeta{
 				Name: deploymentName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      role,
 					"name":      deploymentName,
 				},
@@ -576,7 +591,7 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: v1.ObjectMeta{
 						Labels: map[string]string{
-							"component": "elasticsearch",
+							"component": component,
 							"role":      role,
 							"name":      deploymentName,
 						},
@@ -626,6 +641,14 @@ func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string,
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
+									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
 									},
 								},
 								Ports: []v1.ContainerPort{
@@ -723,9 +746,13 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint string) error {
 
-	statefulSetName := fmt.Sprintf("%s-%s", dataDeploymentName, storageClass)
+	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
+	statefulSetName := fmt.Sprintf("%s-%s", fullDataDeploymentName, storageClass)
 
 	// Check if StatefulSet exists
 	statefulSet, err := k.Kclient.StatefulSets(namespace).Get(statefulSetName)
@@ -745,18 +772,18 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 			ObjectMeta: v1.ObjectMeta{
 				Name: statefulSetName,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 					"role":      "data",
 					"name":      statefulSetName,
 				},
 			},
 			Spec: apps.StatefulSetSpec{
 				Replicas:    replicas,
-				ServiceName: "es-data-svc",
+				ServiceName: "es-data-svc" + "-" + clusterName,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: v1.ObjectMeta{
 						Labels: map[string]string{
-							"component": "elasticsearch",
+							"component": component,
 							"role":      "data",
 							"name":      statefulSetName,
 						},
@@ -802,6 +829,14 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: "-Xms1024m -Xmx1024m",
+									},
+									v1.EnvVar{
+										Name:  "STATSD_HOST",
+										Value: statsdEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "DISCOVERY_SERVICE",
+										Value: discoveryServiceNameCluster,
 									},
 								},
 								Ports: []v1.ContainerPort{
@@ -903,8 +938,9 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 
 // CreateStorageClass creates a storage class
 // NOTE: Right now only creating AWS EBS volumes type gp2
-func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string) error {
+func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string, clusterName string) error {
 
+	component := "elasticsearch" + "-" + clusterName
 	// Check if storage class exists
 	storageClass, err := k.Kclient.StorageClasses().Get(zone)
 
@@ -915,7 +951,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 			ObjectMeta: v1.ObjectMeta{
 				Name: zone,
 				Labels: map[string]string{
-					"component": "elasticsearch",
+					"component": component,
 				},
 			},
 			Provisioner: storageClassProvisioner,
@@ -943,8 +979,9 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 }
 
 // DeleteStorageClasses removes storage classes tied to the operator
-func (k *K8sutil) DeleteStorageClasses() error {
-	err := k.Kclient.StorageClasses().DeleteCollection(&v1.DeleteOptions{}, v1.ListOptions{LabelSelector: "component=elasticsearch"})
+func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
+	component := "elasticsearch" + "-" + clusterName
+	err := k.Kclient.StorageClasses().DeleteCollection(&v1.DeleteOptions{}, v1.ListOptions{LabelSelector: component})
 
 	if err != nil {
 		logrus.Error("Could not delete storageclasses: ", err)
