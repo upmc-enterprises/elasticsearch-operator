@@ -21,7 +21,6 @@
       "type": "gp2",
       "storage-class-provisioner": "kubernetes.io/aws-ebs"
     },
-    "nodePort": 30303,
     "resources": {
       "requests": {
          "memory": "512Mi",
