@@ -129,6 +129,9 @@ type Storage struct {
 
 	// StorageClassProvisoner is the storage provisioner type
 	StorageClassProvisoner string `json:"storage-class-provisioner"`
+
+	// StorageClass to use
+	StorageClass string `json:"storage-class"`
 }
 
 // Resources defines CPU / Memory restrictions on pods
