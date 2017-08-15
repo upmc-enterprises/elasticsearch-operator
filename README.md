@@ -41,9 +41,11 @@ Following parameters are available to customize the elastic cluster:
   - bucket-name: Name of S3 bucket to dump snaptshots
   - cron-schedule: Cron task definition for intervals to do snapshots
 - [storage](https://kubernetes.io/docs/user-guide/persistent-volumes/)
-  - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
-  - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
-  - storage-class: Defines the name of an existing StorageClass object to use
+  - Using a provisioner
+    - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
+    - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
+  - Using an existing Storage Class (e.g. storage class for GlusterFS)
+    - storage-class: Name of an existing StorageClass object to use (zones can be [])
 - instrumentation
   - statsd-host: Sets the statsd host to send metrics to if enabled
 
