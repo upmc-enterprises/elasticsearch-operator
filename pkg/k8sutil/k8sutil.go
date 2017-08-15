@@ -831,6 +831,27 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 						},
 					},
 					Spec: v1.PodSpec{
+						Affinity: &v1.Affinity{
+							PodAntiAffinity: &v1.PodAntiAffinity{
+								PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+									{
+										Weight: 100,
+										PodAffinityTerm: v1.PodAffinityTerm{
+											LabelSelector: &metav1.LabelSelector{
+												MatchExpressions: []metav1.LabelSelectorRequirement{
+													{
+														Key:      "role",
+														Operator: metav1.LabelSelectorOpIn,
+														Values:   []string{"data"},
+
+													},
+												},
+											},
+											TopologyKey: "kubernetes.io/hostname",
+										},
+									},
+								},
+							}},
 						Containers: []v1.Container{
 							v1.Container{
 								Name: statefulSetName,
