@@ -1074,6 +1074,6 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 			logrus.Error("Could not update pv! ", err)
 			continue
 		}
-
 	}
+
 }
