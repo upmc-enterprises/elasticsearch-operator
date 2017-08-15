@@ -152,6 +152,7 @@ func (p *Processor) refreshClusters() error {
 				Storage: myspec.Storage{
 					StorageType:            cluster.Spec.Storage.StorageType,
 					StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
+					StorageClass:           cluster.Spec.Storage.StorageClass,
 				},
 				Scheduler: snapshot.New(
 					cluster.Spec.Snapshot.BucketName,
@@ -250,11 +251,15 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			p.k8sclient.CreateDataNodeDeployment(&count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
 				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
 		}
-	} else {
+	} else if len(c.Spec.Storage.StorageClass) == 0 {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
 		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, "standard",
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
+	} else {
+		sc := c.Spec.Storage.StorageClass
+		p.k8sclient.CreateDataNodeDeployment(func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, sc,
 			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
 	}
 
