@@ -94,6 +94,8 @@ func Main() int {
 	processor.WatchDataPodEvents(doneChan, &wg)
 	wg.Add(1)
 	processor.WatchElasticSearchClusterHealthEvents(doneChan, &wg)
+	wg.Add(1)
+	processor.WatchElasticSearchClusterHealthEvents(doneChan, &wg)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)

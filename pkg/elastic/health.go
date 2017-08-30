@@ -32,7 +32,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
 var (
@@ -46,7 +49,7 @@ type StatusEvent struct {
 }
 
 // MonitorElasticClusterStatus watches for elastic events
-func (c *Client) MonitorElasticClusterStatus(stopchan chan struct{}) (<-chan *StatusEvent, <-chan error) {
+func (c *Client) MonitorElasticClusterStatus(stopchan chan struct{}, wg *sync.WaitGroup) (<-chan *StatusEvent, <-chan error) {
 	events := make(chan *StatusEvent)
 	errc := make(chan error, 1)
 	go func() {
@@ -100,8 +103,16 @@ func (c *Client) MonitorElasticClusterStatus(stopchan chan struct{}) (<-chan *St
 				c.HealthStatus = event.HealthStatus
 			}
 
-			// Zzz...zzzzzZZzzz...zzzZZZzzzz...
-			time.Sleep(c.checkInterval)
+			select {
+			case <-stopchan:
+				wg.Done()
+				logrus.Println("Stopped health event watcher.")
+				return
+			default:
+				logrus.Info("Health check loop...")
+				// Zzz...zzzzzZZzzz...zzzZZZzzzz...
+				time.Sleep(c.checkInterval)
+			}
 		}
 	}()
 

@@ -24,7 +24,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 
 package elastic
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 var (
 	caFile = "ca.pem"
@@ -32,7 +35,7 @@ var (
 
 // Interface abstracts out the implementation of elastic
 type Interface interface {
-	MonitorElasticClusterStatus(stopchan chan struct{}) (<-chan *StatusEvent, <-chan error)
+	MonitorElasticClusterStatus(stopchan chan struct{}, wg *sync.WaitGroup) (<-chan *StatusEvent, <-chan error)
 }
 
 // Client gives a health interface to elastic
