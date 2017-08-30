@@ -291,10 +291,17 @@ func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
 }
 
 // DeleteStatefulSet deletes the data statefulset
-func (k *K8sutil) DeleteStatefulSet(clusterName, namespace string) error {
+func (k *K8sutil) DeleteStatefulSet(deploymentType, clusterName, namespace string) error {
+
+	labelSelector := ""
+	if deploymentType == "data" {
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=data"
+	} else if deploymentType == "master" {
+		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=master"
+	}
 
 	// Get list of data type statefulsets
-	statefulsets, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: "component=elasticsearch" + "-" + clusterName + ",role=data"})
+	statefulsets, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get stateful sets! ", err)
@@ -340,13 +347,26 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
+func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
 
-	fullDataDeploymentName := fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
+	var deploymentName, role, isNodeMaster, isNodeData string
+
+	if deploymentType == "data" {
+		deploymentName = fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
+		isNodeMaster = "false"
+		role = "data"
+		isNodeData = "true"
+	} else if deploymentType == "master" {
+		deploymentName = fmt.Sprintf("%s-%s", masterDeploymentName, clusterName)
+		isNodeMaster = "true"
+		role = "master"
+		isNodeData = "false"
+	}
+
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
-	statefulSetName := fmt.Sprintf("%s-%s", fullDataDeploymentName, storageClass)
+	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
 
 	// Check if StatefulSet exists
 	statefulSet, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
@@ -367,18 +387,18 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 				Name: statefulSetName,
 				Labels: map[string]string{
 					"component": component,
-					"role":      "data",
+					"role":      role,
 					"name":      statefulSetName,
 				},
 			},
 			Spec: apps.StatefulSetSpec{
 				Replicas:    replicas,
-				ServiceName: "es-data-svc" + "-" + clusterName,
+				ServiceName: statefulSetName,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
 							"component": component,
-							"role":      "data",
+							"role":      role,
 							"name":      statefulSetName,
 						},
 						Annotations: map[string]string{
@@ -397,7 +417,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 													{
 														Key:      "role",
 														Operator: metav1.LabelSelectorOpIn,
-														Values:   []string{"data"},
+														Values:   []string{role},
 													},
 												},
 											},
@@ -434,7 +454,11 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									},
 									v1.EnvVar{
 										Name:  "NODE_MASTER",
-										Value: "false",
+										Value: isNodeMaster,
+									},
+									v1.EnvVar{
+										Name:  "NODE_DATA",
+										Value: isNodeData,
 									},
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
@@ -442,7 +466,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
-										Value: "-Xms1024m -Xmx1024m",
+										Value: javaOptions,
 									},
 									v1.EnvVar{
 										Name:  "STATSD_HOST",
@@ -508,7 +532,7 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 							},
 							Labels: map[string]string{
 								"component": "elasticsearch",
-								"role":      "data",
+								"role":      role,
 								"name":      statefulSetName,
 							},
 						},
@@ -530,12 +554,12 @@ func (k *K8sutil) CreateDataNodeDeployment(replicas *int32, baseImage, storageCl
 		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
 
 		if err != nil {
-			logrus.Error("Could not create data stateful set: ", err)
+			logrus.Error("Could not create stateful set: ", err)
 			return err
 		}
 	} else {
 		if err != nil {
-			logrus.Error("Could not get data stateful set! ", err)
+			logrus.Error("Could not get stateful set! ", err)
 			return err
 		}
 

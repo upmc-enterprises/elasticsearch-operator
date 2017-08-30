@@ -45,7 +45,7 @@ type ClusterSpec struct {
 	ClientNodeReplicas int32 `json:"client-node-replicas"`
 
 	// MasterNodeSize defines how many client nodes to have in cluster
-	MasterNodeReplicas int32 `json:"master-node-replicas"`
+	MasterNodeReplicas int `json:"master-node-replicas"`
 
 	// DataNodeSize defines how many client nodes to have in cluster
 	DataNodeReplicas int `json:"data-node-replicas"`

@@ -35,16 +35,10 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
-// DeleteClientMasterDeployment deletes the client or master deployment
-func (k *K8sutil) DeleteClientMasterDeployment(deploymentType, clusterName, namespace string) error {
+// DeleteClientDeployment deletes the client or master deployment
+func (k *K8sutil) DeleteClientDeployment(clusterName, namespace string) error {
 
-	labelSelector := ""
-
-	if deploymentType == "client" {
-		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=client"
-	} else if deploymentType == "master" {
-		labelSelector = "component=elasticsearch" + "-" + clusterName + ",role=master"
-	}
+	labelSelector := "component=elasticsearch" + "-" + clusterName + ",role=client"
 
 	// Get list of deployments
 	deployments, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
@@ -93,26 +87,17 @@ func (k *K8sutil) DeleteClientMasterDeployment(deploymentType, clusterName, name
 	return nil
 }
 
-// CreateClientMasterDeployment creates the client or master deployment
-func (k *K8sutil) CreateClientMasterDeployment(deploymentType, baseImage string, replicas *int32, javaOptions string,
+// CreateClientDeployment creates the client or master deployment
+func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
 	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 
-	var deploymentName, role, isNodeMaster, httpEnable string
-
-	if deploymentType == "client" {
-		httpEnable = "true"
-		deploymentName = clientDeploymentName + "-" + clusterName
-		isNodeMaster = "false"
-		role = "client"
-	} else if deploymentType == "master" {
-		httpEnable = "false"
-		deploymentName = masterDeploymentName + "-" + clusterName
-		isNodeMaster = "true"
-		role = "master"
-	}
+	httpEnable := "true"
+	deploymentName := fmt.Sprintf("%s-%s", clientDeploymentName, clusterName)
+	isNodeMaster := "false"
+	role := "client"
 
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
