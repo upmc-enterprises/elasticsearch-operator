@@ -9,7 +9,7 @@
     "master-node-replicas": 2,
     "data-node-replicas": 3,
     "network-host": "0.0.0.0",
-    "zones": ["us-east-1c", "us-east-1d", "us-east-1e"],
+    "zones": [],
     "data-volume-size": "10Gi",
     "java-options": "-Xms1024m -Xmx1024m",
     "snapshot": {
@@ -18,8 +18,7 @@
       "cron-schedule": "@every 2m"
     },
     "storage": {
-      "type": "gp2",
-      "storage-class-provisioner": "kubernetes.io/aws-ebs"
+      "storage-class": "default"
     },
     "resources": {
       "requests": {
