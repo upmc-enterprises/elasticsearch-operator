@@ -64,6 +64,8 @@ const (
 	masterDeploymentName = "es-master"
 	dataDeploymentName   = "es-data"
 
+	kibanaDeploymentName = "kibana"
+
 	secretName = "es-certs"
 )
 

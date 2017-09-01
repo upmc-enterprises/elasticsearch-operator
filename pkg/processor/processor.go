@@ -178,6 +178,9 @@ func (p *Processor) refreshClusters() error {
 				Instrumentation: myspec.Instrumentation{
 					StatsdHost: cluster.Spec.Instrumentation.StatsdHost,
 				},
+				Kibana: myspec.Kibana{
+					Image: cluster.Spec.Kibana.Image,
+				},
 			},
 		}
 	}
@@ -274,6 +277,11 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions)
 	}
 
+	// Deploy Kibana
+	if c.Spec.Kibana.Image != "" {
+		p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets)
+	}
+
 	// Setup CronSchedule
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Init()
 
@@ -283,9 +291,14 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
 	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
 
-	err := p.k8sclient.DeleteClientDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
+	err := p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "client")
 	if err != nil {
 		logrus.Error("Could not delete client deployment:", err)
+	}
+
+	err = p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "kibana")
+	if err != nil {
+		logrus.Error("Could not delete kibana deployment:", err)
 	}
 
 	err = p.k8sclient.DeleteStatefulSet("master", c.ObjectMeta.Name, c.ObjectMeta.Namespace)

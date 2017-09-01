@@ -48,6 +48,8 @@ Following parameters are available to customize the elastic cluster:
     - storage-class: Name of an existing StorageClass object to use (zones can be [])
 - instrumentation
   - statsd-host: Sets the statsd host to send metrics to if enabled
+- kibana: Deploy kibana to cluster and automatically reference certs from secret
+  - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
 
 ## Certs secret
 
