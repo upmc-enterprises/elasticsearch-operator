@@ -35,10 +35,10 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
-// DeleteClientDeployment deletes the client or master deployment
-func (k *K8sutil) DeleteClientDeployment(clusterName, namespace string) error {
+// DeleteDeployment deletes a deployment
+func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string) error {
 
-	labelSelector := "component=elasticsearch" + "-" + clusterName + ",role=client"
+	labelSelector := fmt.Sprintf("component=elasticsearch-%s,role=%s", clusterName, deploymentType)
 
 	// Get list of deployments
 	deployments, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
@@ -87,7 +87,7 @@ func (k *K8sutil) DeleteClientDeployment(clusterName, namespace string) error {
 	return nil
 }
 
-// CreateClientDeployment creates the client or master deployment
+// CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
 	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
 
@@ -266,6 +266,107 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 			if err != nil {
 				logrus.Error("Could not scale deployment: ", err)
 			}
+		}
+	}
+
+	return nil
+}
+
+// CreateKibanaDeployment creates a deployment of Kibana
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets) error {
+
+	replicaCount := int32(1)
+
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	elasticHTTPEndpoint := fmt.Sprintf("https://%s:9200", component)
+	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
+
+	// Check if deployment exists
+	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+
+	if len(deployment.Name) == 0 {
+		logrus.Infof("%s not found, creating...", deploymentName)
+
+		deployment := &v1beta1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: deploymentName,
+				Labels: map[string]string{
+					"component": component,
+					"role":      "kibana",
+					"name":      deploymentName,
+				},
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: &replicaCount,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"component": component,
+							"role":      "kibana",
+							"name":      deploymentName,
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							v1.Container{
+								Name:            deploymentName,
+								Image:           baseImage,
+								ImagePullPolicy: "Always",
+								Env: []v1.EnvVar{
+									v1.EnvVar{
+										Name:  "ELASTICSEARCH_URL",
+										Value: elasticHTTPEndpoint,
+									},
+									v1.EnvVar{
+										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
+										Value: "/elasticsearch/config/certs/ca.pem",
+									},
+									v1.EnvVar{
+										Name:  "NODE_DATA",
+										Value: "false",
+									},
+								},
+								Ports: []v1.ContainerPort{
+									v1.ContainerPort{
+										Name:          "http",
+										ContainerPort: 5601,
+										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								VolumeMounts: []v1.VolumeMount{
+									v1.VolumeMount{
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+										MountPath: "/elasticsearch/config/certs",
+									},
+								},
+							},
+						},
+						Volumes: []v1.Volume{
+							v1.Volume{
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+									},
+								},
+							},
+						},
+						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
+
+		if err != nil {
+			logrus.Error("Could not create kibana deployment: ", err)
+			return err
+		}
+	} else {
+		if err != nil {
+			logrus.Error("Could not get kibana deployment! ", err)
+			return err
 		}
 	}
 

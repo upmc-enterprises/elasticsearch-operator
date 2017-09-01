@@ -90,6 +90,9 @@ type ClusterSpec struct {
 	//NodePort
 	NodePort int32 `json:"nodePort"`
 
+	// Kibana
+	Kibana Kibana `json:"kibana"`
+
 	Scheduler *snapshot.Scheduler
 }
 
@@ -152,6 +155,12 @@ type MemoryCPU struct {
 // Instrumentation handles all metrics for the cluster
 type Instrumentation struct {
 	StatsdHost string `json:"statsd-host"`
+}
+
+// Kibana properties if wanting operator to deploy for user
+type Kibana struct {
+	// Defines the image to use for deploying kibana
+	Image string `json:"image"`
 }
 
 type ElasticsearchClusterCopy ElasticsearchCluster
