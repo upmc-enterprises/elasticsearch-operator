@@ -322,6 +322,18 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 										Value: "/elasticsearch/config/certs/ca.pem",
 									},
 									v1.EnvVar{
+										Name:  "SERVER_SSL_ENABLED",
+										Value: "true",
+									},
+									v1.EnvVar{
+										Name:  "SERVER_SSL_KEY",
+										Value: "/elasticsearch/config/certs/kibana-key.pem",
+									},
+									v1.EnvVar{
+										Name:  "SERVER_SSL_CERTIFICATE",
+										Value: "/elasticsearch/config/certs/kibana.pem",
+									},
+									v1.EnvVar{
 										Name:  "NODE_DATA",
 										Value: "false",
 									},
