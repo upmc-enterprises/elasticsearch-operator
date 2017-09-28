@@ -1,0 +1,27 @@
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticSearch-Clusters
+metadata:
+  name: example-es-cluster
+spec:
+  kibana:
+    image: upmcenterprises/kibana:5.3.1
+  client-node-replicas: 3
+  master-node-replicas: 2
+  data-node-replicas: 3
+  network-host: 0.0.0.0
+  zones: []
+  data-volume-size: 10Gi
+  java-options: "-Xms256m -Xmx256m"
+  snapshot:
+    scheduler-enabled: false
+    bucket-name: elasticsnapshots99
+    cron-schedule: "@every 2m"
+  storage:
+    storage-class: rook-block
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 1024Mi
+      cpu: '1'

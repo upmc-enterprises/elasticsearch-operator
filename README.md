@@ -8,7 +8,9 @@ The ElasticSearch operator is designed to manage one or more elastic search clus
 
 ## Kubernetes
 
-The operator was built and tested on a 1.6.X Kubernetes cluster and is the only version supported currently. This is because it is utilizing [`StatefulSets`](https://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/) as well as [`CronJobs`](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) which are not available in previous versions of Kubernetes. 
+The operator was built and tested on a 1.7.X Kubernetes cluster and is the minimum version required due to the operators use of Custom Resource Definitions. 
+
+_NOTE: If using on an older cluster, please make sure to use version [v0.0.7] (https://github.com/upmc-enterprises/elasticsearch-operator/releases/tag/v0.0.7) which still utilize third party resources. 
 
 ## Cloud
 
@@ -24,9 +26,9 @@ Watch a demo here:<br>
 
 # Usage
 
-The operator is built using the controller + third party resource model. Once the controller is deployed to your cluster, it will automatically create the ThirdPartyResource. Next create a Kubernetes object type `elasticsearchCluster` to deploy the elastic cluster based upon the TPR. 
+The operator is built using the controller + custom resource definition model. Once the controller is deployed to your cluster, it will automatically create the CustomResourceDefinition (CRD). Next create a Kubernetes object type `elasticsearchCluster` to deploy the elastic cluster based upon the CRD. 
 
-## ThirdPartyResource
+## CustomResourceDefinition
 
 Following parameters are available to customize the elastic cluster:
 
@@ -59,7 +61,7 @@ If supplying your own certs, first generate them and add to a secret. Secret sho
 
 ## Base image
 
-The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1` which can be overriden by addeding to the custom cluster you create _(See: [ThirdPartyResource](#thirdpartyresource) above)_. 
+The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1` which can be overriden by addeding to the custom cluster you create _(See: [CustomResourceDefinition](#customdesourcedefinition) above)_. 
 
 _NOTE: If no image is specified, the default noted previously is used._
 
@@ -104,7 +106,7 @@ _NOTE: In the example we're putting the operator into the namespace `operator`. 
 ```bash
 $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.json
 ```
-_NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
+_NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
 # Create Example ElasticSearch Cluster (Minikube)
 
@@ -113,7 +115,7 @@ To run the operator on minikube, this sample file is setup to do that. It sets l
 ```bash
 $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.json
 ```
-_NOTE: Creating a custom cluster requires the creation of a ThirdPartyResource. This happens automatically after the controller is created._
+_NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
 # Resize ElasticSearch Cluster
 

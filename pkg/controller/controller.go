@@ -66,7 +66,7 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) init() error {
-	err := c.k8sclient.CreateKubernetesThirdPartyResource()
+	err := c.k8sclient.CreateKubernetesCustomResourceDefinition()
 	if err != nil {
 		return err
 	}
