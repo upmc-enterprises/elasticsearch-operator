@@ -181,6 +181,9 @@ func (p *Processor) refreshClusters() error {
 				Kibana: myspec.Kibana{
 					Image: cluster.Spec.Kibana.Image,
 				},
+				Cerebro: myspec.Cerebro{
+					Image: cluster.Spec.Cerebro.Image,
+				},
 			},
 		}
 	}
@@ -225,8 +228,14 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	if p.k8sclient.CertsSecretExists(c.ObjectMeta.Namespace, c.ObjectMeta.Name) == false {
 		// Create certs
 		logrus.Info("Creating new certs!")
-		p.k8sclient.GenerateCerts("/tmp/certs/config", "/tmp/certs/certs", c.ObjectMeta.Namespace, c.ObjectMeta.Name)
-		p.k8sclient.CreateCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name, "/tmp/certs/certs")
+		if err := p.k8sclient.GenerateCerts("/tmp/certs/config", "/tmp/certs/certs", c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
+			return err
+		}
+
+		if err := p.k8sclient.CreateCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name, "/tmp/certs/certs"); err != nil {
+			return err
+		}
+
 	}
 
 	// Create Services
@@ -282,6 +291,21 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets)
 	}
 
+	// Deploy Cerebro
+	if c.Spec.Cerebro.Image != "" {
+		cert := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
+		p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, cert, c.Spec.ImagePullSecrets)
+
+		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name, cert)
+
+		// create/update cerebro configMap
+		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")) {
+			p.k8sclient.UpdateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf)
+		} else {
+			p.k8sclient.CreateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf)
+		}
+	}
+
 	// Setup CronSchedule
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Init()
 
@@ -299,6 +323,11 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) e
 	err = p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "kibana")
 	if err != nil {
 		logrus.Error("Could not delete kibana deployment:", err)
+	}
+
+	err = p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "cerebro")
+	if err != nil {
+		logrus.Error("Could not delete cerebro deployment:", err)
 	}
 
 	err = p.k8sclient.DeleteStatefulSet("master", c.ObjectMeta.Name, c.ObjectMeta.Namespace)

@@ -52,6 +52,9 @@ Following parameters are available to customize the elastic cluster:
   - statsd-host: Sets the statsd host to send metrics to if enabled
 - kibana: Deploy kibana to cluster and automatically reference certs from secret
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
+- cerebro: Deploy [cerebro](https://github.com/lmenezes/cerebro) to cluster and automatically reference certs from secret
+  - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/cerebro-docker) since upstream has no docker images available)
+
 
 ## Certs secret
 

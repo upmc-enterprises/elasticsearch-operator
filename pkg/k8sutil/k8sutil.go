@@ -59,7 +59,8 @@ const (
 	masterDeploymentName = "es-master"
 	dataDeploymentName   = "es-data"
 
-	kibanaDeploymentName = "kibana"
+	kibanaDeploymentName  = "kibana"
+	cerebroDeploymentName = "cerebro"
 
 	secretName = "es-certs"
 )
@@ -501,7 +502,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.VolumeMount{
 										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: "/elasticsearch/config/certs",
+										MountPath: elasticsearchCertspath,
 									},
 								},
 								Resources: v1.ResourceRequirements{
@@ -582,4 +583,44 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	}
 
 	return nil
+}
+
+func (k *K8sutil) CreateCerebroConfiguration(clusterName, cert string) map[string]string {
+	clusterName = fmt.Sprintf("https://%s:9200", fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName)))
+
+	x := map[string]string{}
+	x["application.conf"] = fmt.Sprintf(`
+play.ws.ssl {
+        trustManager = {
+                stores = [
+				{ type = "PEM", path = "%s/cerebro.pem" },
+				{ path: %s/truststore.jks, type: "JKS" }
+                ]
+        }
+}
+//play.crypto.secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
+//play.http.secret.key = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
+secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
+# Application base path
+basePath = "/"
+
+# Defaults to RUNNING_PID at the root directory of the app.
+# To avoid creating a PID file set this value to /dev/null
+#pidfile.path = "/var/run/cerebro.pid"
+pidfile.path=/dev/null
+
+# Rest request history max size per user
+rest.history.size = 50 // defaults to 50 if not specified
+
+# Path of local database file
+#data.path: "/var/lib/cerebro/cerebro.db"
+data.path = "./cerebro.db"
+hosts = [
+{
+	host = "%s"
+	name = "es-servers"
+}
+]
+		`, elasticsearchCertspath, elasticsearchCertspath, clusterName)
+	return x
 }
