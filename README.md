@@ -104,7 +104,7 @@ _NOTE: In the example we're putting the operator into the namespace `operator`. 
 # Create Example ElasticSearch Cluster
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.json
+$ kubectl create -n operator -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.yaml
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
@@ -113,7 +113,7 @@ _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefini
 To run the operator on minikube, this sample file is setup to do that. It sets lower Java memory contraints as well as uses the default storage class in Minikube which writes to hostPath.
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.json
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.yaml
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
@@ -124,7 +124,7 @@ _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefini
 First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: The API is acesssed the API service in this example via [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/)._ 
 
 ```bash
-curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:8001/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
+curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.yaml http://127.0.0.1:8001/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
 ```
 
 # Snapshot
