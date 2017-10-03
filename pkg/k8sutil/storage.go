@@ -40,7 +40,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 	storageClass, err := k.Kclient.StorageV1beta1().StorageClasses().Get(zone, metav1.GetOptions{})
 
 	if len(storageClass.Name) == 0 {
-		logrus.Infof("StorgeClass %s not found, creating...", zone)
+		logrus.Infof("StorageClass %s not found, creating...", zone)
 
 		class := &storage.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
