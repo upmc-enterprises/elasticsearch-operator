@@ -10,7 +10,7 @@ The ElasticSearch operator is designed to manage one or more elastic search clus
 
 The operator was built and tested on a 1.7.X Kubernetes cluster and is the minimum version required due to the operators use of Custom Resource Definitions. 
 
-_NOTE: If using on an older cluster, please make sure to use version [v0.0.7] (https://github.com/upmc-enterprises/elasticsearch-operator/releases/tag/v0.0.7) which still utilize third party resources._
+_NOTE: If using on an older cluster, please make sure to use version [v0.0.7](https://github.com/upmc-enterprises/elasticsearch-operator/releases/tag/v0.0.7) which still utilize third party resources._
 
 ## Cloud
 
