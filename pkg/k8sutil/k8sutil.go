@@ -26,30 +26,25 @@ package k8sutil
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/crd"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-var (
-	tprName = "elasticsearch-cluster.enterprises.upmc.com"
 )
 
 const (
@@ -71,25 +66,27 @@ const (
 
 // K8sutil defines the kube object
 type K8sutil struct {
-	Config     *rest.Config
-	TprClient  *rest.RESTClient
-	Kclient    kubernetes.Interface
-	MasterHost string
+	Config        *rest.Config
+	CrdClient     apiextensionsclient.Interface
+	Kclient       kubernetes.Interface
+	ElasticClient *rest.RESTClient
+	MasterHost    string
 }
 
 // New creates a new instance of k8sutil
 func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 
-	client, tprclient, err := newKubeClient(kubeCfgFile)
+	client, crdclient, esClient, err := newKubeClient(kubeCfgFile)
 
 	if err != nil {
 		logrus.Fatalf("Could not init Kubernetes client! [%s]", err)
 	}
 
 	k := &K8sutil{
-		Kclient:    client,
-		TprClient:  tprclient,
-		MasterHost: masterHost,
+		Kclient:       client,
+		CrdClient:     crdclient,
+		MasterHost:    masterHost,
+		ElasticClient: esClient,
 	}
 
 	return k, nil
@@ -98,40 +95,19 @@ func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 func buildConfig(kubeCfgFile string) (*rest.Config, error) {
 	if kubeCfgFile != "" {
 		logrus.Infof("Using OutOfCluster k8s config with kubeConfigFile: %s", kubeCfgFile)
-		return clientcmd.BuildConfigFromFlags("", kubeCfgFile)
+		config, err := clientcmd.BuildConfigFromFlags("", kubeCfgFile)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		return config, nil
 	}
 
 	logrus.Info("Using InCluster k8s config")
 	return rest.InClusterConfig()
 }
 
-func configureTPRClient(config *rest.Config) {
-	groupversion := schema.GroupVersion{
-		Group:   "enterprises.upmc.com",
-		Version: "v1",
-	}
-
-	config.GroupVersion = &groupversion
-	config.APIPath = "/apis"
-	config.ContentType = runtime.ContentTypeJSON
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
-
-	schemeBuilder := runtime.NewSchemeBuilder(
-		func(scheme *runtime.Scheme) error {
-			scheme.AddKnownTypes(
-				schema.GroupVersion{Group: "enterprises.upmc.com", Version: "v1"},
-				&myspec.ElasticsearchCluster{},
-				&myspec.ElasticsearchClusterList{},
-				&api.ListOptions{},
-				&api.DeleteOptions{},
-			)
-			return nil
-		})
-
-	schemeBuilder.AddToScheme(api.Scheme)
-}
-
-func newKubeClient(kubeCfgFile string) (kubernetes.Interface, *rest.RESTClient, error) {
+func newKubeClient(kubeCfgFile string) (kubernetes.Interface, apiextensionsclient.Interface, *rest.RESTClient, error) {
 
 	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
 	Config, err := buildConfig(kubeCfgFile)
@@ -139,39 +115,31 @@ func newKubeClient(kubeCfgFile string) (kubernetes.Interface, *rest.RESTClient, 
 		panic(err)
 	}
 
+	// Create the kubernetes client
 	client, err := kubernetes.NewForConfig(Config)
 	if err != nil {
 		panic(err)
 	}
 
-	// make a new config for our extension's API group, using the first config as a baseline
-	var tprconfig *rest.Config
-	tprconfig = Config
+	// Create the CRD Client
+	CrdClient := apiextensionsclient.NewForConfigOrDie(Config)
 
-	configureTPRClient(tprconfig)
+	// Create the elastic client
+	esClient, _, _ := crd.NewClient(Config)
 
-	tprclient, err := rest.RESTClientFor(tprconfig)
-	if err != nil {
-		logrus.Error(err.Error())
-		logrus.Error("can not get client to TPR")
-		os.Exit(2)
-	}
-
-	return client, tprclient, nil
+	return client, CrdClient, esClient, nil
 }
 
 // GetElasticSearchClusters returns a list of custom clusters defined
 func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticsearchCluster, error) {
-	// var resp *http.Response
 	elasticSearchList := myspec.ElasticsearchClusterList{}
 	var err error
 
 	for {
-		err = k.TprClient.Get().Resource("ElasticsearchClusters").Do().Into(&elasticSearchList)
+		err = k.ElasticClient.Get().Resource(crd.CRDResourcePlural).Do().Into(&elasticSearchList)
 
 		if err != nil {
-			logrus.Error("error getting elasticsearch clusters")
-			logrus.Error(err)
+			logrus.Errorf("error getting elasticsearch clusters: %s", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -186,7 +154,7 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
-	source := cache.NewListWatchFromClient(k.TprClient, "elasticsearchclusters", v1.NamespaceAll, fields.Everything())
+	source := cache.NewListWatchFromClient(k.ElasticClient, crd.CRDResourcePlural, v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
@@ -261,27 +229,63 @@ func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-cha
 	return events, errc
 }
 
-// CreateKubernetesThirdPartyResource checks if ElasticSearch TPR exists. If not, create
-func (k *K8sutil) CreateKubernetesThirdPartyResource() error {
+// CreateKubernetesCustomResourceDefinition checks if ElasticSearch CRD exists. If not, create
+func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
 
-	tpr, err := k.Kclient.ExtensionsV1beta1().ThirdPartyResources().Get(tprName, metav1.GetOptions{})
+	tpr, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.CRDName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			tpr := &v1beta1.ThirdPartyResource{
+			crdObject := &apiextensionsv1beta1.CustomResourceDefinition{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: tprName,
+					Name: crd.CRDName,
 				},
-				Versions: []v1beta1.APIVersion{
-					{Name: "v1"},
+				Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+					Group:   crd.CRDGroupName,
+					Version: crd.SchemeGroupVersion.Version,
+					Scope:   apiextensionsv1beta1.NamespaceScoped,
+					Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+						Plural: crd.CRDResourcePlural,
+						Kind:   crd.CRDResourceKind,
+					},
 				},
-				Description: "Managed elasticsearch clusters",
 			}
 
-			_, err := k.Kclient.ExtensionsV1beta1().ThirdPartyResources().Create(tpr)
+			_, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crdObject)
 			if err != nil {
 				panic(err)
 			}
-			logrus.Info("Created missing TPR")
+			logrus.Info("Created missing CRD...waiting for it to be established...")
+
+			// wait for CRD being established
+			err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {
+				createdCRD, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.CRDName, metav1.GetOptions{})
+				if err != nil {
+					return false, err
+				}
+				for _, cond := range createdCRD.Status.Conditions {
+					switch cond.Type {
+					case apiextensionsv1beta1.Established:
+						if cond.Status == apiextensionsv1beta1.ConditionTrue {
+							return true, err
+						}
+					case apiextensionsv1beta1.NamesAccepted:
+						if cond.Status == apiextensionsv1beta1.ConditionFalse {
+							fmt.Printf("Name conflict: %v\n", cond.Reason)
+						}
+					}
+				}
+				return false, err
+			})
+
+			if err != nil {
+				deleteErr := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crd.CRDName, nil)
+				if deleteErr != nil {
+					return errors.NewAggregate([]error{err, deleteErr})
+				}
+				return err
+			}
+
+			logrus.Info("CRD ready!")
 		} else {
 			panic(err)
 		}

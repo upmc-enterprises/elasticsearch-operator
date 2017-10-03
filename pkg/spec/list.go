@@ -25,8 +25,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package spec
 
 import (
-	"encoding/json"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,27 +33,4 @@ type ElasticsearchClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ElasticsearchCluster `json:"items"`
-}
-
-// // Required to satisfy Object interface
-// func (e *ElasticsearchCluster) GetObjectKind() runtime.ObjectKind {
-// 	return &e.TypeMeta
-// }
-
-// // Required to satisfy ObjectMetaAccessor interface
-// func (e *ElasticsearchCluster) GetObjectMeta() metav1.Object {
-// 	return &e.Metadata
-// }
-
-type ElasticsearchClusterListCopy ElasticsearchClusterList
-
-func (c *ElasticsearchClusterList) UnmarshalJSON(data []byte) error {
-	tmp := ElasticsearchClusterListCopy{}
-	err := json.Unmarshal(data, &tmp)
-	if err != nil {
-		return err
-	}
-	tmp2 := ElasticsearchClusterList(tmp)
-	*c = tmp2
-	return nil
 }

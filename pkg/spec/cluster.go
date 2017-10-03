@@ -25,8 +25,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package spec
 
 import (
-	"encoding/json"
-
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -37,7 +35,15 @@ type ElasticsearchCluster struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Type              string      `json:"type"`
 	Spec              ClusterSpec `json:"spec"`
+	Status            CRDStatus   `json:"status,omitempty"`
 }
+
+type CRDStatus struct {
+	State   CRDState `json:"state,omitempty"`
+	Message string   `json:"message,omitempty"`
+}
+
+type CRDState string
 
 // ClusterSpec defines cluster options
 type ClusterSpec struct {
@@ -161,17 +167,4 @@ type Instrumentation struct {
 type Kibana struct {
 	// Defines the image to use for deploying kibana
 	Image string `json:"image"`
-}
-
-type ElasticsearchClusterCopy ElasticsearchCluster
-
-func (c *ElasticsearchCluster) UnmarshalJSON(data []byte) error {
-	tmp := ElasticsearchClusterCopy{}
-	err := json.Unmarshal(data, &tmp)
-	if err != nil {
-		return err
-	}
-	tmp2 := ElasticsearchCluster(tmp)
-	*c = tmp2
-	return nil
 }
