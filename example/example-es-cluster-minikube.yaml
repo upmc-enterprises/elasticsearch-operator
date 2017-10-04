@@ -3,6 +3,8 @@ kind: ElasticsearchCluster
 metadata:
   name: example-es-cluster
 spec:
+  kibana:
+    image: upmcenterprises/kibana:5.3.1
   elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:5.3.1
   client-node-replicas: 1
   master-node-replicas: 1
