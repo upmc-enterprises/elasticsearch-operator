@@ -136,6 +136,8 @@ $ kubectl port-forward <podName> 5601:5601
 $ curl https://localhost:5601
 ```
 
+_(Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)_
+
 # Resize ElasticSearch Cluster
 
 If changes are required to the cluster, say the replica count of the data nodes for example, just update the manifest and do a `kubectl apply` on the resource.
