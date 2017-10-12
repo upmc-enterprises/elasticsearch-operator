@@ -52,6 +52,9 @@ Following parameters are available to customize the elastic cluster:
   - statsd-host: Sets the statsd host to send metrics to if enabled
 - kibana: Deploy kibana to cluster and automatically reference certs from secret
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
+- cerebro: Deploy [cerebro](https://github.com/lmenezes/cerebro) to cluster and automatically reference certs from secret
+  - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/cerebro-docker) since upstream has no docker images available)
+
 
 ## Certs secret
 
@@ -117,23 +120,32 @@ $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticse
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
-# Kibana
+# Kibana and cerebro
 
-Kibana can be automatically deployed by adding the kibana piece to the manifest:
+[Kibana](https://www.elastic.co/products/kibana) and [Cerebro](https://github.com/lmenezes/cerebro) can be automatically deployed by adding the cerebro piece to the manifest:
 
 ```
 spec:
-  kibana:
+  kibana: 
     image: upmcenterprises/kibana:5.3.1
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
 ```
 
-Once added the operator will create certs for Kibana and automatically secure with those certs trusing the same CA used to generate the certs for the Elastic nodes. 
+Once added the operator will create certs for Kibana or Cerebro and automatically secure with those certs trusing the same CA used to generate the certs for the Elastic nodes. 
 
 To access, just port-forward to the pod:
 
+Kibana:
 ```
 $ kubectl port-forward <podName> 5601:5601
 $ curl https://localhost:5601
+````
+
+```
+Cerebro:
+$ kubectl port-forward <podName> 9000:9000
+$ curl https://localhost:9000
 ```
 
 _(Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)_

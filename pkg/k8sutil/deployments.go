@@ -35,6 +35,11 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
+const (
+	elasticsearchCertspath = "/elasticsearch/config/certs"
+)
+
+// TODO just mount the secret needed by each deployment
 // DeleteDeployment deletes a deployment
 func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string) error {
 
@@ -103,7 +108,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
 	if len(deployment.Name) == 0 {
-		logrus.Infof("%s not found, creating...", deploymentName)
+		logrus.Infof("Deployment %s not found, creating...", deploymentName)
 
 		// Parse CPU / Memory
 		limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
@@ -208,7 +213,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.VolumeMount{
 										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: "/elasticsearch/config/certs",
+										MountPath: elasticsearchCertspath,
 									},
 								},
 								Resources: v1.ResourceRequirements{
@@ -319,7 +324,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
-										Value: "/elasticsearch/config/certs/ca.pem",
+										Value: fmt.Sprintf("%s/ca.pem", elasticsearchCertspath),
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_ENABLED",
@@ -327,11 +332,11 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_KEY",
-										Value: "/elasticsearch/config/certs/kibana-key.pem",
+										Value: fmt.Sprintf("%s/kibana-key.pem", elasticsearchCertspath),
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_CERTIFICATE",
-										Value: "/elasticsearch/config/certs/kibana.pem",
+										Value: fmt.Sprintf("%s/kibana.pem", elasticsearchCertspath),
 									},
 									v1.EnvVar{
 										Name:  "NODE_DATA",
@@ -348,7 +353,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: "/elasticsearch/config/certs",
+										MountPath: elasticsearchCertspath,
 									},
 								},
 							},
@@ -378,6 +383,108 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 	} else {
 		if err != nil {
 			logrus.Error("Could not get kibana deployment! ", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CreateCerebroDeployment creates a deployment of Cerebro
+func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets) error {
+	replicaCount := int32(1)
+	component := fmt.Sprintf("elasticsearch-%s", clusterName)
+	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
+
+	// Check if deployment exists
+	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+
+	if len(deployment.Name) == 0 {
+		logrus.Infof("Deployment %s not found, creating...", deploymentName)
+
+		deployment := &v1beta1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: deploymentName,
+				Labels: map[string]string{
+					"component": component,
+					"role":      "cerebro",
+					"name":      deploymentName,
+				},
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: &replicaCount,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"component": component,
+							"role":      "cerebro",
+							"name":      deploymentName,
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							v1.Container{
+								Name:            deploymentName,
+								Image:           baseImage,
+								ImagePullPolicy: "Always",
+								Command: []string{
+									"bin/cerebro",
+									"-Dconfig.file=/usr/local/cerebro/cfg/application.conf",
+								},
+								Ports: []v1.ContainerPort{
+									v1.ContainerPort{
+										Name:          "http",
+										ContainerPort: 9000,
+										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								VolumeMounts: []v1.VolumeMount{
+									v1.VolumeMount{
+										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+										MountPath: elasticsearchCertspath,
+									},
+									v1.VolumeMount{
+										Name:      cert,
+										MountPath: "/usr/local/cerebro/cfg",
+									},
+								},
+							},
+						},
+						Volumes: []v1.Volume{
+							v1.Volume{
+								Name: cert,
+								VolumeSource: v1.VolumeSource{
+									ConfigMap: &v1.ConfigMapVolumeSource{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: cert,
+										},
+									},
+								},
+							},
+							v1.Volume{
+								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+									},
+								},
+							},
+						},
+						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
+					},
+				},
+			},
+		}
+
+		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
+
+		if err != nil {
+			logrus.Error("Could not create cerebro deployment: ", err)
+			return err
+		}
+	} else {
+		if err != nil {
+			logrus.Error("Could not get cerebro deployment! ", err)
 			return err
 		}
 	}

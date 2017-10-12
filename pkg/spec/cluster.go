@@ -99,6 +99,9 @@ type ClusterSpec struct {
 	// Kibana
 	Kibana Kibana `json:"kibana"`
 
+	//Cerebro
+	Cerebro Cerebro `json:"cerebro"`
+
 	Scheduler *snapshot.Scheduler
 }
 
@@ -167,4 +170,11 @@ type Instrumentation struct {
 type Kibana struct {
 	// Defines the image to use for deploying kibana
 	Image string `json:"image"`
+}
+
+// Cerebro properties if wanting operator to deploy for user
+type Cerebro struct {
+	// Defines the image to use for deploying Cerebro
+	Image         string `json:"image"`
+	Configuration string `json:"configuration"`
 }
