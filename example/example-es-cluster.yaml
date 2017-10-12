@@ -5,8 +5,8 @@ metadata:
 spec:
   kibana:
     image: upmcenterprises/kibana:5.3.1
-  #cerebro:
-  #  image: upmcenterprises/cerebro:0.6.8
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
   client-node-replicas: 3
   master-node-replicas: 2
   data-node-replicas: 3

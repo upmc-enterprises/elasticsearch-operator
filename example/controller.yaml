@@ -9,13 +9,16 @@ metadata:
   name: elasticsearch-operator
 rules:
 - apiGroups: ["extensions"]
-  resources: ["deployments", "thirdpartyresources", "replicasets"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["create", "get", "update", "delete", "list"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
   verbs: ["create", "get", "update", "delete", "list"]
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list", "create", "delete", "deletecollection"]
 - apiGroups: [""]
-  resources: ["persistentvolumes", "persistentvolumeclaims", "services", "secrets"]
+  resources: ["persistentvolumes", "persistentvolumeclaims", "services", "secrets", "configmaps"] 
   verbs: ["create", "get", "update", "delete", "list"]
 - apiGroups: ["batch"]
   resources: ["cronjobs", "jobs"]

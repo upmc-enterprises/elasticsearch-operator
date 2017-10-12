@@ -429,7 +429,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 								ImagePullPolicy: "Always",
 								Command: []string{
 									"bin/cerebro",
-									"Dconfig.file=/opt/cerebro/cfg/application.conf",
+									"-Dconfig.file=/usr/local/cerebro/cfg/application.conf",
 								},
 								Ports: []v1.ContainerPort{
 									v1.ContainerPort{
@@ -445,7 +445,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 									},
 									v1.VolumeMount{
 										Name:      cert,
-										MountPath: "/opt/cerebro/cfg",
+										MountPath: "/usr/local/cerebro/cfg",
 									},
 								},
 							},
