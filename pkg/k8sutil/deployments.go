@@ -99,7 +99,6 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 
-	httpEnable := "true"
 	deploymentName := fmt.Sprintf("%s-%s", clientDeploymentName, clusterName)
 	isNodeMaster := "false"
 	role := "client"
@@ -175,7 +174,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
-										Value: httpEnable,
+										Value: "true",
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",

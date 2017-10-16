@@ -469,7 +469,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
-										Value: "false",
+										Value: "true",
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
@@ -492,6 +492,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									v1.ContainerPort{
 										Name:          "transport",
 										ContainerPort: 9300,
+										Protocol:      v1.ProtocolTCP,
+									},
+									v1.ContainerPort{
+										Name:          "http",
+										ContainerPort: 9200,
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
