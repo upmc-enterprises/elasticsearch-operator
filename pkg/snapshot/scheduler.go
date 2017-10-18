@@ -78,26 +78,37 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, svcU
 }
 
 // Init creates the snapshot repository cronjob
-func (s *Scheduler) Init() {
+func (s *Scheduler) Init() error {
 
 	if s.enabled {
 		// Init repository
-		s.CreateSnapshotRepository()
+		if err := s.CreateSnapshotRepository(); err != nil {
+			return err
+		}
 
 		// Init snapshot
-		s.CreateSnapshot()
+		if err := s.CreateSnapshot(); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // CreateSnapshotRepository creates the snapshot repository cronjob
-func (s *Scheduler) CreateSnapshotRepository() {
+func (s *Scheduler) CreateSnapshotRepository() error {
 	// TODO: This should wait until the api goes green and cluster is healthy
-	s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_REPOSITORY, s.cronSchedule)
+	if err := s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_REPOSITORY, s.cronSchedule); err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateSnapshot creates snapshot cronjob
-func (s *Scheduler) CreateSnapshot() {
-	s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_SNAPSHOT, s.cronSchedule)
+func (s *Scheduler) CreateSnapshot() error {
+	if err := s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_SNAPSHOT, s.cronSchedule); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Stop cleans up Cron
@@ -137,7 +148,7 @@ func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
 }
 
 // CreateCronJob creates a cron job
-func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule string) {
+func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule string) error {
 	snapshotName := getSnapshotname(clusterName, action)
 
 	// Check if CronJob exists
@@ -145,9 +156,15 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 
 	if len(cronJob.Name) == 0 {
 
-		requestCPU, _ := resource.ParseQuantity("100m")
-		requestMemory, _ := resource.ParseQuantity("256mbi")
+		requestCPU, err := resource.ParseQuantity("100m")
+		if err != nil {
+			return err
+		}
 
+		requestMemory, err := resource.ParseQuantity("256mbi")
+		if err == nil {
+			return err
+		}
 		job := &batch.CronJob{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: snapshotName,
@@ -198,14 +215,15 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 			},
 		}
 
-		_, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Create(job)
-
-		if err != nil {
+		if _, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Create(job); err != nil {
 			logrus.Error("Could not create CronJob! ", err)
+			return err
 		}
 	} else if err != nil {
 		logrus.Error("Could not get cron job! ", err)
+		return err
 	}
+	return nil
 }
 
 // GetSnapshotname gets the name of the snapshot cron job

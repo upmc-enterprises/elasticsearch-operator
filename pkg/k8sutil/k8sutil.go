@@ -590,8 +590,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	return nil
 }
 
-func (k *K8sutil) CreateCerebroConfiguration(clusterName, cert string) map[string]string {
-	clusterName = fmt.Sprintf("https://%s:9200", fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName)))
+func (k *K8sutil) CreateCerebroConfiguration(clusterName string) map[string]string {
 
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`
@@ -626,6 +625,7 @@ hosts = [
 	name = "es-servers"
 }
 ]
-		`, elasticsearchCertspath, elasticsearchCertspath, clusterName)
+		`, elasticsearchCertspath, elasticsearchCertspath, fmt.Sprintf("https://%s:9200",
+		fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName))))
 	return x
 }

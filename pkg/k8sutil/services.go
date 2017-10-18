@@ -41,7 +41,7 @@ func (k *K8sutil) CreateDataService(clusterName, namespace string) error {
 
 	// Service missing, create
 	if len(svc.Name) == 0 {
-		logrus.Infof("%s not found, creating...", fullDataServiceName)
+		logrus.Infof("Service %s not found, creating...", fullDataServiceName)
 
 		dataService := &v1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -69,9 +69,7 @@ func (k *K8sutil) CreateDataService(clusterName, namespace string) error {
 			},
 		}
 
-		_, err := k.Kclient.CoreV1().Services(namespace).Create(dataService)
-
-		if err != nil {
+		if _, err := k.Kclient.CoreV1().Services(namespace).Create(dataService); err != nil {
 			logrus.Error("Could not create data service", err)
 			return err
 		}
@@ -132,12 +130,11 @@ func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort in
 			clientSvc.Spec.Ports[0].NodePort = nodePort
 		}
 
-		_, err := k.Kclient.CoreV1().Services(namespace).Create(clientSvc)
-
-		if err != nil {
+		if _, err := k.Kclient.CoreV1().Services(namespace).Create(clientSvc); err != nil {
 			logrus.Error("Could not create client service", err)
 			return err
 		}
+
 	} else if err != nil {
 		logrus.Error("Could not get client service! ", err)
 		return err
@@ -181,12 +178,11 @@ func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 			},
 		}
 
-		_, err := k.Kclient.CoreV1().Services(namespace).Create(discoverySvc)
-
-		if err != nil {
+		if _, err := k.Kclient.CoreV1().Services(namespace).Create(discoverySvc); err != nil {
 			logrus.Error("Could not create discovery service! ", err)
 			return err
 		}
+
 	} else if err != nil {
 		logrus.Error("Could not get discovery service! ", err)
 		return err
@@ -196,30 +192,25 @@ func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 }
 
 // DeleteServices creates the discovery service
-func (k *K8sutil) DeleteServices(clusterName, namespace string) {
+func (k *K8sutil) DeleteServices(clusterName, namespace string) error {
 
 	fullDiscoveryServiceName := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
-	err := k.Kclient.CoreV1().Services(namespace).Delete(fullDiscoveryServiceName, &metav1.DeleteOptions{})
-	if err != nil {
+	if err := k.Kclient.CoreV1().Services(namespace).Delete(fullDiscoveryServiceName, &metav1.DeleteOptions{}); err != nil {
 		logrus.Error("Could not delete service "+fullDiscoveryServiceName+":", err)
-	} else {
-		logrus.Infof("Delete service: %s", fullDiscoveryServiceName)
 	}
+	logrus.Infof("Deleted service: %s", fullDiscoveryServiceName)
 
 	fullDataServiceName := dataServiceName + "-" + clusterName
-	err = k.Kclient.CoreV1().Services(namespace).Delete(fullDataServiceName, &metav1.DeleteOptions{})
-	if err != nil {
+	if err := k.Kclient.CoreV1().Services(namespace).Delete(fullDataServiceName, &metav1.DeleteOptions{}); err != nil {
 		logrus.Error("Could not delete service "+fullDataServiceName+":", err)
-	} else {
-		logrus.Infof("Delete service: %s", fullDataServiceName)
 	}
+	logrus.Infof("Deleted service: %s", fullDataServiceName)
 
 	fullClientServiceName := clientServiceName + "-" + clusterName
-	err = k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{})
-	if err != nil {
+	if err := k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{}); err != nil {
 		logrus.Error("Could not delete service "+fullClientServiceName+":", err)
-	} else {
-		logrus.Infof("Delete service: %s", fullClientServiceName)
 	}
+	logrus.Infof("Deleted service: %s", fullClientServiceName)
 
+	return nil
 }

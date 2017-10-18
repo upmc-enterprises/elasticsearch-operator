@@ -5,6 +5,9 @@
 
 TAG ?= 0.0.8
 PREFIX ?= upmcenterprises
+pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
+# go source files, ignore vendor directory
+SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 all: container
 
@@ -19,6 +22,12 @@ push:
 
 clean:
 	rm -f elasticsearch-operator
+
+format:
+	go fmt $(pkgs)
+
+check:
+	@go tool vet ${SRC}
 
 test: clean
 	go test $$(go list ./... | grep -v /vendor/)

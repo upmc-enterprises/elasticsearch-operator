@@ -37,14 +37,12 @@ func (k *K8sutil) CreateConfigMap(namespace string, name string, data map[string
 
 	cf := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name, 
+			Name: name,
 		},
 		Data: data,
 	}
 
-	_, err := k.Kclient.CoreV1().ConfigMaps(namespace).Create(cf)
-
-	if err != nil {
+	if _, err := k.Kclient.CoreV1().ConfigMaps(namespace).Create(cf); err != nil {
 		logrus.Error(fmt.Sprintf("Could not create configmap %s:", name), err)
 		return err
 	}
@@ -74,14 +72,12 @@ func (k *K8sutil) UpdateConfigMap(namespace string, name string, data map[string
 
 	cf := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name, 
+			Name: name,
 		},
 		Data: data,
 	}
 
-	_, err := k.Kclient.CoreV1().ConfigMaps(namespace).Update(cf)
-
-	if err != nil {
+	if _, err := k.Kclient.CoreV1().ConfigMaps(namespace).Update(cf); err != nil {
 		logrus.Error(fmt.Sprintf("Could not update configmap %s:", name), err)
 		return err
 	}
