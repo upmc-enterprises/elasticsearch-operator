@@ -264,8 +264,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		if len(c.Spec.Storage.StorageClass) == 0 {
-			p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
-			c.Spec.Storage.StorageClass = "standard"
+			c.Spec.Storage.StorageClass = "default"
 		}
 
 		// Create Master Nodes
