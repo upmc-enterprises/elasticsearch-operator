@@ -68,4 +68,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        ports:
+        - containerPort: 8000
+          name: http
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: "8000"
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: "8000"
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
       serviceAccount: elasticsearch-operator
