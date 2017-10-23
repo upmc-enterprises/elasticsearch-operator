@@ -43,6 +43,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -511,6 +512,17 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										Name:          "http",
 										ContainerPort: 9200,
 										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								ReadinessProbe: &v1.Probe{
+									TimeoutSeconds:      30,
+									InitialDelaySeconds: 10,
+									FailureThreshold:    15,
+									Handler: v1.Handler{
+										HTTPGet: &v1.HTTPGetAction{
+											Port: intstr.FromInt(9200),
+											Path: clusterHealthURL,
+										},
 									},
 								},
 								VolumeMounts: []v1.VolumeMount{

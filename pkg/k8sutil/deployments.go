@@ -31,12 +31,15 @@ import (
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
 	elasticsearchCertspath = "/elasticsearch/config/certs"
+	clusterHealthURL       = "/_cluster/health?local=true"
 )
 
 // TODO just mount the secret needed by each deployment
@@ -205,6 +208,17 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 										Name:          "http",
 										ContainerPort: 9200,
 										Protocol:      v1.ProtocolTCP,
+									},
+								},
+								ReadinessProbe: &v1.Probe{
+									TimeoutSeconds:      30,
+									InitialDelaySeconds: 10,
+									FailureThreshold:    15,
+									Handler: v1.Handler{
+										HTTPGet: &v1.HTTPGetAction{
+											Port: intstr.FromInt(9200),
+											Path: clusterHealthURL,
+										},
 									},
 								},
 								VolumeMounts: []v1.VolumeMount{
