@@ -26,6 +26,7 @@ package k8sutil
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
@@ -179,6 +180,14 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 										Value: "true",
 									},
 									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
+									},
+									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
 									},
@@ -278,12 +287,18 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, enableSSL bool, imagePullSecrets []myspec.ImagePullSecrets) error {
 
 	replicaCount := int32(1)
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
-	elasticHTTPEndpoint := fmt.Sprintf("https://%s:9200", component)
+
+	elasticURL := fmt.Sprintf("https://%s:9200", component)
+
+	if !enableSSL {
+		elasticURL = fmt.Sprintf("http://%s:9200", component)
+	}
+
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
 
 	// Check if deployment exists
@@ -320,7 +335,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 								Env: []v1.EnvVar{
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_URL",
-										Value: elasticHTTPEndpoint,
+										Value: elasticURL,
 									},
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
@@ -328,7 +343,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_ENABLED",
-										Value: "true",
+										Value: strconv.FormatBool(enableSSL),
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_KEY",
@@ -391,7 +406,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 }
 
 // CreateCerebroDeployment creates a deployment of Cerebro
-func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, enableSSL bool, imagePullSecrets []myspec.ImagePullSecrets) error {
 	replicaCount := int32(1)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)

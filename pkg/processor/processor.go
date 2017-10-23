@@ -334,7 +334,8 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	// Deploy Kibana
 	if c.Spec.Kibana.Image != "" {
 
-		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets); err != nil {
+		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace,
+			c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
 			logrus.Error("Error creating kibana deployment ", err)
 			return err
 		}
@@ -343,13 +344,14 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 	// Deploy Cerebro
 	if c.Spec.Cerebro.Image != "" {
-		name := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
-		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
+		cert := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
+
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, cert, c.ObjectMeta.Namespace,
+			c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
 			logrus.Error("Error creating cerebro deployment ", err)
 			return err
 		}
 		// TODO create service
-
 		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name)
 
 		// create/update cerebro configMap

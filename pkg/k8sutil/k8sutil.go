@@ -577,9 +577,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				"volume.beta.kubernetes.io/storage-class": storageClass,
 			}
 		}
-		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
-
-		if err != nil {
+		if _, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
 			return err
 		}
@@ -633,9 +631,9 @@ data.path = "./cerebro.db"
 hosts = [
 {
 	host = "%s"
-	name = "es-servers"
+	name = "%s"
 }
-]
-		`, elasticsearchCertspath, elasticsearchCertspath, k.GetClientServiceName(clusterName))
+]`, elasticsearchCertspath, elasticsearchCertspath, k.GetClientServiceName(clusterName), clusterName)
+
 	return x
 }
