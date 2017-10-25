@@ -10,7 +10,7 @@ The ElasticSearch operator is designed to manage one or more elastic search clus
 
 The operator was built and tested on a 1.7.X Kubernetes cluster and is the minimum version required due to the operators use of Custom Resource Definitions. 
 
-_NOTE: If using on an older cluster, please make sure to use version [v0.0.7] (https://github.com/upmc-enterprises/elasticsearch-operator/releases/tag/v0.0.7) which still utilize third party resources. 
+_NOTE: If using on an older cluster, please make sure to use version [v0.0.7](https://github.com/upmc-enterprises/elasticsearch-operator/releases/tag/v0.0.7) which still utilize third party resources._
 
 ## Cloud
 
@@ -53,6 +53,9 @@ Following parameters are available to customize the elastic cluster:
   - statsd-host: Sets the statsd host to send metrics to if enabled
 - kibana: Deploy kibana to cluster and automatically reference certs from secret
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
+- cerebro: Deploy [cerebro](https://github.com/lmenezes/cerebro) to cluster and automatically reference certs from secret
+  - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/cerebro-docker) since upstream has no docker images available)
+
 
 ## Certs secret
 
@@ -105,7 +108,7 @@ _NOTE: In the example we're putting the operator into the namespace `operator`. 
 # Create Example ElasticSearch Cluster
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.json
+$ kubectl create -n operator -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.yaml
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
@@ -114,19 +117,43 @@ _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefini
 To run the operator on minikube, this sample file is setup to do that. It sets lower Java memory contraints as well as uses the default storage class in Minikube which writes to hostPath.
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.json
+$ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.yaml
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
 
+# Kibana and cerebro
+
+[Kibana](https://www.elastic.co/products/kibana) and [Cerebro](https://github.com/lmenezes/cerebro) can be automatically deployed by adding the cerebro piece to the manifest:
+
+```
+spec:
+  kibana: 
+    image: upmcenterprises/kibana:5.3.1
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
+```
+
+Once added the operator will create certs for Kibana or Cerebro and automatically secure with those certs trusing the same CA used to generate the certs for the Elastic nodes. 
+
+To access, just port-forward to the pod:
+
+Kibana:
+```
+$ kubectl port-forward <podName> 5601:5601
+$ curl https://localhost:5601
+````
+
+```
+Cerebro:
+$ kubectl port-forward <podName> 9000:9000
+$ curl https://localhost:9000
+```
+
+_(Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)_
+
 # Resize ElasticSearch Cluster
 
-`kubectl apply` doesn't work for TPR for the moment. See [kubernetes/#29542](https://github.com/kubernetes/kubernetes/issues/29542). As a workaround, we use curl to resize the cluster.
-
-First update the default example configuration, then send a `PUT` request to the Kubernetes API server. _NOTE: The API is acesssed the API service in this example via [kubectl proxy](https://kubernetes.io/docs/user-guide/kubectl/kubectl_proxy/)._ 
-
-```bash
-curl -H 'Content-Type: application/json' -X PUT --data @example/example-es-cluster.json http://127.0.0.1:8001/apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/example-es-cluster
-```
+If changes are required to the cluster, say the replica count of the data nodes for example, just update the manifest and do a `kubectl apply` on the resource.
 
 # Snapshot
 

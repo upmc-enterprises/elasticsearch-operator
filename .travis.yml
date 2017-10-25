@@ -9,5 +9,6 @@ services:
   - docker
 
 script:
+- make check
 - make test
 - make build

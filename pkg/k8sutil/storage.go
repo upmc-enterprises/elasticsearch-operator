@@ -40,7 +40,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 	storageClass, err := k.Kclient.StorageV1beta1().StorageClasses().Get(zone, metav1.GetOptions{})
 
 	if len(storageClass.Name) == 0 {
-		logrus.Infof("StorgeClass %s not found, creating...", zone)
+		logrus.Infof("StorageClass %s not found, creating...", zone)
 
 		class := &storage.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
@@ -76,13 +76,11 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 // DeleteStorageClasses removes storage classes tied to the operator
 func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
 	component := "elasticsearch" + "-" + clusterName
-	err := k.Kclient.StorageV1beta1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: component})
-
-	if err != nil {
+	if err := k.Kclient.StorageV1beta1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{},
+		metav1.ListOptions{LabelSelector: component}); err != nil {
 		logrus.Error("Could not delete storageclasses: ", err)
-	} else {
-		logrus.Info("Deleted storageclasses")
 	}
+	logrus.Info("Deleted storageclasses")
 
 	return nil
 }

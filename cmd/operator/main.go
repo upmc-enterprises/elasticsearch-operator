@@ -27,12 +27,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/heptiolabs/healthcheck"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/processor"
@@ -70,16 +76,36 @@ func Main() int {
 
 	// Init
 	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost)
-	controller, err := controller.New("elasticcluster", k8sclient)
-	processor, err := processor.New(k8sclient, baseImage)
+	if err != nil {
+		logrus.Error("Could not init k8sclient! ", err)
+		return 1
+	}
 
+	controller, err := controller.New("elasticcluster", k8sclient)
 	if err != nil {
 		logrus.Error("Could not init Controller! ", err)
 		return 1
 	}
 
+	processor, err := processor.New(k8sclient, baseImage)
+	if err != nil {
+		logrus.Error("Could not init processor! ", err)
+		return 1
+	}
+
 	doneChan := make(chan struct{})
 	var wg sync.WaitGroup
+
+	r := prometheus.NewRegistry()
+	r.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+	r.MustRegister(prometheus.NewGoCollector())
+
+	health := healthcheck.NewMetricsHandler(r, "elasticsearch-operator")
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
+	mux.HandleFunc("/live", health.LiveEndpoint)
+	mux.HandleFunc("/ready", health.ReadyEndpoint)
 
 	// Kick it off
 	controller.Run()
@@ -87,11 +113,19 @@ func Main() int {
 
 	// Watch for events that add, modify, or delete ElasticSearchCluster definitions andlog
 	// process them asynchronously.
-	logrus.Info("Watching for elastic search events...")
+	logrus.Info("Watching for elasticsearch events...")
 	wg.Add(1)
 	processor.WatchElasticSearchClusterEvents(doneChan, &wg)
 	wg.Add(1)
 	processor.WatchDataPodEvents(doneChan, &wg)
+
+	srv := &http.Server{Handler: mux}
+
+	l, err := net.Listen("tcp", ":8000")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	go srv.Serve(l)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
