@@ -209,7 +209,10 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 	defer processorLock.Unlock()
 
 	// Set the policy to retain
-	p.k8sclient.UpdateVolumeReclaimPolicy("Retain", c.ObjectMeta.Namespace)
+	name := c.Labels["component"]
+	name = name[14:len(name)]
+
+	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace)
 
 	return nil
 }
