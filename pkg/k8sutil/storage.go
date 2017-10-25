@@ -47,6 +47,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 				Name: zone,
 				Labels: map[string]string{
 					"component": component,
+					"cluster":   clusterName,
 				},
 			},
 			Provisioner: storageClassProvisioner,
