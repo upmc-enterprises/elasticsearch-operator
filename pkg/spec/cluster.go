@@ -144,6 +144,9 @@ type Storage struct {
 
 	// StorageClass to use
 	StorageClass string `json:"storage-class"`
+
+	// Volume Reclaim Policy on Persistent Volumes
+	VolumeReclaimPolicy string `json:"volume-reclaim-policy"`
 }
 
 // Resources defines CPU / Memory restrictions on pods

@@ -101,7 +101,7 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 	}
 
 	pvc, err := k.Kclient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{
-		LabelSelector: "role=data",
+		LabelSelector: "component=elasticsearch-example-es-cluster",
 	})
 
 	if err != nil {

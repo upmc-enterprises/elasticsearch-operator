@@ -22,3 +22,4 @@ spec:
   storage:
     type: standard
     storage-class-version: volume.alpha.kubernetes.io/storage-class
+    volume-reclaim-policy: Delete
