@@ -539,9 +539,6 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 					v1.PersistentVolumeClaim{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "es-data",
-							Annotations: map[string]string{
-								"volume.beta.kubernetes.io/storage-class": storageClass,
-							},
 							Labels: map[string]string{
 								"component": "elasticsearch",
 								"role":      role,
@@ -561,6 +558,12 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 					},
 				},
 			},
+		}
+
+		if storageClass != "default" {
+			statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
+				"volume.beta.kubernetes.io/storage-class": storageClass,
+			}
 		}
 
 		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)

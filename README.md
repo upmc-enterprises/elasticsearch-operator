@@ -48,6 +48,7 @@ Following parameters are available to customize the elastic cluster:
     - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
   - Using an existing Storage Class (e.g. storage class for GlusterFS)
     - storage-class: Name of an existing StorageClass object to use (zones can be [])
+  - Omitting the storage section, results in a VolumeClaimTemplates without storage-class annotation (uses default StorageClass in this case. See [change default StorageClass](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/))
 - instrumentation
   - statsd-host: Sets the statsd host to send metrics to if enabled
 - kibana: Deploy kibana to cluster and automatically reference certs from secret
