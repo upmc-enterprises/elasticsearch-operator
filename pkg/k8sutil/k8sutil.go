@@ -396,6 +396,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 					"component": component,
 					"role":      role,
 					"name":      statefulSetName,
+					"cluster":   clusterName,
 				},
 			},
 			Spec: apps.StatefulSetSpec{
@@ -407,6 +408,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 							"component": component,
 							"role":      role,
 							"name":      statefulSetName,
+							"cluster":   clusterName,
 						},
 						Annotations: map[string]string{
 							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
@@ -543,6 +545,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 								"component": "elasticsearch",
 								"role":      role,
 								"name":      statefulSetName,
+								"cluster":   clusterName,
 							},
 						},
 						Spec: v1.PersistentVolumeClaimSpec{
