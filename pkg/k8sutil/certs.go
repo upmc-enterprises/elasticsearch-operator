@@ -109,18 +109,24 @@ func (k *K8sutil) generateConfig(configDir, certsDir, namespace, clusterName str
 		},
 	}
 
-	caConfigJSON, _ := json.Marshal(caConfig)
+	caConfigJSON, err := json.Marshal(caConfig)
+	if err != nil {
+		logrus.Error("json Marshal error : ", err)
+		return err
+	}
 	f, err := os.Create(fmt.Sprintf("%s/ca-config.json", configDir))
 	_, err = f.Write(caConfigJSON)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("Error creating ca-config.json: ", err)
+		return err
 	}
 
 	reqCACSRJSON, _ := json.Marshal(caCSR)
 	f, err = os.Create(fmt.Sprintf("%s/ca-csr.json", configDir))
 	_, err = f.Write(reqCACSRJSON)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("Error creating ca-csr.json: ", err)
+		return err
 	}
 
 	for k, v := range map[string]string{
@@ -169,15 +175,18 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 	cleanUp(configDir)
 
 	// Generate new config
-	k.generateConfig(configDir, certsDir, namespace, clusterName)
+	if err := k.generateConfig(configDir, certsDir, namespace, clusterName); err != nil {
+		logrus.Error(err)
+		return err
+	}
 
 	// Generate CA Cert
 	logrus.Info("Creating ca cert...")
 	cmdCA1 := exec.Command("cfssl", "gencert", "-initca", fmt.Sprintf("%s/ca-csr.json", configDir))
 	cmdCA2 := exec.Command("cfssljson", "-bare", fmt.Sprintf("%s/ca", certsDir))
-	_, err := pipeCommands(cmdCA1, cmdCA2)
-	if err != nil {
+	if _, err := pipeCommands(cmdCA1, cmdCA2); err != nil {
 		logrus.Error(err)
+		return err
 	}
 
 	// Generate client Certs
@@ -186,34 +195,34 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 		logrus.Infof("Creating %s cert...", name)
 		cmd1 := exec.Command("cfssl", "gencert", "-ca", fmt.Sprintf("%s/ca.pem", certsDir), "-ca-key", fmt.Sprintf("%s/ca-key.pem", certsDir), "-config", fmt.Sprintf("%s/ca-config.json", configDir), "-profile=server", fmt.Sprintf("%s/req-csr.json", configDir))
 		cmd2 := exec.Command("cfssljson", "-bare", fmt.Sprintf("%s/%s", certsDir, name))
-		_, err = pipeCommands(cmd1, cmd2)
-		if err != nil {
+		if _, err := pipeCommands(cmd1, cmd2); err != nil {
 			logrus.Error(err)
+			return err
 		}
 
 	}
 
 	logrus.Info("Converting node to pkcs12...")
 	cmdConvertNode := exec.Command("openssl", "pkcs12", "-export", "-inkey", fmt.Sprintf("%s/node-key.pem", certsDir), "-in", fmt.Sprintf("%s/node.pem", certsDir), "-out", fmt.Sprintf("%s/node.pkcs12", certsDir), "-password", "pass:changeit", "-certfile", fmt.Sprintf("%s/ca.pem", certsDir))
-	out, err := cmdConvertNode.Output()
-	if err != nil {
-		logrus.Error(string(out))
+	if out, err := cmdConvertNode.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
 	}
 
 	logrus.Info("Converting ca cert to jks...")
 	cmdCAJKS := exec.Command("keytool", "-import", "-file", fmt.Sprintf("%s/ca.pem", certsDir), "-alias", "root-ca", "-keystore", fmt.Sprintf("%s/truststore.jks", certsDir),
 		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-noprompt")
-	out, err = cmdCAJKS.Output()
-	if err != nil {
-		logrus.Error(string(out))
+	if out, err := cmdCAJKS.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
 	}
 
 	logrus.Info("Converting node cert to jks...")
 	cmdNodeJKS := exec.Command("keytool", "-importkeystore", "-srckeystore", fmt.Sprintf("%s/node.pkcs12", certsDir), "-srcalias", "1", "-destkeystore", fmt.Sprintf("%s/node-keystore.jks", certsDir),
 		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-srcstorepass", "changeit", "-destalias", "elasticsearch-node")
-	out, err = cmdNodeJKS.Output()
-	if err != nil {
-		logrus.Error(string(out))
+	if out, err := cmdNodeJKS.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
 	}
 
 	return nil
@@ -222,13 +231,9 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 // CertsSecretExists returms true if secret exists
 func (k *K8sutil) CertsSecretExists(namespace, clusterName string) bool {
 	// Check if cert exists
-	secret, err := k.Kclient.CoreV1().Secrets(namespace).Get(fmt.Sprintf("%s-%s", secretName, clusterName), metav1.GetOptions{})
-
-	if err != nil {
+	if secret, err := k.Kclient.CoreV1().Secrets(namespace).Get(fmt.Sprintf("%s-%s", secretName, clusterName), metav1.GetOptions{}); err != nil {
 		return false
-	}
-
-	if len(secret.Name) > 0 {
+	} else if len(secret.Name) > 0 {
 		return true
 	}
 
@@ -236,8 +241,8 @@ func (k *K8sutil) CertsSecretExists(namespace, clusterName string) bool {
 }
 
 // DeleteCertsSecret deletes the certs secret
-func (k *K8sutil) DeleteCertsSecret(namespace, clusterName string) {
-	k.Kclient.CoreV1().Secrets(namespace).Delete(fmt.Sprintf("%s-%s", secretName, clusterName), &metav1.DeleteOptions{})
+func (k *K8sutil) DeleteCertsSecret(namespace, clusterName string) error {
+	return k.Kclient.CoreV1().Secrets(namespace).Delete(fmt.Sprintf("%s-%s", secretName, clusterName), &metav1.DeleteOptions{})
 }
 
 // CreateCertsSecret creates the certs secrets
@@ -245,9 +250,11 @@ func (k *K8sutil) CreateCertsSecret(namespace, clusterName, certsDir string) err
 	// Read certs from disk
 	nodeKeyStore, err := ioutil.ReadFile(fmt.Sprintf("%s/node-keystore.jks", certsDir))
 	if err != nil {
-		logrus.Errorf("Could not read certs: %v", err)
+		logrus.Error("Could not read certs:", err)
+		return err
 	}
 
+	//TODO return err
 	trustStore, _ := ioutil.ReadFile(fmt.Sprintf("%s/truststore.jks", certsDir))
 	ca, _ := ioutil.ReadFile(fmt.Sprintf("%s/ca.pem", certsDir))
 	caKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/ca-key.pem", certsDir))
@@ -275,9 +282,7 @@ func (k *K8sutil) CreateCertsSecret(namespace, clusterName, certsDir string) err
 		},
 	}
 
-	_, err = k.Kclient.CoreV1().Secrets(namespace).Create(secret)
-
-	if err != nil {
+	if _, err = k.Kclient.CoreV1().Secrets(namespace).Create(secret); err != nil {
 		logrus.Error("Could not create elastic certs secret: ", err)
 		return err
 	}

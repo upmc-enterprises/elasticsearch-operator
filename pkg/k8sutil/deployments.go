@@ -265,10 +265,9 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		if deployment.Spec.Replicas != replicas {
 			deployment.Spec.Replicas = replicas
 
-			_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(deployment)
-
-			if err != nil {
+			if _, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(deployment); err != nil {
 				logrus.Error("Could not scale deployment: ", err)
+				return err
 			}
 		}
 	}
@@ -475,9 +474,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 			},
 		}
 
-		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
-
-		if err != nil {
+		if _, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment); err != nil {
 			logrus.Error("Could not create cerebro deployment: ", err)
 			return err
 		}

@@ -199,7 +199,7 @@ func (p *Processor) processElasticSearchClusterEvent(c *myspec.ElasticsearchClus
 	case c.Type == "ADDED" || c.Type == "MODIFIED":
 		return p.processElasticSearchCluster(c)
 	case c.Type == "DELETED":
-		return p.deleteElasticSearchCluster(c)
+		p.deleteElasticSearchCluster(c)
 	}
 	return nil
 }
@@ -215,10 +215,13 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 }
 
 func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
-	logrus.Println("--------> ElasticSearch Event!")
+	logrus.Println("--------> Received ElasticSearch Event!")
 
 	// Refresh
-	p.refreshClusters()
+	if err := p.refreshClusters(); err != nil {
+		logrus.Error("Error refreshing cluster ", err)
+		return err
+	}
 
 	// Is a base image defined in the custom cluster?
 	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
@@ -239,12 +242,26 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	// Create Services
-	p.k8sclient.CreateDiscoveryService(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
-	p.k8sclient.CreateDataService(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
-	p.k8sclient.CreateClientService(c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.NodePort)
+	if err := p.k8sclient.CreateDiscoveryService(c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Error("Error creating discovery service ", err)
+		return err
+	}
 
-	p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
-		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace)
+	if err := p.k8sclient.CreateDataService(c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Error("Error creating data service ", err)
+		return err
+	}
+
+	if err := p.k8sclient.CreateClientService(c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.NodePort); err != nil {
+		logrus.Error("Error creating client service ", err)
+		return err
+	}
+
+	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
+		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace); err != nil {
+		logrus.Error("Error creating client deployment ", err)
+		return err
+	}
 
 	zoneCount := 0
 	if len(c.Spec.Zones) != 0 {
@@ -252,7 +269,10 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Storage Classes
 		for _, sc := range c.Spec.Zones {
-			p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
+			if err := p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name); err != nil {
+				logrus.Error("Error creating storage class ", err)
+				return err
+			}
 		}
 
 		zoneDistributionData := p.calculateZoneDistribution(c.Spec.DataNodeReplicas, zoneCount)
@@ -260,94 +280,133 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		for index, count := range zoneDistributionMaster {
-			p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions)
+			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
+				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
+				logrus.Error("Error creating master node deployment ", err)
+				return err
+			}
 		}
 
 		// Create Data Nodes
 		for index, count := range zoneDistributionData {
-			p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions)
+			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
+				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
+				logrus.Error("Error creating data node deployment ", err)
+
+				return err
+			}
 		}
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
 		// NOTE: Issue with dynamic PV provisioning (https://github.com/kubernetes/kubernetes/issues/34583)
 		if len(c.Spec.Storage.StorageClass) == 0 {
-			p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name)
+			if err := p.k8sclient.CreateStorageClass("standard", c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name); err != nil {
+				logrus.Error("Error creating storage class  ", err)
+				return err
+			}
 			c.Spec.Storage.StorageClass = "standard"
 		}
 
 		// Create Master Nodes
-		p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions)
+		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
+			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
+			logrus.Error("Error creating master node deployment ", err)
+
+			return err
+		}
 
 		// Create Data Nodes
-		p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions)
+		if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
+			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
+			logrus.Error("Error creating data node deployment ", err)
+			return err
+		}
 	}
 
 	// Deploy Kibana
 	if c.Spec.Kibana.Image != "" {
-		p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets)
+
+		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets); err != nil {
+			logrus.Error("Error creating kibana deployment ", err)
+			return err
+		}
+		// TODO create service
 	}
 
 	// Deploy Cerebro
 	if c.Spec.Cerebro.Image != "" {
-		cert := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
-		p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, cert, c.Spec.ImagePullSecrets)
+		name := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
+			logrus.Error("Error creating cerebro deployment ", err)
+			return err
+		}
+		// TODO create service
 
-		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name, cert)
+		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name)
 
 		// create/update cerebro configMap
 		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")) {
-			p.k8sclient.UpdateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf)
+			if err := p.k8sclient.UpdateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf); err != nil {
+				logrus.Error("Error updating configmap ", err)
+				return err
+			}
 		} else {
-			p.k8sclient.CreateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf)
+			if err := p.k8sclient.CreateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf); err != nil {
+				logrus.Error("Error creating configmaop ", err)
+				return err
+			}
 		}
 	}
 
 	// Setup CronSchedule
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Init()
+	logrus.Println("--------> ElasticSearch Event finished!")
 
 	return nil
 }
 
-func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
-	logrus.Println("--------> ElasticSearch Cluster deleted...removing all components...")
+func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) {
+	logrus.Println("--------> Deleting elasticSearch Cluster ...removing all components...")
 
-	err := p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "client")
-	if err != nil {
-		logrus.Error("Could not delete client deployment:", err)
+	if err := p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "client"); err != nil {
+		logrus.Errorf("Could not delete client deployment %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	err = p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "kibana")
-	if err != nil {
-		logrus.Error("Could not delete kibana deployment:", err)
+	if err := p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "kibana"); err != nil {
+		logrus.Errorf("Could not delete kibana deployment %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	err = p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "cerebro")
-	if err != nil {
-		logrus.Error("Could not delete cerebro deployment:", err)
+	if err := p.k8sclient.DeleteDeployment(c.ObjectMeta.Name, c.ObjectMeta.Namespace, "cerebro"); err != nil {
+		logrus.Errorf("Could not delete cerebro deployment %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	err = p.k8sclient.DeleteStatefulSet("master", c.ObjectMeta.Name, c.ObjectMeta.Namespace)
-	if err != nil {
-		logrus.Error("Could not delete master deployment:", err)
+	if err := p.k8sclient.DeleteStatefulSet("master", c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Errorf("Could not delete master deployment %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	err = p.k8sclient.DeleteStatefulSet("data", c.ObjectMeta.Name, c.ObjectMeta.Namespace)
-	if err != nil {
-		logrus.Error("Could not delete stateful set:", err)
+	if err := p.k8sclient.DeleteStatefulSet("data", c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Errorf("Could not delete stateful set %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	p.k8sclient.DeleteServices(c.ObjectMeta.Name, c.ObjectMeta.Namespace)
-	p.k8sclient.DeleteStorageClasses(c.ObjectMeta.Name)
+	if err := p.k8sclient.DeleteServices(c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Errorf("Could not delete service %s : %v", c.ObjectMeta.Name, err)
+	}
+
+	if err := p.k8sclient.DeleteStorageClasses(c.ObjectMeta.Name); err != nil {
+		logrus.Errorf("Could not delete storage class %s: %v", c.ObjectMeta.Name, err)
+	}
 
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Stop()
 
-	p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name)
+	if err := p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
+		logrus.Errorf("Could not delete cert secret %s: %v", c.ObjectMeta.Name, err)
+	}
+	logrus.Println("--------> ElasticSearch Cluster deleted")
 
-	return nil
 }
 
 func (p *Processor) calculateZoneDistribution(dataReplicas, zonesCount int) []int32 {
