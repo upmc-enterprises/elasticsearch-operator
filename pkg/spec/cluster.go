@@ -84,6 +84,9 @@ type ClusterSpec struct {
 	// ImagePullSecrets defines credentials to pull image from private repository (optional)
 	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
 
+	// Flag to enable/disable ssl
+	EnableSSL bool `json:"enable-ssl"`
+
 	// Resources defines memory / cpu constraints
 	Resources Resources `json:"resources"`
 

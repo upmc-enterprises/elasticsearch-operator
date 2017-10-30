@@ -141,6 +141,7 @@ func (p *Processor) refreshClusters() error {
 				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
 				Zones:              cluster.Spec.Zones,
 				DataDiskSize:       cluster.Spec.DataDiskSize,
+				EnableSSL:          cluster.Spec.EnableSSL,
 				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
 				JavaOptions:        cluster.Spec.JavaOptions,
 				NetworkHost:        cluster.Spec.NetworkHost,
@@ -160,7 +161,7 @@ func (p *Processor) refreshClusters() error {
 					cluster.Spec.Snapshot.SchedulerEnabled,
 					cluster.Spec.Snapshot.Authentication.UserName,
 					cluster.Spec.Snapshot.Authentication.Password,
-					p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
+					k8sutil.GetESURL(p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace), cluster.Spec.EnableSSL),
 					cluster.ObjectMeta.Name,
 					cluster.ObjectMeta.Namespace,
 					p.k8sclient.Kclient,
@@ -260,7 +261,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		return err
 	}
 
-	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
+	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.EnableSSL,
 		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace); err != nil {
 		logrus.Error("Error creating client deployment ", err)
 		return err
@@ -284,22 +285,25 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// Create Master Nodes
 		for index, count := range zoneDistributionMaster {
 			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
 				return err
 			}
+
 		}
 
 		// Create Data Nodes
 		for index, count := range zoneDistributionData {
+
 			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 
 				return err
 			}
+
 		}
 	} else {
 		// No zones defined, rely on current provisioning logic which may break. Other strategy is to use emptyDir?
@@ -310,7 +314,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
 
@@ -319,7 +323,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Data Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.EnableSSL, c.Spec.ImagePullSecrets, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions); err != nil {
 			logrus.Error("Error creating data node deployment ", err)
 			return err
@@ -329,7 +333,8 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	// Deploy Kibana
 	if c.Spec.Kibana.Image != "" {
 
-		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets); err != nil {
+		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace,
+			c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
 			logrus.Error("Error creating kibana deployment ", err)
 			return err
 		}
@@ -338,14 +343,8 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 	// Deploy Cerebro
 	if c.Spec.Cerebro.Image != "" {
-		name := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
-		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
-			logrus.Error("Error creating cerebro deployment ", err)
-			return err
-		}
-		// TODO create service
-
-		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name)
+		host := fmt.Sprintf("elasticsearch-%s", c.ObjectMeta.Name)
+		cerebroConf := p.k8sclient.CreateCerebroConfiguration(host, c.Spec.EnableSSL)
 
 		// create/update cerebro configMap
 		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")) {
@@ -358,6 +357,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 				logrus.Error("Error creating configmaop ", err)
 				return err
 			}
+		}
+
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace,
+			fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
+			logrus.Error("Error creating cerebro deployment ", err)
+			return err
 		}
 	}
 

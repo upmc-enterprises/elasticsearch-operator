@@ -26,6 +26,7 @@ package k8sutil
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -353,9 +354,20 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 	return outSecrets
 }
 
+// GetESURL Return elasticsearch url
+func GetESURL(esHost string, enableSSL bool) string {
+
+	if !enableSSL {
+		return fmt.Sprintf("http://%s:9200", esHost)
+	}
+
+	return fmt.Sprintf("https://%s:9200", esHost)
+
+}
+
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
+	enableSSL bool, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
 
 	var deploymentName, role, isNodeMaster, isNodeData string
 
@@ -474,6 +486,14 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										Value: "true",
 									},
 									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+										Value: strconv.FormatBool(enableSSL),
+									},
+									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
 									},
@@ -568,10 +588,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				"volume.beta.kubernetes.io/storage-class": storageClass,
 			}
 		}
-
-		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
-
-		if err != nil {
+		if _, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
 			return err
 		}
@@ -589,6 +606,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
+				return err
 			}
 		}
 	}
@@ -596,7 +614,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	return nil
 }
 
-func (k *K8sutil) CreateCerebroConfiguration(clusterName string) map[string]string {
+func (k *K8sutil) CreateCerebroConfiguration(esHost string, enableSSL bool) map[string]string {
 
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`
@@ -608,8 +626,6 @@ play.ws.ssl {
                 ]
         }
 }
-//play.crypto.secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
-//play.http.secret.key = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 # Application base path
 basePath = "/"
@@ -623,15 +639,13 @@ pidfile.path=/dev/null
 rest.history.size = 50 // defaults to 50 if not specified
 
 # Path of local database file
-#data.path: "/var/lib/cerebro/cerebro.db"
 data.path = "./cerebro.db"
 hosts = [
 {
 	host = "%s"
-	name = "es-servers"
+	name = "%s"
 }
-]
-		`, elasticsearchCertspath, elasticsearchCertspath, fmt.Sprintf("https://%s:9200",
-		fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName))))
+]`, elasticsearchCertspath, elasticsearchCertspath, GetESURL(esHost, enableSSL), esHost)
+
 	return x
 }

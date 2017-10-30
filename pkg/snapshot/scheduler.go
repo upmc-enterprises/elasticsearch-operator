@@ -27,11 +27,10 @@ package snapshot
 import (
 	"fmt"
 
-	"k8s.io/client-go/kubernetes"
-
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 	batchv1 "k8s.io/client-go/pkg/apis/batch/v1"
 	batch "k8s.io/client-go/pkg/apis/batch/v2alpha1"
@@ -62,8 +61,7 @@ type Authentication struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, svcURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
-	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
+func New(bucketName, cronSchedule string, enabled bool, userName, password, elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
 
 	return &Scheduler{
 		s3bucketName: bucketName,
