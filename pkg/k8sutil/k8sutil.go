@@ -354,6 +354,17 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 	return outSecrets
 }
 
+// GetESURL Return elasticsearch url
+func GetESURL(esHost string, enableSSL bool) string {
+
+	if !enableSSL {
+		return fmt.Sprintf("http://%s:9200", esHost)
+	}
+
+	return fmt.Sprintf("https://%s:9200", esHost)
+
+}
+
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
 	enableSSL bool, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
@@ -595,6 +606,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
+				return err
 			}
 		}
 	}
@@ -602,7 +614,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	return nil
 }
 
-func (k *K8sutil) CreateCerebroConfiguration(clusterName string) map[string]string {
+func (k *K8sutil) CreateCerebroConfiguration(esHost string, enableSSL bool) map[string]string {
 
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`
@@ -633,7 +645,7 @@ hosts = [
 	host = "%s"
 	name = "%s"
 }
-]`, elasticsearchCertspath, elasticsearchCertspath, k.GetClientServiceName(clusterName), clusterName)
+]`, elasticsearchCertspath, elasticsearchCertspath, GetESURL(esHost, enableSSL), esHost)
 
 	return x
 }

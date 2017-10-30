@@ -293,12 +293,6 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 
-	elasticURL := fmt.Sprintf("https://%s:9200", component)
-
-	if !enableSSL {
-		elasticURL = fmt.Sprintf("http://%s:9200", component)
-	}
-
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
 
 	// Check if deployment exists
@@ -335,7 +329,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 								Env: []v1.EnvVar{
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_URL",
-										Value: elasticURL,
+										Value: GetESURL(component, enableSSL),
 									},
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",

@@ -161,11 +161,10 @@ func (p *Processor) refreshClusters() error {
 					cluster.Spec.Snapshot.SchedulerEnabled,
 					cluster.Spec.Snapshot.Authentication.UserName,
 					cluster.Spec.Snapshot.Authentication.Password,
-					p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
+					k8sutil.GetESURL(p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace), cluster.Spec.EnableSSL),
 					cluster.ObjectMeta.Name,
 					cluster.ObjectMeta.Namespace,
 					p.k8sclient.Kclient,
-					cluster.Spec.EnableSSL,
 				),
 				Resources: myspec.Resources{
 					Limits: myspec.MemoryCPU{
@@ -344,15 +343,8 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 	// Deploy Cerebro
 	if c.Spec.Cerebro.Image != "" {
-		cert := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
-
-		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, cert, c.ObjectMeta.Namespace,
-			c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
-			logrus.Error("Error creating cerebro deployment ", err)
-			return err
-		}
-		// TODO create service
-		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name)
+		host := fmt.Sprintf("elasticsearch-%s", c.ObjectMeta.Name)
+		cerebroConf := p.k8sclient.CreateCerebroConfiguration(host, c.Spec.EnableSSL)
 
 		// create/update cerebro configMap
 		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")) {
@@ -365,6 +357,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 				logrus.Error("Error creating configmaop ", err)
 				return err
 			}
+		}
+
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace,
+			fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), c.Spec.EnableSSL, c.Spec.ImagePullSecrets); err != nil {
+			logrus.Error("Error creating cerebro deployment ", err)
+			return err
 		}
 	}
 
