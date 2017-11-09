@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL UPMC ENTERPRISES BE LIABLE FOR ANY
 DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOW CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 */
@@ -28,12 +28,13 @@ import (
 	"fmt"
 	"sync"
 
-	"k8s.io/client-go/pkg/api/v1"
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 
 	"github.com/Sirupsen/logrus"
+	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
-	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // processorLock ensures that reconciliation and event processing does
@@ -42,11 +43,16 @@ var (
 	processorLock = &sync.Mutex{}
 )
 
+type Cluster struct {
+	ESCluster *myspec.ElasticsearchCluster
+	Scheduler *snapshot.Scheduler
+}
+
 // Processor object
 type Processor struct {
 	k8sclient *k8sutil.K8sutil
 	baseImage string
-	clusters  map[string]*myspec.ElasticsearchCluster
+	clusters  map[string]Cluster
 }
 
 // New creates new instance of Processor
@@ -54,7 +60,7 @@ func New(kclient *k8sutil.K8sutil, baseImage string) (*Processor, error) {
 	p := &Processor{
 		k8sclient: kclient,
 		baseImage: baseImage,
-		clusters:  make(map[string]*myspec.ElasticsearchCluster),
+		clusters:  make(map[string]Cluster),
 	}
 
 	return p, nil
@@ -117,74 +123,88 @@ func (p *Processor) refreshClusters() error {
 
 	for key, cluster := range p.clusters {
 		logrus.Infof("-----> Stop scheduler %s", key)
-		cluster.Spec.Scheduler.Stop()
+		cluster.Scheduler.Stop()
 	}
 
 	//Reset
-	p.clusters = make(map[string]*myspec.ElasticsearchCluster)
+	p.clusters = make(map[string]Cluster)
 
 	// Get existing clusters
-	currentClusters, err := p.k8sclient.GetElasticSearchClusters()
+	currentClusters, err := p.k8sclient.CrdClient.EnterprisesV1().ElasticsearchClusters(v1.NamespaceAll).List(metav1.ListOptions{})
 
 	if err != nil {
 		logrus.Error("Could not get list of clusters: ", err)
 		return err
 	}
 
-	for _, cluster := range currentClusters {
+	for _, cluster := range currentClusters.Items {
 		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
 
-		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = &myspec.ElasticsearchCluster{
-			Spec: myspec.ClusterSpec{
-				ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
-				MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
-				DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
-				Zones:              cluster.Spec.Zones,
-				DataDiskSize:       cluster.Spec.DataDiskSize,
-				ElasticSearchImage: cluster.Spec.ElasticSearchImage,
-				JavaOptions:        cluster.Spec.JavaOptions,
-				NetworkHost:        cluster.Spec.NetworkHost,
-				Snapshot: myspec.Snapshot{
-					SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
-					BucketName:       cluster.Spec.Snapshot.BucketName,
-					CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
-				},
-				Storage: myspec.Storage{
-					StorageType:            cluster.Spec.Storage.StorageType,
-					StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
-					StorageClass:           cluster.Spec.Storage.StorageClass,
-				},
-				Scheduler: snapshot.New(
-					cluster.Spec.Snapshot.BucketName,
-					cluster.Spec.Snapshot.CronSchedule,
-					cluster.Spec.Snapshot.SchedulerEnabled,
-					cluster.Spec.Snapshot.Authentication.UserName,
-					cluster.Spec.Snapshot.Authentication.Password,
-					p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
-					cluster.ObjectMeta.Name,
-					cluster.ObjectMeta.Namespace,
-					p.k8sclient.Kclient,
-				),
-				Resources: myspec.Resources{
-					Limits: myspec.MemoryCPU{
-						Memory: cluster.Spec.Resources.Limits.Memory,
-						CPU:    cluster.Spec.Resources.Limits.CPU,
+		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = Cluster{
+			ESCluster: &myspec.ElasticsearchCluster{
+				Spec: myspec.ClusterSpec{
+					ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
+					MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
+					DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
+					Zones:              cluster.Spec.Zones,
+					DataDiskSize:       cluster.Spec.DataDiskSize,
+					ElasticSearchImage: cluster.Spec.ElasticSearchImage,
+					JavaOptions:        cluster.Spec.JavaOptions,
+					NetworkHost:        cluster.Spec.NetworkHost,
+					Snapshot: myspec.Snapshot{
+						SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
+						BucketName:       cluster.Spec.Snapshot.BucketName,
+						CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
 					},
-					Requests: myspec.MemoryCPU{
-						Memory: cluster.Spec.Resources.Requests.Memory,
-						CPU:    cluster.Spec.Resources.Requests.CPU,
+					Storage: myspec.Storage{
+						StorageType:            cluster.Spec.Storage.StorageType,
+						StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
+						StorageClass:           cluster.Spec.Storage.StorageClass,
 					},
-				},
-				Instrumentation: myspec.Instrumentation{
-					StatsdHost: cluster.Spec.Instrumentation.StatsdHost,
-				},
-				Kibana: myspec.Kibana{
-					Image: cluster.Spec.Kibana.Image,
-				},
-				Cerebro: myspec.Cerebro{
-					Image: cluster.Spec.Cerebro.Image,
+					Scheduler: myspec.Scheduler{
+						S3bucketName: cluster.Spec.Snapshot.BucketName,
+						CronSchedule: cluster.Spec.Snapshot.CronSchedule,
+						Enabled:      cluster.Spec.Snapshot.SchedulerEnabled,
+						Auth: myspec.SchedulerAuthentication{
+							UserName: cluster.Spec.Snapshot.Authentication.UserName,
+							Password: cluster.Spec.Snapshot.Authentication.Password,
+						},
+						ElasticURL:  p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
+						ClusterName: cluster.ObjectMeta.Name,
+						Namespace:   cluster.ObjectMeta.Namespace,
+					},
+					Resources: myspec.Resources{
+						Limits: myspec.MemoryCPU{
+							Memory: cluster.Spec.Resources.Limits.Memory,
+							CPU:    cluster.Spec.Resources.Limits.CPU,
+						},
+						Requests: myspec.MemoryCPU{
+							Memory: cluster.Spec.Resources.Requests.Memory,
+							CPU:    cluster.Spec.Resources.Requests.CPU,
+						},
+					},
+					Instrumentation: myspec.Instrumentation{
+						StatsdHost: cluster.Spec.Instrumentation.StatsdHost,
+					},
+					Kibana: myspec.Kibana{
+						Image: cluster.Spec.Kibana.Image,
+					},
+					Cerebro: myspec.Cerebro{
+						Image: cluster.Spec.Cerebro.Image,
+					},
 				},
 			},
+			Scheduler: snapshot.New(
+				cluster.Spec.Scheduler.S3bucketName,
+				cluster.Spec.Scheduler.CronSchedule,
+				cluster.Spec.Scheduler.Enabled,
+				cluster.Spec.Scheduler.Auth.UserName,
+				cluster.Spec.Scheduler.Auth.Password,
+				cluster.Spec.Scheduler.ElasticURL,
+				cluster.Spec.Scheduler.ClusterName,
+				cluster.Spec.Scheduler.Namespace,
+				p.k8sclient.Kclient,
+			),
 		}
 	}
 
@@ -212,7 +232,7 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 	name := c.Labels["component"]
 	name = name[14:len(name)]
 
-	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace)
+	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace)
 
 	return nil
 }
@@ -362,7 +382,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	// Setup CronSchedule
-	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Init()
+	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Scheduler.Init()
 	logrus.Println("--------> ElasticSearch Event finished!")
 
 	return nil
@@ -399,7 +419,7 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) {
 		logrus.Errorf("Could not delete storage class %s: %v", c.ObjectMeta.Name, err)
 	}
 
-	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Spec.Scheduler.Stop()
+	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Scheduler.Stop()
 
 	if err := p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
 		logrus.Errorf("Could not delete cert secret %s: %v", c.ObjectMeta.Name, err)

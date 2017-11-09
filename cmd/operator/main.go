@@ -45,7 +45,7 @@ import (
 )
 
 var (
-	appVersion = "0.0.9"
+	appVersion = "0.0.10"
 
 	printVersion bool
 	baseImage    string

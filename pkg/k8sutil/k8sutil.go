@@ -26,11 +26,16 @@ package k8sutil
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/upmc-enterprises/elasticsearch-operator/pkg/crd"
-	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	elasticsearchoperator "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator"
+	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
+	clientset "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
+	genclient "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
+	apps "k8s.io/api/apps/v1beta2"
+	"k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,8 +45,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
-	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -65,29 +68,35 @@ const (
 	secretName = "es-certs"
 )
 
+var (
+	initContainerClusterVersionMin = []int{1, 8}
+)
+
 // K8sutil defines the kube object
 type K8sutil struct {
-	Config        *rest.Config
-	CrdClient     apiextensionsclient.Interface
-	Kclient       kubernetes.Interface
-	ElasticClient *rest.RESTClient
-	MasterHost    string
+	Config     *rest.Config
+	CrdClient  genclient.Interface
+	Kclient    kubernetes.Interface
+	KubeExt    apiextensionsclient.Interface
+	K8sVersion []int
+	MasterHost string
 }
 
 // New creates a new instance of k8sutil
 func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 
-	client, crdclient, esClient, err := newKubeClient(kubeCfgFile)
+	crdClient, kubeClient, kubeExt, k8sVersion, err := newKubeClient(kubeCfgFile)
 
 	if err != nil {
 		logrus.Fatalf("Could not init Kubernetes client! [%s]", err)
 	}
 
 	k := &K8sutil{
-		Kclient:       client,
-		CrdClient:     crdclient,
-		MasterHost:    masterHost,
-		ElasticClient: esClient,
+		Kclient:    kubeClient,
+		MasterHost: masterHost,
+		K8sVersion: k8sVersion,
+		CrdClient:  crdClient,
+		KubeExt:    kubeExt,
 	}
 
 	return k, nil
@@ -108,7 +117,7 @@ func buildConfig(kubeCfgFile string) (*rest.Config, error) {
 	return rest.InClusterConfig()
 }
 
-func newKubeClient(kubeCfgFile string) (kubernetes.Interface, apiextensionsclient.Interface, *rest.RESTClient, error) {
+func newKubeClient(kubeCfgFile string) (genclient.Interface, kubernetes.Interface, apiextensionsclient.Interface, []int, error) {
 
 	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
 	Config, err := buildConfig(kubeCfgFile)
@@ -117,37 +126,98 @@ func newKubeClient(kubeCfgFile string) (kubernetes.Interface, apiextensionsclien
 	}
 
 	// Create the kubernetes client
-	client, err := kubernetes.NewForConfig(Config)
+	clientSet, err := clientset.NewForConfig(Config)
 	if err != nil {
 		panic(err)
 	}
 
-	// Create the CRD Client
-	CrdClient := apiextensionsclient.NewForConfigOrDie(Config)
-
-	// Create the elastic client
-	esClient, _, _ := crd.NewClient(Config)
-
-	return client, CrdClient, esClient, nil
-}
-
-// GetElasticSearchClusters returns a list of custom clusters defined
-func (k *K8sutil) GetElasticSearchClusters() ([]myspec.ElasticsearchCluster, error) {
-	elasticSearchList := myspec.ElasticsearchClusterList{}
-	var err error
-
-	for {
-		err = k.ElasticClient.Get().Resource(crd.CRDResourcePlural).Do().Into(&elasticSearchList)
-
-		if err != nil {
-			logrus.Errorf("error getting elasticsearch clusters: %s", err)
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		break
+	kubeClient, err := kubernetes.NewForConfig(Config)
+	if err != nil {
+		panic(err)
 	}
 
-	return elasticSearchList.Items, nil
+	kubeExtCli, err := apiextensionsclient.NewForConfig(Config)
+	if err != nil {
+		panic(err)
+	}
+
+	version, err := kubeClient.ServerVersion()
+	if err != nil {
+		logrus.Error("Could not get version from api server:", err)
+	}
+
+	majorVer, _ := strconv.Atoi(version.Major)
+	minorVer, _ := strconv.Atoi(version.Minor)
+	k8sVersion := []int{majorVer, minorVer}
+
+	return clientSet, kubeClient, kubeExtCli, k8sVersion, nil
+}
+
+// CreateKubernetesCustomResourceDefinition checks if ElasticSearch CRD exists. If not, create
+func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
+
+	crd, err := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Get(elasticsearchoperator.Name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			crdObject := &apiextensionsv1beta1.CustomResourceDefinition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: elasticsearchoperator.Name,
+				},
+				Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+					Group:   elasticsearchoperator.GroupName,
+					Version: elasticsearchoperator.Version,
+					Scope:   apiextensionsv1beta1.NamespaceScoped,
+					Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+						Plural: elasticsearchoperator.ResourcePlural,
+						Kind:   elasticsearchoperator.ResourceKind,
+					},
+				},
+			}
+
+			_, err := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crdObject)
+			if err != nil {
+				panic(err)
+			}
+			logrus.Info("Created missing CRD...waiting for it to be established...")
+
+			// wait for CRD being established
+			err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {
+				createdCRD, err := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Get(elasticsearchoperator.Name, metav1.GetOptions{})
+				if err != nil {
+					return false, err
+				}
+				for _, cond := range createdCRD.Status.Conditions {
+					switch cond.Type {
+					case apiextensionsv1beta1.Established:
+						if cond.Status == apiextensionsv1beta1.ConditionTrue {
+							return true, nil
+						}
+					case apiextensionsv1beta1.NamesAccepted:
+						if cond.Status == apiextensionsv1beta1.ConditionFalse {
+							return false, fmt.Errorf("Name conflict: %v", cond.Reason)
+						}
+					}
+				}
+				return false, nil
+			})
+
+			if err != nil {
+				deleteErr := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(elasticsearchoperator.Name, nil)
+				if deleteErr != nil {
+					return errors.NewAggregate([]error{err, deleteErr})
+				}
+				return err
+			}
+
+			logrus.Info("CRD ready!")
+		} else {
+			panic(err)
+		}
+	} else {
+		logrus.Infof("SKIPPING: already exists %#v\n", crd.ObjectMeta.Name)
+	}
+
+	return nil
 }
 
 // MonitorElasticSearchEvents watches for new or removed clusters
@@ -155,7 +225,7 @@ func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *my
 	events := make(chan *myspec.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
-	source := cache.NewListWatchFromClient(k.ElasticClient, crd.CRDResourcePlural, v1.NamespaceAll, fields.Everything())
+	source := cache.NewListWatchFromClient(k.CrdClient.EnterprisesV1().RESTClient(), elasticsearchoperator.ResourcePlural, v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*myspec.ElasticsearchCluster)
@@ -228,73 +298,6 @@ func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-cha
 	go controller.Run(stopchan)
 
 	return events, errc
-}
-
-// CreateKubernetesCustomResourceDefinition checks if ElasticSearch CRD exists. If not, create
-func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
-
-	tpr, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.CRDName, metav1.GetOptions{})
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			crdObject := &apiextensionsv1beta1.CustomResourceDefinition{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: crd.CRDName,
-				},
-				Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-					Group:   crd.CRDGroupName,
-					Version: crd.SchemeGroupVersion.Version,
-					Scope:   apiextensionsv1beta1.NamespaceScoped,
-					Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-						Plural: crd.CRDResourcePlural,
-						Kind:   crd.CRDResourceKind,
-					},
-				},
-			}
-
-			_, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crdObject)
-			if err != nil {
-				panic(err)
-			}
-			logrus.Info("Created missing CRD...waiting for it to be established...")
-
-			// wait for CRD being established
-			err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {
-				createdCRD, err := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.CRDName, metav1.GetOptions{})
-				if err != nil {
-					return false, err
-				}
-				for _, cond := range createdCRD.Status.Conditions {
-					switch cond.Type {
-					case apiextensionsv1beta1.Established:
-						if cond.Status == apiextensionsv1beta1.ConditionTrue {
-							return true, err
-						}
-					case apiextensionsv1beta1.NamesAccepted:
-						if cond.Status == apiextensionsv1beta1.ConditionFalse {
-							fmt.Printf("Name conflict: %v\n", cond.Reason)
-						}
-					}
-				}
-				return false, err
-			})
-
-			if err != nil {
-				deleteErr := k.CrdClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crd.CRDName, nil)
-				if deleteErr != nil {
-					return errors.NewAggregate([]error{err, deleteErr})
-				}
-				return err
-			}
-
-			logrus.Info("CRD ready!")
-		} else {
-			panic(err)
-		}
-	} else {
-		logrus.Infof("SKIPPING: already exists %#v\n", tpr.ObjectMeta.Name)
-	}
-
-	return nil
 }
 
 // DeleteStatefulSet deletes the data statefulset
@@ -376,7 +379,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
 
 	// Check if StatefulSet exists
-	statefulSet, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
+	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 
 	if len(statefulSet.Name) == 0 {
 		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
@@ -402,6 +405,14 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			Spec: apps.StatefulSetSpec{
 				Replicas:    replicas,
 				ServiceName: statefulSetName,
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"component": component,
+						"role":      role,
+						"name":      statefulSetName,
+						"cluster":   clusterName,
+					},
+				},
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
@@ -563,13 +574,30 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			},
 		}
 
+		// Handle 1.8+ clusters with initContainers
+		if k.K8sVersion[0] >= initContainerClusterVersionMin[0] && k.K8sVersion[1] >= initContainerClusterVersionMin[1] {
+			statefulSet.Spec.Template.Spec.InitContainers = []v1.Container{
+				v1.Container{
+					Name:            "sysctl",
+					Image:           "busybox",
+					ImagePullPolicy: "IfNotPresent",
+					Command: []string{
+						"sysctl", "-w", "vm.max_map_count=262144",
+					},
+					SecurityContext: &v1.SecurityContext{
+						Privileged: &[]bool{true}[0],
+					},
+				},
+			}
+		}
+
 		if storageClass != "default" {
 			statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
 				"volume.beta.kubernetes.io/storage-class": storageClass,
 			}
 		}
 
-		_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Create(statefulSet)
+		_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet)
 
 		if err != nil {
 			logrus.Error("Could not create stateful set: ", err)
@@ -585,7 +613,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		if statefulSet.Spec.Replicas != replicas {
 			statefulSet.Spec.Replicas = replicas
 
-			_, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Update(statefulSet)
+			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
