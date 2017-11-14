@@ -31,7 +31,6 @@ import (
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -39,7 +38,7 @@ import (
 
 const (
 	elasticsearchCertspath = "/elasticsearch/config/certs"
-	clusterHealthURL       = "/_cluster/health?local=true"
+	clusterHealthURL       = "/_nodes/_local"
 )
 
 // TODO just mount the secret needed by each deployment
@@ -117,7 +116,18 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
-
+		probe := &v1.Probe{
+			TimeoutSeconds:      30,
+			InitialDelaySeconds: 10,
+			FailureThreshold:    15,
+			Handler: v1.Handler{
+				HTTPGet: &v1.HTTPGetAction{
+					Port:   intstr.FromInt(9200),
+					Path:   clusterHealthURL,
+					Scheme: v1.URISchemeHTTPS,
+				},
+			},
+		}
 		deployment := &v1beta1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
@@ -210,17 +220,8 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
-								ReadinessProbe: &v1.Probe{
-									TimeoutSeconds:      30,
-									InitialDelaySeconds: 10,
-									FailureThreshold:    15,
-									Handler: v1.Handler{
-										HTTPGet: &v1.HTTPGetAction{
-											Port: intstr.FromInt(9200),
-											Path: clusterHealthURL,
-										},
-									},
-								},
+								ReadinessProbe: probe,
+								LivenessProbe:  probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      "storage",
@@ -302,7 +303,18 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
-
+	probe := &v1.Probe{
+		TimeoutSeconds:      30,
+		InitialDelaySeconds: 1,
+		FailureThreshold:    10,
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Port:   intstr.FromInt(5601),
+				Path:   "/", //TODO since kibana doesn't have a healthcheck url, the root is enough
+				Scheme: v1.URISchemeHTTPS,
+			},
+		},
+	}
 	if len(deployment.Name) == 0 {
 		logrus.Infof("%s not found, creating...", deploymentName)
 
@@ -364,6 +376,8 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
+								LivenessProbe:  probe,
+								ReadinessProbe: probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
@@ -412,7 +426,18 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 
 	// Check if deployment exists
 	deployment, err := k.Kclient.AppsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
-
+	probe := &v1.Probe{
+		TimeoutSeconds:      30,
+		InitialDelaySeconds: 1,
+		FailureThreshold:    10,
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Port:   intstr.FromInt(9000),
+				Path:   "/#/connect", //TODO since cerebro doesn't have a healthcheck url, this path is enough
+				Scheme: v1.URISchemeHTTP,
+			},
+		},
+	}
 	if len(deployment.Name) == 0 {
 		logrus.Infof("Deployment %s not found, creating...", deploymentName)
 
@@ -452,6 +477,8 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
+								ReadinessProbe: probe,
+								LivenessProbe:  probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),

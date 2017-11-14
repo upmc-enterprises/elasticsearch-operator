@@ -392,7 +392,18 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
-
+		probe := &v1.Probe{
+			TimeoutSeconds:      30,
+			InitialDelaySeconds: 10,
+			FailureThreshold:    15,
+			Handler: v1.Handler{
+				HTTPGet: &v1.HTTPGetAction{
+					Port: intstr.FromInt(9200),
+					Path: clusterHealthURL,
+					Scheme: v1.URISchemeHTTPS,											
+				},
+			},
+		}
 		statefulSet := &apps.StatefulSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: statefulSetName,
@@ -514,17 +525,8 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
-								ReadinessProbe: &v1.Probe{
-									TimeoutSeconds:      30,
-									InitialDelaySeconds: 10,
-									FailureThreshold:    15,
-									Handler: v1.Handler{
-										HTTPGet: &v1.HTTPGetAction{
-											Port: intstr.FromInt(9200),
-											Path: clusterHealthURL,
-										},
-									},
-								},
+								ReadinessProbe: probe,
+								LivenessProbe: probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      "es-data",
