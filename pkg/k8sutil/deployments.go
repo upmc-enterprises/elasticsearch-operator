@@ -164,7 +164,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.EnvVar{
 										Name:  "CLUSTER_NAME",
-										Value: "myesdb",
+										Value: clusterName,
 									},
 									v1.EnvVar{
 										Name:  "NODE_MASTER",
