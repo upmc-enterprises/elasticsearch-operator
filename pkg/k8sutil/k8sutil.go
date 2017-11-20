@@ -459,7 +459,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "CLUSTER_NAME",
-										Value: "myesdb",
+										Value: clusterName,
 									},
 									v1.EnvVar{
 										Name:  "NODE_MASTER",
