@@ -478,6 +478,28 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										Value: javaOptions,
 									},
 									v1.EnvVar{
+										Name:  "OVERWRITE_JVM_HEAPSIZE",
+										Value: "true",
+									},
+									v1.EnvVar{
+										Name: "MY_MEM_REQUEST",
+										ValueFrom: &v1.EnvVarSource{
+											ResourceFieldRef: &v1.ResourceFieldSelector{
+												ContainerName: statefulSetName,
+												Resource:      "requests.memory",
+											},
+										},
+									},
+									v1.EnvVar{
+										Name: "MY_MEM_LIMIT",
+										ValueFrom: &v1.EnvVarSource{
+											ResourceFieldRef: &v1.ResourceFieldSelector{
+												ContainerName: statefulSetName,
+												Resource:      "limits.memory",
+											},
+										},
+									},
+									v1.EnvVar{
 										Name:  "STATSD_HOST",
 										Value: statsdEndpoint,
 									},
