@@ -1,0 +1,35 @@
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  name: {{ .Values.name }}
+spec:
+{{- if .Values.kibana.enabled }}
+  kibana:
+    image: {{ .Values.kibana.image }}
+{{- end }}
+{{- if .Values.cerebro.enabled }}
+  cerebro:
+    image: {{ .Values.cerebro.image }}
+{{- end }}
+  elastic-search-image: {{ .Values.image }}
+  client-node-replicas: {{ .Values.clientReplicas }}
+  master-node-replicas: {{ .Values.masterReplicas }}
+  data-node-replicas: {{ .Values.dataReplicas }}
+  network-host: 0.0.0.0
+  zones: {{ .Values.zones }}
+  data-volume-size: {{ .Values.volumeSize }}
+  java-options: {{ .Values.javaOpts }}
+{{- if .Values.imagePullSecret }}
+  image-pull-secrets:
+    - name: {{ .Values.imagePullSecret }}
+{{- end }}
+  snapshot:
+    scheduler-enabled: {{ .Values.snapshot.enabled }}
+    bucket-name: {{ .Values.snapshot.bucketName }}
+    cron-schedule: "{{ .Values.snapshot.schedule }}"
+  storage:
+    type: {{ .Values.storage.type }}
+    storage-class-version: {{ .Values.storage.classVersion }}
+    volume-reclaim-policy: {{ .Values.storage.reclaimPolicy }}
+  resources:
+{{ toYaml .Values.resources | indent 4 }}

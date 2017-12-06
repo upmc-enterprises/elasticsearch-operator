@@ -1,0 +1,32 @@
+# Default values for elasticsearch-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+name: st-cluster
+image: upmcenterprises/docker-elasticsearch-kubernetes:5.3.1
+clientReplicas: 1
+masterReplicas: 1
+dataReplicas: 1
+dataVolumeSize: 1Gi
+javaOpts: "-Xms256m -Xmx256m" 
+zones: []
+snapshot:
+  enabled: false
+  bucketName: elasticsnapshots
+  schedule: "@every 2m"
+storage:
+  type: standard
+  classVersion: volume.alpha.kubernetes.io/storage-class
+  reclaimPolicy: Delete
+kibana:
+  enabled: true
+  image: upmcenterprises/kibana:5.3.1
+cerebro:
+  enabled: true
+  image: upmcenterprises/cerebro:0.6.8
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 500m
+  limits:
+    memory: 1024Mi
+    cpu: '1'
