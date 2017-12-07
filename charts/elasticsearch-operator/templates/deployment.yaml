@@ -40,8 +40,10 @@ spec:
           timeoutSeconds: 5
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+{{- if .Values.image.pullSecret }}
       imagePullSecrets:
-        - name: regsecret
+        - name: {{ .Values.image.pullSecret }}
+{{- end }}
 {{- if .Values.rbac.enabled }}
       serviceAccountName: {{ template "elasticsearch-operator.name" . }}
 {{- end }}

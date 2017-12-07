@@ -1,0 +1,7 @@
+Creating Elasticsearch cluster...
+
+Client endpoints to access your cluster:  
+ - https://elasticsearch-{{ .Release.Name }}-cluster:9200
+ - https://elasticsearch:9200
+
+Cluster name: {{ .Release.Name }}-cluster
