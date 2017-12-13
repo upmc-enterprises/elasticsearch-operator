@@ -1,0 +1,17 @@
+# Default values for elasticsearch-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: upmcenterprises/elasticsearch-operator
+  tag: 0.0.9
+  pullPolicy: Always
+#  pullSecret:
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+rbac:
+  enabled: false

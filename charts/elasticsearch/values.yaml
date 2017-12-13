@@ -1,0 +1,56 @@
+# Default values for elasticsearch-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: upmcenterprises/docker-elasticsearch-kubernetes
+  tag: 5.3.1
+  #pullSecret: test
+
+clientReplicas: 1
+masterReplicas: 1
+dataReplicas: 1
+dataVolumeSize: 1Gi
+javaOpts: "-Xms256m -Xmx256m"
+
+# Deploy data nodes across zones
+#zones:
+#  - us-east-1c
+#  - us-east-1d
+#  - us-east-1e
+
+snapshot:
+  enabled: false
+  bucketName: elasticsnapshots
+  schedule: "@every 2m"
+  authentication:
+    enabled: false
+    password: test
+    username: test
+
+storage:
+  # e.g. gp2 for AWS
+  type: standard
+  # e.g. kubernetes.io/aws-ebs for AWS
+  classVersion: volume.alpha.kubernetes.io/storage-class
+  # Retain or Delete
+  reclaimPolicy: Delete
+
+kibana:
+  enabled: false
+  image: upmcenterprises/kibana:5.3.1
+
+cerebro:
+  enabled: false
+  image: upmcenterprises/cerebro:0.6.8
+
+statsd:
+  enabled: false
+  host: ""
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 500m
+  limits:
+    memory: 1024Mi
+    cpu: '1'

@@ -18,7 +18,6 @@ The operator was also _currently_ designed to leverage [Amazon AWS S3](https://a
 
 By swapping out the storage types, this can be used in GKE, but snapshots won't work at the moment. 
 
-
 # Demo
 Watch a demo here:<br>
 [![Elasticsearch Operator Demo](http://img.youtube.com/vi/3HnV7NfgP6A/0.jpg)](http://www.youtube.com/watch?v=3HnV7NfgP6A)<br>
@@ -56,7 +55,6 @@ Following parameters are available to customize the elastic cluster:
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
 - cerebro: Deploy [cerebro](https://github.com/lmenezes/cerebro) to cluster and automatically reference certs from secret
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/cerebro-docker) since upstream has no docker images available)
-
 
 ## Certs secret
 
@@ -121,6 +119,21 @@ To run the operator on minikube, this sample file is setup to do that. It sets l
 $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.yaml
 ```
 _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefinition. This happens automatically after the controller is created._
+
+# Helm
+
+Both operator and cluster can be deployed using Helm charts:
+
+```
+helm install --name operator .
+```
+
+```
+⚡  helm list
+NAME      	REVISION	UPDATED                 	STATUS  	CHART                       	NAMESPACE
+my-release	1       	Thu Dec  7 11:53:45 2017	DEPLOYED	elasticsearch-0.1.0         	default
+operator  	1       	Thu Dec  7 11:49:13 2017	DEPLOYED	elasticsearch-operator-0.1.0	default
+```
 
 # Kibana and cerebro
 

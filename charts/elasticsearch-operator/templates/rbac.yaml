@@ -1,0 +1,62 @@
+{{ if .Values.rbac.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "elasticsearch-operator.name" . }}
+  labels:
+    app: {{ template "elasticsearch-operator.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ template "elasticsearch-operator.name" . }}
+  labels:
+    app: {{ template "elasticsearch-operator.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+rules:
+- apiGroups: ["extensions"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["create", "get", "update", "delete", "list"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "get", "update", "delete", "list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "create", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["persistentvolumes", "persistentvolumeclaims", "services", "secrets", "configmaps"]
+  verbs: ["create", "get", "update", "delete", "list"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs", "jobs"]
+  verbs: ["create", "get", "deletecollection", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["*"]
+- apiGroups: ["enterprises.upmc.com"]
+  resources: ["elasticsearchclusters"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "elasticsearch-operator.name" . }}
+  labels:
+    app: {{ template "elasticsearch-operator.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "elasticsearch-operator.name" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "elasticsearch-operator.name" . }}
+  namespace: {{ .Release.Namespace }}
+{{ end }}
