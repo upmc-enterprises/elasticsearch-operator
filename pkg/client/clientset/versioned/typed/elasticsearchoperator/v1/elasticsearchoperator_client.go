@@ -23,22 +23,22 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type ElasticsearchoperatorV1Interface interface {
+type EnterprisesV1Interface interface {
 	RESTClient() rest.Interface
 	ElasticsearchClustersGetter
 }
 
-// ElasticsearchoperatorV1Client is used to interact with features provided by the elasticsearchoperator group.
-type ElasticsearchoperatorV1Client struct {
+// EnterprisesV1Client is used to interact with features provided by the enterprises.upmc.com group.
+type EnterprisesV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ElasticsearchoperatorV1Client) ElasticsearchClusters(namespace string) ElasticsearchClusterInterface {
+func (c *EnterprisesV1Client) ElasticsearchClusters(namespace string) ElasticsearchClusterInterface {
 	return newElasticsearchClusters(c, namespace)
 }
 
-// NewForConfig creates a new ElasticsearchoperatorV1Client for the given config.
-func NewForConfig(c *rest.Config) (*ElasticsearchoperatorV1Client, error) {
+// NewForConfig creates a new EnterprisesV1Client for the given config.
+func NewForConfig(c *rest.Config) (*EnterprisesV1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -47,12 +47,12 @@ func NewForConfig(c *rest.Config) (*ElasticsearchoperatorV1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ElasticsearchoperatorV1Client{client}, nil
+	return &EnterprisesV1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new ElasticsearchoperatorV1Client for the given config and
+// NewForConfigOrDie creates a new EnterprisesV1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *ElasticsearchoperatorV1Client {
+func NewForConfigOrDie(c *rest.Config) *EnterprisesV1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -60,9 +60,9 @@ func NewForConfigOrDie(c *rest.Config) *ElasticsearchoperatorV1Client {
 	return client
 }
 
-// New creates a new ElasticsearchoperatorV1Client for the given RESTClient.
-func New(c rest.Interface) *ElasticsearchoperatorV1Client {
-	return &ElasticsearchoperatorV1Client{c}
+// New creates a new EnterprisesV1Client for the given RESTClient.
+func New(c rest.Interface) *EnterprisesV1Client {
+	return &EnterprisesV1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -80,7 +80,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *ElasticsearchoperatorV1Client) RESTClient() rest.Interface {
+func (c *EnterprisesV1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

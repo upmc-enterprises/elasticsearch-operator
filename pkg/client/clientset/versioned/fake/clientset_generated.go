@@ -18,8 +18,8 @@ package fake
 
 import (
 	clientset "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
-	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/enterprises/v1"
-	fakeenterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/enterprises/v1/fake"
+	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/elasticsearchoperator/v1"
+	fakeenterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/elasticsearchoperator/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

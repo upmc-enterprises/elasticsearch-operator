@@ -136,6 +136,9 @@ type Snapshot struct {
 
 	// Authentication defines credentials for snapshot requests
 	Authentication Authentication `json:"authentication"`
+
+	// CronImage allows you to overwrite the default cron image
+	CronImage string `json:"cron-image"`
 }
 
 // Authentication defines credentials for snapshot requests

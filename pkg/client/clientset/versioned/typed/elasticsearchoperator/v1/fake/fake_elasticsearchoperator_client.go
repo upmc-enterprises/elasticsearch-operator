@@ -22,17 +22,17 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeElasticsearchoperatorV1 struct {
+type FakeEnterprisesV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeElasticsearchoperatorV1) ElasticsearchClusters(namespace string) v1.ElasticsearchClusterInterface {
+func (c *FakeEnterprisesV1) ElasticsearchClusters(namespace string) v1.ElasticsearchClusterInterface {
 	return &FakeElasticsearchClusters{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeElasticsearchoperatorV1) RESTClient() rest.Interface {
+func (c *FakeEnterprisesV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

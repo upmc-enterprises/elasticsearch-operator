@@ -18,7 +18,7 @@ package versioned
 
 import (
 	glog "github.com/golang/glog"
-	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/enterprises/v1"
+	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned/typed/elasticsearchoperator/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

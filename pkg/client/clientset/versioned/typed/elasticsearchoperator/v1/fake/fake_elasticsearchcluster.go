@@ -28,13 +28,13 @@ import (
 
 // FakeElasticsearchClusters implements ElasticsearchClusterInterface
 type FakeElasticsearchClusters struct {
-	Fake *FakeElasticsearchoperatorV1
+	Fake *FakeEnterprisesV1
 	ns   string
 }
 
-var elasticsearchclustersResource = schema.GroupVersionResource{Group: "elasticsearchoperator", Version: "v1", Resource: "elasticsearchclusters"}
+var elasticsearchclustersResource = schema.GroupVersionResource{Group: "enterprises.upmc.com", Version: "v1", Resource: "elasticsearchclusters"}
 
-var elasticsearchclustersKind = schema.GroupVersionKind{Group: "elasticsearchoperator", Version: "v1", Kind: "ElasticsearchCluster"}
+var elasticsearchclustersKind = schema.GroupVersionKind{Group: "enterprises.upmc.com", Version: "v1", Kind: "ElasticsearchCluster"}
 
 // Get takes name of the elasticsearchCluster, and returns the corresponding elasticsearchCluster object, and an error if there is any.
 func (c *FakeElasticsearchClusters) Get(name string, options v1.GetOptions) (result *elasticsearchoperator_v1.ElasticsearchCluster, err error) {

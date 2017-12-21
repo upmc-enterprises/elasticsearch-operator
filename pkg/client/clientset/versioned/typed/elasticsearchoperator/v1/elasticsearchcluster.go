@@ -52,7 +52,7 @@ type elasticsearchClusters struct {
 }
 
 // newElasticsearchClusters returns a ElasticsearchClusters
-func newElasticsearchClusters(c *ElasticsearchoperatorV1Client, namespace string) *elasticsearchClusters {
+func newElasticsearchClusters(c *EnterprisesV1Client, namespace string) *elasticsearchClusters {
 	return &elasticsearchClusters{
 		client: c.RESTClient(),
 		ns:     namespace,
