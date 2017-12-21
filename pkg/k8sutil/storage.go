@@ -26,9 +26,9 @@ package k8sutil
 
 import (
 	"github.com/Sirupsen/logrus"
+	"k8s.io/api/core/v1"
+	storage "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api/v1"
-	storage "k8s.io/client-go/pkg/apis/storage/v1beta1"
 )
 
 // CreateStorageClass creates a storage class
@@ -60,7 +60,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 			class.Parameters["zone"] = zone
 		}
 
-		_, err := k.Kclient.StorageV1beta1().StorageClasses().Create(class)
+		_, err := k.Kclient.Storage().StorageClasses().Create(class)
 
 		if err != nil {
 			logrus.Error("Could not create storage class: ", err)

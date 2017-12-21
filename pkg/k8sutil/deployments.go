@@ -28,11 +28,11 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
-	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/spec"
+	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
+	"k8s.io/api/apps/v1beta1"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 const (
@@ -251,7 +251,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 			},
 		}
 
-		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
+		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
 			logrus.Error("Could not create client deployment: ", err)
@@ -374,7 +374,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 			},
 		}
 
-		_, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment)
+		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
 			logrus.Error("Could not create kibana deployment: ", err)
@@ -397,7 +397,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+	deployment, err := k.Kclient.AppsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
 	if len(deployment.Name) == 0 {
 		logrus.Infof("Deployment %s not found, creating...", deploymentName)
@@ -476,7 +476,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 			},
 		}
 
-		if _, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Create(deployment); err != nil {
+		if _, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment); err != nil {
 			logrus.Error("Could not create cerebro deployment: ", err)
 			return err
 		}

@@ -32,9 +32,12 @@ import (
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
-	batchv1 "k8s.io/client-go/pkg/apis/batch/v1"
-	batch "k8s.io/client-go/pkg/apis/batch/v2alpha1"
+
+	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
+
+	batchv1 "k8s.io/api/batch/v1"
+	v2alpha1 "k8s.io/api/batch/v2alpha1"
+	apicore "k8s.io/api/core/v1"
 )
 
 const (
@@ -43,22 +46,9 @@ const (
 	CRON_ACTION_SNAPSHOT   = "snapshot"
 )
 
-// Scheduler stores info about how to snapshot the cluster
 type Scheduler struct {
-	s3bucketName string
-	cronSchedule string
-	enabled      bool
-	auth         Authentication
-	elasticURL   string
-	Kclient      kubernetes.Interface
-	namespace    string
-	clusterName  string
-}
-
-// Authentication stores credentials used to authenticate against snapshot endpoint
-type Authentication struct {
-	userName string
-	password string
+	Kclient kubernetes.Interface
+	CRD     enterprisesv1.Scheduler
 }
 
 // New creates an instance of Scheduler
@@ -66,21 +56,26 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, svcU
 	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
 
 	return &Scheduler{
-		s3bucketName: bucketName,
-		cronSchedule: cronSchedule,
-		elasticURL:   elasticURL,
-		auth:         Authentication{userName, password},
-		Kclient:      kc,
-		namespace:    namespace,
-		clusterName:  clusterName,
-		enabled:      enabled,
+		Kclient: kc,
+		CRD: enterprisesv1.Scheduler{
+			S3bucketName: bucketName,
+			CronSchedule: cronSchedule,
+			ElasticURL:   elasticURL,
+			Auth: enterprisesv1.SchedulerAuthentication{
+				UserName: userName,
+				Password: password,
+			},
+			Namespace:   namespace,
+			ClusterName: clusterName,
+			Enabled:     enabled,
+		},
 	}
 }
 
 // Init creates the snapshot repository cronjob
 func (s *Scheduler) Init() error {
 
-	if s.enabled {
+	if s.CRD.Enabled {
 		// Init repository
 		if err := s.CreateSnapshotRepository(); err != nil {
 			return err
@@ -97,7 +92,7 @@ func (s *Scheduler) Init() error {
 // CreateSnapshotRepository creates the snapshot repository cronjob
 func (s *Scheduler) CreateSnapshotRepository() error {
 	// TODO: This should wait until the api goes green and cluster is healthy
-	if err := s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_REPOSITORY, s.cronSchedule); err != nil {
+	if err := s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_REPOSITORY, s.CRD.CronSchedule); err != nil {
 		return err
 	}
 	return nil
@@ -105,7 +100,7 @@ func (s *Scheduler) CreateSnapshotRepository() error {
 
 // CreateSnapshot creates snapshot cronjob
 func (s *Scheduler) CreateSnapshot() error {
-	if err := s.CreateCronJob(s.namespace, s.clusterName, CRON_ACTION_SNAPSHOT, s.cronSchedule); err != nil {
+	if err := s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_SNAPSHOT, s.CRD.CronSchedule); err != nil {
 		return err
 	}
 	return nil
@@ -113,8 +108,8 @@ func (s *Scheduler) CreateSnapshot() error {
 
 // Stop cleans up Cron
 func (s *Scheduler) Stop() {
-	s.deleteCronJob(s.namespace, s.clusterName)
-	s.deleteJobs(s.namespace, s.clusterName)
+	s.deleteCronJob(s.CRD.Namespace, s.CRD.ClusterName)
+	s.deleteJobs(s.CRD.Namespace, s.CRD.ClusterName)
 }
 
 // DeleteJobs cleans up an remaining jobs started by the cronjob
@@ -165,7 +160,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 		if err == nil {
 			return err
 		}
-		job := &batch.CronJob{
+		job := &v2alpha1.CronJob{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: snapshotName,
 				Labels: map[string]string{
@@ -174,11 +169,11 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 					"name":        snapshotName,
 				},
 			},
-			Spec: batch.CronJobSpec{
+			Spec: v2alpha1.CronJobSpec{
 				Schedule: cronSchedule,
-				JobTemplate: batch.JobTemplateSpec{
+				JobTemplate: v2alpha1.JobTemplateSpec{
 					Spec: batchv1.JobSpec{
-						Template: apiv1.PodTemplateSpec{
+						Template: apicore.PodTemplateSpec{
 							ObjectMeta: metav1.ObjectMeta{
 								Labels: map[string]string{
 									"app":         "elasticsearch-operator",
@@ -186,25 +181,25 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 									"clusterName": clusterName,
 								},
 							},
-							Spec: apiv1.PodSpec{
+							Spec: apicore.PodSpec{
 								RestartPolicy: "OnFailure",
-								Containers: []apiv1.Container{
-									apiv1.Container{
+								Containers: []apicore.Container{
+									apicore.Container{
 										Name:            snapshotName,
 										Image:           baseCronImage,
 										ImagePullPolicy: "Always",
-										Resources: apiv1.ResourceRequirements{
-											Requests: apiv1.ResourceList{
+										Resources: apicore.ResourceRequirements{
+											Requests: apicore.ResourceList{
 												"cpu":    requestCPU,
 												"memory": requestMemory,
 											},
 										},
 										Args: []string{
 											fmt.Sprintf("--action=%s", action),
-											fmt.Sprintf("--s3-bucket-name=%s", s.s3bucketName),
-											fmt.Sprintf("--elastic-url=%s", s.elasticURL),
-											fmt.Sprintf("--auth-username=%s", s.auth.userName),
-											fmt.Sprintf("--auth-password=%s", s.auth.password),
+											fmt.Sprintf("--s3-bucket-name=%s", s.CRD.S3bucketName),
+											fmt.Sprintf("--elastic-url=%s", s.CRD.ElasticURL),
+											fmt.Sprintf("--auth-username=%s", s.CRD.Auth.UserName),
+											fmt.Sprintf("--auth-password=%s", s.CRD.Auth.Password),
 										},
 									},
 								},
