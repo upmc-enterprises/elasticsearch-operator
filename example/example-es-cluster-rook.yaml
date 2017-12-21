@@ -5,6 +5,7 @@ metadata:
 spec:
   kibana:
     image: upmcenterprises/kibana:5.3.1
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:5.6.4_1
   client-node-replicas: 3
   master-node-replicas: 2
   data-node-replicas: 3
