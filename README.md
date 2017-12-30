@@ -152,8 +152,8 @@ Once added the operator will create certs for Kibana or Cerebro and automaticall
 
 To access, just port-forward to the pod:
 
-Kibana:
 ```
+Kibana:
 $ kubectl port-forward <podName> 5601:5601
 $ curl https://localhost:5601
 ````
@@ -254,7 +254,6 @@ Once deployed and all pods are running, the cluster can be accessed internally v
 To run the Operator locally:
 
 ```
-$ kubectl proxy
 $ mkdir -p /tmp/certs/config && mkdir -p /tmp/certs/certs
 $ go get -u github.com/cloudflare/cfssl/cmd/cfssl
 $ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
