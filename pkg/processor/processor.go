@@ -143,14 +143,15 @@ func (p *Processor) refreshClusters() error {
 		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = Cluster{
 			ESCluster: &myspec.ElasticsearchCluster{
 				Spec: myspec.ClusterSpec{
-					ClientNodeReplicas: cluster.Spec.ClientNodeReplicas,
-					MasterNodeReplicas: cluster.Spec.MasterNodeReplicas,
-					DataNodeReplicas:   cluster.Spec.DataNodeReplicas,
-					Zones:              cluster.Spec.Zones,
-					DataDiskSize:       cluster.Spec.DataDiskSize,
-					ElasticSearchImage: cluster.Spec.ElasticSearchImage,
-					JavaOptions:        cluster.Spec.JavaOptions,
-					NetworkHost:        cluster.Spec.NetworkHost,
+					ClientNodeReplicas:  cluster.Spec.ClientNodeReplicas,
+					MasterNodeReplicas:  cluster.Spec.MasterNodeReplicas,
+					DataNodeReplicas:    cluster.Spec.DataNodeReplicas,
+					Zones:               cluster.Spec.Zones,
+					DataDiskSize:        cluster.Spec.DataDiskSize,
+					ElasticSearchImage:  cluster.Spec.ElasticSearchImage,
+					JavaOptions:         cluster.Spec.JavaOptions,
+					NetworkHost:         cluster.Spec.NetworkHost,
+					KeepSecretsOnDelete: cluster.Spec.KeepSecretsOnDelete,
 					Snapshot: myspec.Snapshot{
 						SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
 						BucketName:       cluster.Spec.Snapshot.BucketName,
@@ -421,9 +422,14 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) {
 
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Scheduler.Stop()
 
-	if err := p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
-		logrus.Errorf("Could not delete cert secret %s: %v", c.ObjectMeta.Name, err)
+	if !c.Spec.KeepSecretsOnDelete {
+		if err := p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
+			logrus.Errorf("Could not delete cert secret %s: %v", c.ObjectMeta.Name, err)
+		}
+	} else {
+		logrus.Println("Keeping existing cert secrets...")
 	}
+
 	logrus.Println("--------> ElasticSearch Cluster deleted")
 
 }
