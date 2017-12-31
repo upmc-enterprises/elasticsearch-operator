@@ -114,6 +114,9 @@ type ClusterSpec struct {
 	Cerebro Cerebro `json:"cerebro"`
 
 	Scheduler Scheduler
+
+	//KeepSecretsOnDelete tells the operator to not delete secrets when a cluster is destroyed
+	KeepSecretsOnDelete bool `json:"keep-secrets-on-delete"`
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository

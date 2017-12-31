@@ -37,6 +37,7 @@ Following parameters are available to customize the elastic cluster:
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
 - elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1`)
+- keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
   - bucket-name: Name of S3 bucket to dump snaptshots
