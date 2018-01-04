@@ -29,5 +29,9 @@ format:
 check:
 	@go tool vet ${SRC}
 
+helm-package:
+	helm package charts/{elasticsearch,elasticsearch-operator} -d charts
+	helm repo index --merge charts/index.yaml charts
+
 test: clean
 	go test $$(go list ./... | grep -v /vendor/)
