@@ -26,7 +26,7 @@ spec:
 {{- else }}
   zones: []
 {{- end }}
-  data-volume-size: {{ .Values.volumeSize }}
+  data-volume-size: {{ .Values.dataVolumeSize }}
   java-options: {{ .Values.javaOpts }}
 {{- if .Values.image.pullSecret }}
   image-pull-secrets:
