@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 image:
   repository: upmcenterprises/docker-elasticsearch-kubernetes
-  tag: 5.3.1
+  tag: 5.6.4_2
   #pullSecret: test
 
 clientReplicas: 1
