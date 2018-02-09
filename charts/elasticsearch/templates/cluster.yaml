@@ -26,7 +26,7 @@ spec:
 {{- else }}
   zones: []
 {{- end }}
-  data-volume-size: {{ .Values.volumeSize }}
+  data-volume-size: {{ .Values.dataVolumeSize }}
   java-options: {{ .Values.javaOpts }}
 {{- if .Values.image.pullSecret }}
   image-pull-secrets:
@@ -45,6 +45,7 @@ spec:
     type: {{ .Values.storage.type }}
     storage-class-version: {{ .Values.storage.classVersion }}
     volume-reclaim-policy: {{ .Values.storage.reclaimPolicy }}
+    storage-class-provisioner: kubernetes.io/aws-ebs
 {{- if .Values.statsd.enabled }}
   statsd-host: {{ .Values.statsd.host }}
 {{- end }}
