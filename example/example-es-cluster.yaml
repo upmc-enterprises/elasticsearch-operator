@@ -4,7 +4,7 @@ metadata:
   name: example-es-cluster
 spec:
   kibana:
-    image: upmcenterprises/kibana:5.3.1
+    image: docker.elastic.co/kibana/kibana-oss:6.2.1
   cerebro:
     image: upmcenterprises/cerebro:0.6.8
   elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:5.6.4_1

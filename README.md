@@ -36,7 +36,7 @@ Following parameters are available to customize the elastic cluster:
 - data-node-replicas: Number of data node replicas
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
-- elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1`)
+- elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3`)
 - keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
@@ -65,7 +65,7 @@ If supplying your own certs, first generate them and add to a secret. Secret sho
 
 ## Base image
 
-The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:5.3.1` which can be overriden by addeding to the custom cluster you create _(See: [CustomResourceDefinition](#customdesourcedefinition) above)_. 
+The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3` which can be overriden by addeding to the custom cluster you create _(See: [CustomResourceDefinition](#customdesourcedefinition) above)_. 
 
 _NOTE: If no image is specified, the default noted previously is used._
 
@@ -144,7 +144,7 @@ elasticsearch-operator  	1       	Thu Dec  7 11:49:13 2017	DEPLOYED	elasticsearc
 ```
 spec:
   kibana: 
-    image: upmcenterprises/kibana:5.3.1
+    image: docker.elastic.co/kibana/kibana-oss:6.2.1
   cerebro:
     image: upmcenterprises/cerebro:0.6.8
 ```

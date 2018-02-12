@@ -37,7 +37,7 @@ storage:
 
 kibana:
   enabled: false
-  image: upmcenterprises/kibana:5.3.1
+  image: docker.elastic.co/kibana/kibana-oss:6.2.1
 
 cerebro:
   enabled: false
