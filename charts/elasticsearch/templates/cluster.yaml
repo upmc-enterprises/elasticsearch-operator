@@ -43,7 +43,7 @@ spec:
 {{- end }}
   storage:
     type: {{ .Values.storage.type }}
-    storage-class-version: {{ .Values.storage.classVersion }}
+    storage-class-provisioner: {{ .Values.storage.classProvisioner }}
     volume-reclaim-policy: {{ .Values.storage.reclaimPolicy }}
     storage-class-provisioner: kubernetes.io/aws-ebs
 {{- if .Values.statsd.enabled }}

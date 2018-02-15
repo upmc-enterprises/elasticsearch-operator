@@ -31,7 +31,7 @@ storage:
   # e.g. gp2 for AWS
   type: gp2
   # e.g. kubernetes.io/aws-ebs for AWS
-  classVersion: volume.alpha.kubernetes.io/storage-class
+  classProvisioner: volume.alpha.kubernetes.io/storage-class
   # Retain or Delete
   reclaimPolicy: Delete
 
