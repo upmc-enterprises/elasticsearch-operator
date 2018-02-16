@@ -1,7 +1,7 @@
 apiVersion: enterprises.upmc.com/v1
 kind: ElasticsearchCluster
 metadata:
-  name: example-es-cluster
+  name: example.es.cluster.com
 spec:
   kibana:
     image: upmcenterprises/kibana:5.3.1
