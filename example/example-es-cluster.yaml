@@ -13,11 +13,9 @@ spec:
   data-node-replicas: 3
   network-host: 0.0.0.0
   zones:
-  - us-east-1c
-  - us-east-1d
-  - us-east-1e
+  - us-east-2b
   data-volume-size: 10Gi
-  java-options: "-Xms256m -Xmx256m"
+  java-options: "-Xms512m -Xmx512m"
   snapshot:
     scheduler-enabled: false
     bucket-name: elasticsnapshots99
