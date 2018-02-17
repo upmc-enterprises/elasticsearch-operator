@@ -77,6 +77,7 @@ func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 							},
 						},
 					},
+					HostPID: true,
 				},
 			},
 		},
