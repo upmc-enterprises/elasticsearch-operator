@@ -55,7 +55,7 @@ var (
 
 func init() {
 	flag.BoolVar(&printVersion, "version", false, "Show version and quit")
-	flag.StringVar(&baseImage, "baseImage", "upmcenterprises/docker-elasticsearch-kubernetes:5.3.1", "Base image to use when spinning up the elasticsearch components.")
+	flag.StringVar(&baseImage, "baseImage", "upmcenterprises/docker-elasticsearch-kubernetes:6.1.3", "Base image to use when spinning up the elasticsearch components.")
 	flag.StringVar(&kubeCfgFile, "kubecfg-file", "", "Location of kubecfg file for access to kubernetes master service; --kube_master_url overrides the URL part of this; if neither this nor --kube_master_url are provided, defaults to service account tokens")
 	flag.StringVar(&masterHost, "masterhost", "http://127.0.0.1:8001", "Full url to k8s api server")
 	flag.Parse()
