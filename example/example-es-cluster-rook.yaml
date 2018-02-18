@@ -1,5 +1,5 @@
 apiVersion: enterprises.upmc.com/v1
-kind: ElasticSearch-Clusters
+kind: ElasticsearchCluster
 metadata:
   name: example-es-cluster
 spec:
