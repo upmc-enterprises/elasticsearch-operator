@@ -6,11 +6,11 @@ spec:
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:6.2.1
   cerebro:
-   image: upmcenterprises/cerebro:0.6.8
-  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:5.6.4_1
-  client-node-replicas: 2
-  master-node-replicas: 2
-  data-node-replicas: 3
+   image: upmcenterprises/cerebro:0.7.2
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0
+  client-node-replicas: 1
+  master-node-replicas: 1
+  data-node-replicas: 1
   network-host: 0.0.0.0
   zones: []
   data-volume-size: 10Gi

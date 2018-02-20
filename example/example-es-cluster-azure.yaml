@@ -3,7 +3,7 @@ kind: ElasticsearchCluster
 metadata:
   name: example-es-cluster
 spec:
-  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:5.6.4_1
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0
   client-node-replicas: 3
   master-node-replicas: 2
   data-node-replicas: 3
