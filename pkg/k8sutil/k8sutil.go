@@ -436,9 +436,6 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 							"name":      statefulSetName,
 							"cluster":   clusterName,
 						},
-						Annotations: map[string]string{
-							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
-						},
 					},
 					Spec: v1.PodSpec{
 						Affinity: &v1.Affinity{
@@ -589,23 +586,6 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 					},
 				},
 			},
-		}
-
-		// Handle 1.8+ clusters with initContainers
-		if k.K8sVersion[0] >= initContainerClusterVersionMin[0] && k.K8sVersion[1] >= initContainerClusterVersionMin[1] {
-			statefulSet.Spec.Template.Spec.InitContainers = []v1.Container{
-				v1.Container{
-					Name:            "sysctl",
-					Image:           "busybox",
-					ImagePullPolicy: "IfNotPresent",
-					Command: []string{
-						"sysctl", "-w", "vm.max_map_count=262144",
-					},
-					SecurityContext: &v1.SecurityContext{
-						Privileged: &[]bool{true}[0],
-					},
-				},
-			}
 		}
 
 		if storageClass != "default" {
