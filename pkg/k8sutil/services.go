@@ -30,6 +30,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // CreateDataService creates the data service
@@ -191,6 +192,55 @@ func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 	return nil
 }
 
+// CreateMgmtServices creates service for kibana and cerebro
+func (k *K8sutil) CreateMgmtServices(clusterName, namespace string) error {
+
+	for component, port := range mgmtServices {
+
+		serviceName := fmt.Sprintf("%s-%s", component, clusterName)
+
+		// Check if service exists
+		s, err := k.Kclient.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
+
+		// Service missing, create
+		if len(s.Name) == 0 {
+			logrus.Info(fmt.Sprintf("%v not found, creating...", serviceName))
+
+			svc := &v1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: serviceName,
+					Labels: map[string]string{
+						"component": component,
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"component": component,
+					},
+					Ports: []v1.ServicePort{
+						v1.ServicePort{
+							Name:       "http",
+							Port:       80,
+							Protocol:   "TCP",
+							TargetPort: intstr.FromInt(port),
+						},
+					},
+				},
+			}
+
+			if _, err := k.Kclient.CoreV1().Services(namespace).Create(svc); err != nil {
+				logrus.Error("Could not create service %v ! ", serviceName, err)
+				return err
+			}
+
+		} else if err != nil {
+			logrus.Error("Could not get service %v! ", serviceName, err)
+			return err
+		}
+	}
+	return nil
+}
+
 // DeleteServices creates the discovery service
 func (k *K8sutil) DeleteServices(clusterName, namespace string) error {
 
@@ -211,6 +261,17 @@ func (k *K8sutil) DeleteServices(clusterName, namespace string) error {
 		logrus.Error("Could not delete service "+fullClientServiceName+":", err)
 	}
 	logrus.Infof("Deleted service: %s", fullClientServiceName)
+
+	for component, _ := range mgmtServices {
+
+		fullClientServiceName := fmt.Sprintf("%s-%s", component, clusterName)
+
+		if err := k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{}); err != nil {
+			logrus.Error("Could not delete service "+fullClientServiceName+":", err)
+		}
+		logrus.Infof("Deleted service: %s", fullClientServiceName)
+
+	}
 
 	return nil
 }
