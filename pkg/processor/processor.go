@@ -161,6 +161,7 @@ func (p *Processor) refreshClusters() error {
 						StorageType:            cluster.Spec.Storage.StorageType,
 						StorageClassProvisoner: cluster.Spec.Storage.StorageClassProvisoner,
 						StorageClass:           cluster.Spec.Storage.StorageClass,
+						VolumeReclaimPolicy:    cluster.Spec.Storage.VolumeReclaimPolicy,
 					},
 					Scheduler: myspec.Scheduler{
 						S3bucketName: cluster.Spec.Snapshot.BucketName,
@@ -232,8 +233,9 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 	// Set the policy to retain
 	name := c.Labels["component"]
 	name = name[14:len(name)]
-
-	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace)
+	logrus.Println("--------> Pod=>Cluster name? : " + name + " - cluster: " + c.Labels["cluster"])
+	// clusterName := fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)
+	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
 
 	return nil
 }
