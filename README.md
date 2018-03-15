@@ -144,7 +144,7 @@ elasticsearch-operator  	1       	Thu Dec  7 11:49:13 2017	DEPLOYED	elasticsearc
 ```
 spec:
   kibana: 
-    image: docker.elastic.co/kibana/kibana-oss:6.2.1
+    image: docker.elastic.co/kibana/kibana-oss:6.1.3
   cerebro:
     image: upmcenterprises/cerebro:0.6.8
 ```

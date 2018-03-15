@@ -281,6 +281,11 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		return err
 	}
 
+	if err := p.k8sclient.CreateMgmtServices(c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+		logrus.Error("Error creating mgmt service ", err)
+		return err
+	}
+
 	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
 		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace); err != nil {
 		logrus.Error("Error creating client deployment ", err)

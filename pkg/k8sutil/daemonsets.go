@@ -25,64 +25,80 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
+	"github.com/Sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	esOperatorSysctlName = "elasticsearch-operator-sysctl"
+)
+
 // CreateNodeInitDaemonset creates the node init daemonset
 func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 
-	resourceCPU, _ := resource.ParseQuantity("10m")
-	resourceMemory, _ := resource.ParseQuantity("50Mi")
+	ds, err := k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Get(esOperatorSysctlName, metav1.GetOptions{})
 
-	daemonset := &v1beta1.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "elasticsearch-operator-sysctl",
-			Labels: map[string]string{
-				"k8s-app": "elasticsearch-operator",
-			},
-			Namespace: namespace,
-		},
-		Spec: v1beta1.DaemonSetSpec{
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"k8s-app": "elasticsearch-operator",
-					},
+	if err != nil && len(ds.Name) == 0 {
+
+		logrus.Infof("Daemonset %s not found, creating...", ds)
+
+		resourceCPU, _ := resource.ParseQuantity("10m")
+		resourceMemory, _ := resource.ParseQuantity("50Mi")
+
+		daemonset := &v1beta1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: esOperatorSysctlName,
+				Labels: map[string]string{
+					"k8s-app": "elasticsearch-operator",
 				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						v1.Container{
-							Name:  "sysctl-conf",
-							Image: "busybox:1.26.2",
-							Command: []string{
-								"sh",
-								"-c",
-								"sysctl -w vm.max_map_count=262166 && while true; do sleep 86400; done",
-							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									"cpu":    resourceCPU,
-									"memory": resourceMemory,
-								},
-								Requests: v1.ResourceList{
-									"cpu":    resourceCPU,
-									"memory": resourceMemory,
-								},
-							},
-							SecurityContext: &v1.SecurityContext{
-								Privileged: &[]bool{true}[0],
-							},
+				Namespace: namespace,
+			},
+			Spec: v1beta1.DaemonSetSpec{
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"k8s-app": "elasticsearch-operator",
 						},
 					},
-					HostPID: true,
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							v1.Container{
+								Name:  "sysctl-conf",
+								Image: "busybox:1.26.2",
+								Command: []string{
+									"sh",
+									"-c",
+									"sysctl -w vm.max_map_count=262166 && while true; do sleep 86400; done",
+								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    resourceCPU,
+										"memory": resourceMemory,
+									},
+									Requests: v1.ResourceList{
+										"cpu":    resourceCPU,
+										"memory": resourceMemory,
+									},
+								},
+								SecurityContext: &v1.SecurityContext{
+									Privileged: &[]bool{true}[0],
+								},
+							},
+						},
+						HostPID: true,
+					},
 				},
 			},
-		},
+		}
+
+		_, err = k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Create(daemonset)
+
+	} else {
+		logrus.Infof("Daemonset %s already exist, skipping creation ...", ds)
 	}
 
-	_, err := k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Create(daemonset)
 	return err
 }

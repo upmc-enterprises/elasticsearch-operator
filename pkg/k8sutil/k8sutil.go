@@ -58,6 +58,8 @@ const (
 	discoveryServiceName = "elasticsearch-discovery"
 	dataServiceName      = "es-data-svc"
 	clientServiceName    = "elasticsearch"
+	kibanaService        = "kibana"
+	cerebroService       = "cerebro"
 
 	clientDeploymentName = "es-client"
 	masterDeploymentName = "es-master"
@@ -71,6 +73,7 @@ const (
 
 var (
 	initContainerClusterVersionMin = []int{1, 8}
+	mgmtServices                   = map[string]int{"cerebro": 9000, "kibana": 5601}
 )
 
 // K8sutil defines the kube object
@@ -398,9 +401,9 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			FailureThreshold:    15,
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
-					Port: intstr.FromInt(9200),
-					Path: clusterHealthURL,
-					Scheme: v1.URISchemeHTTPS,											
+					Port:   intstr.FromInt(9200),
+					Path:   clusterHealthURL,
+					Scheme: v1.URISchemeHTTPS,
 				},
 			},
 		}
@@ -526,7 +529,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 								},
 								ReadinessProbe: probe,
-								LivenessProbe: probe,
+								LivenessProbe:  probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      "es-data",
