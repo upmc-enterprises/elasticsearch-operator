@@ -96,7 +96,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL bool) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -116,6 +116,10 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
+		scheme := v1.URISchemeHTTP
+		if useSSL {
+			scheme = v1.URISchemeHTTPS
+		}
 		probe := &v1.Probe{
 			TimeoutSeconds:      30,
 			InitialDelaySeconds: 10,
@@ -124,7 +128,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 				HTTPGet: &v1.HTTPGetAction{
 					Port:   intstr.FromInt(9200),
 					Path:   clusterHealthURL,
-					Scheme: v1.URISchemeHTTPS,
+					Scheme: scheme,
 				},
 			},
 		}
@@ -293,12 +297,15 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, elasticsearchUseSSL bool) error {
 
 	replicaCount := int32(1)
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	elasticHTTPEndpoint := fmt.Sprintf("https://%s:9200", component)
+	if !elasticsearchUseSSL {
+		elasticHTTPEndpoint = fmt.Sprintf("http://%s:9200", component)
+	}
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
 
 	// Check if deployment exists

@@ -362,7 +362,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL bool) error {
 
 	var deploymentName, role, isNodeMaster, isNodeData string
 
@@ -395,6 +395,10 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
+		scheme := v1.URISchemeHTTP
+		if useSSL {
+			scheme = v1.URISchemeHTTPS
+		}
 		probe := &v1.Probe{
 			TimeoutSeconds:      30,
 			InitialDelaySeconds: 10,
@@ -403,7 +407,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				HTTPGet: &v1.HTTPGetAction{
 					Port:   intstr.FromInt(9200),
 					Path:   clusterHealthURL,
-					Scheme: v1.URISchemeHTTPS,
+					Scheme: scheme,
 				},
 			},
 		}
