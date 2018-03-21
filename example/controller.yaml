@@ -9,7 +9,7 @@ metadata:
   name: elasticsearch-operator
 rules:
 - apiGroups: ["extensions"]
-  resources: ["deployments", "replicasets"]
+  resources: ["deployments", "replicasets", "daemonsets"]
   verbs: ["create", "get", "update", "delete", "list"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
