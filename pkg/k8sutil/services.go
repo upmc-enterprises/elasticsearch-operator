@@ -195,9 +195,9 @@ func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 // CreateMgmtServices creates service for kibana and cerebro
 func (k *K8sutil) CreateMgmtServices(clusterName, namespace string) error {
 
-	for component, port := range mgmtServices {
+	for role, port := range mgmtServices {
 
-		serviceName := fmt.Sprintf("%s-%s", component, clusterName)
+		serviceName := fmt.Sprintf("%s-%s", role, clusterName)
 
 		// Check if service exists
 		s, err := k.Kclient.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
@@ -210,12 +210,12 @@ func (k *K8sutil) CreateMgmtServices(clusterName, namespace string) error {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: serviceName,
 					Labels: map[string]string{
-						"component": component,
+						"role": role,
 					},
 				},
 				Spec: v1.ServiceSpec{
 					Selector: map[string]string{
-						"component": component,
+						"role": role,
 					},
 					Ports: []v1.ServicePort{
 						v1.ServicePort{
