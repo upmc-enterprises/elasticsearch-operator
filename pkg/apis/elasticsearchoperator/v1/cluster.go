@@ -117,6 +117,8 @@ type ClusterSpec struct {
 
 	//KeepSecretsOnDelete tells the operator to not delete secrets when a cluster is destroyed
 	KeepSecretsOnDelete bool `json:"keep-secrets-on-delete"`
+
+	UseSSL bool `json:"use-ssl"`
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository

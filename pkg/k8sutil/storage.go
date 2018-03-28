@@ -88,7 +88,7 @@ func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
 
 // UpdateVolumeReclaimPolicy updates the policy of the volume after it's created:
 // See: https://github.com/kubernetes/kubernetes/issues/38192
-func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
+func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string, name string) {
 
 	var policyType v1.PersistentVolumeReclaimPolicy
 
@@ -101,8 +101,11 @@ func (k *K8sutil) UpdateVolumeReclaimPolicy(policy, namespace string) {
 		break
 	}
 
+	// pvc, err := k.Kclient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{
+	// 	LabelSelector: "component=elasticsearch-example-es-cluster",
+	// })
 	pvc, err := k.Kclient.CoreV1().PersistentVolumeClaims(namespace).List(metav1.ListOptions{
-		LabelSelector: "component=elasticsearch-example-es-cluster",
+		LabelSelector: "component=elasticsearch-" + name,
 	})
 
 	if err != nil {
