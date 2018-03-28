@@ -40,7 +40,7 @@ Following parameters are available to customize the elastic cluster:
 - keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
-  - bucket-name: Name of S3 bucket to dump snaptshots
+  - bucket-name: Name of S3 bucket to dump snapshots
   - cron-schedule: Cron task definition for intervals to do snapshots
 - [storage](https://kubernetes.io/docs/user-guide/persistent-volumes/)
   - Using a provisioner
@@ -65,7 +65,7 @@ If supplying your own certs, first generate them and add to a secret. Secret sho
 
 ## Base image
 
-The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0` which can be overriden by addeding to the custom cluster you create _(See: [CustomResourceDefinition](#customdesourcedefinition) above)_. 
+The base image used is `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0` which can be overridden by adding to the custom cluster you create _(See: [CustomResourceDefinition](#customdesourcedefinition) above)_. 
 
 _NOTE: If no image is specified, the default noted previously is used._
 
@@ -114,7 +114,7 @@ _NOTE: Creating a custom cluster requires the creation of a CustomResourceDefini
 
 # Create Example ElasticSearch Cluster (Minikube)
 
-To run the operator on minikube, this sample file is setup to do that. It sets lower Java memory contraints as well as uses the default storage class in Minikube which writes to hostPath.
+To run the operator on minikube, this sample file is setup to do that. It sets lower Java memory constraints as well as uses the default storage class in Minikube which writes to hostPath.
 
 ```bash
 $ kubectl create -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster-minikube.yaml
@@ -149,7 +149,7 @@ spec:
     image: upmcenterprises/cerebro:0.6.8
 ```
 
-Once added the operator will create certs for Kibana or Cerebro and automatically secure with those certs trusing the same CA used to generate the certs for the Elastic nodes. 
+Once added the operator will create certs for Kibana or Cerebro and automatically secure with those certs trusting the same CA used to generate the certs for the Elastic nodes. 
 
 To access, just port-forward to the pod:
 
@@ -173,7 +173,7 @@ If changes are required to the cluster, say the replica count of the data nodes 
 
 # Snapshot
 
-Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 as the backup respository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) which enables this feature in AWS. 
+Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 as the backup repository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) which enables this feature in AWS. 
 
 ## Schedule
 
