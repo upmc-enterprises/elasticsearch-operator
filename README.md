@@ -246,7 +246,7 @@ spec:
 
 # Access Cluster
 
-Once deployed and all pods are running, the cluster can be accessed internally via https://elasticsearch:9200/ or https://${ELASTICSEARCH_SERVICE_HOST}:9200/
+Once deployed and all pods are running, the cluster can be accessed internally via https://elasticsearch:9200/ or https://${ELASTICSEARCH_SERVICE_HOST}:9200/. **Note**: the service name for the ES client may also be "elasticsearch + <cluster-Name>" as defined in your `ElasticsearchCluster` resource.
 
 ![alt text](docs/images/running-cluster.png "Running Cluster")
 
