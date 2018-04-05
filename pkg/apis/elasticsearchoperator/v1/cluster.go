@@ -142,6 +142,9 @@ type Snapshot struct {
 
 	// Authentication defines credentials for snapshot requests
 	Authentication Authentication `json:"authentication"`
+
+	// Defines the image to run cronjobs
+	Image string `json:"image"`
 }
 
 // Authentication defines credentials for snapshot requests
@@ -208,6 +211,7 @@ type Scheduler struct {
 	ElasticURL   string
 	Namespace    string
 	ClusterName  string
+	Image        string
 }
 
 // SchedulerAuthentication stores credentials used to authenticate against snapshot endpoint

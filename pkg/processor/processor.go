@@ -214,6 +214,7 @@ func (p *Processor) refreshClusters() error {
 				cluster.Spec.Snapshot.SchedulerEnabled,
 				cluster.Spec.Snapshot.Authentication.UserName,
 				cluster.Spec.Snapshot.Authentication.Password,
+				cluster.Spec.Snapshot.Image,
 				p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
 				cluster.ObjectMeta.Name,
 				cluster.ObjectMeta.Namespace,

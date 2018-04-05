@@ -42,9 +42,9 @@ import (
 )
 
 const (
-	baseCronImage          = "upmcenterprises/elasticsearch-cron:0.0.1"
-	CRON_ACTION_REPOSITORY = "create-repository"
-	CRON_ACTION_SNAPSHOT   = "snapshot"
+	defaultCronImage     = "upmcenterprises/elasticsearch-cron:0.0.1"
+	cronActionRepository = "create-repository"
+	cronActionSnapshot   = "snapshot"
 )
 
 type Scheduler struct {
@@ -53,7 +53,12 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password, image,
+	elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+
+	if image == "" {
+		image = defaultCronImage
+	}
 
 	return &Scheduler{
 		Kclient: kc,
@@ -68,6 +73,7 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, elas
 			Namespace:   namespace,
 			ClusterName: clusterName,
 			Enabled:     enabled,
+			Image:       image,
 		},
 	}
 }
@@ -92,12 +98,12 @@ func (s *Scheduler) Init() error {
 // CreateSnapshotRepository creates the snapshot repository cronjob
 func (s *Scheduler) CreateSnapshotRepository() error {
 	// TODO: This should wait until the api goes green and cluster is healthy
-	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_REPOSITORY, s.CRD.CronSchedule)
+	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, cronActionRepository, s.CRD.CronSchedule)
 }
 
 // CreateSnapshot creates snapshot cronjob
 func (s *Scheduler) CreateSnapshot() error {
-	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_SNAPSHOT, s.CRD.CronSchedule)
+	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, cronActionSnapshot, s.CRD.CronSchedule)
 }
 
 // Stop cleans up Cron
@@ -126,7 +132,7 @@ func (s *Scheduler) deleteJobs(namespace, clusterName string) {
 // DeleteCronJob deletes a cron job
 func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
 	// Repository CronJob
-	snapshotName := getSnapshotname(clusterName, CRON_ACTION_REPOSITORY)
+	snapshotName := getSnapshotname(clusterName, cronActionRepository)
 	err := s.Kclient.BatchV1beta1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
 
 	// ignore not found error
@@ -139,7 +145,7 @@ func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
 	}
 
 	// Snapshot CronJob
-	snapshotName = getSnapshotname(clusterName, CRON_ACTION_SNAPSHOT)
+	snapshotName = getSnapshotname(clusterName, cronActionSnapshot)
 	err = s.Kclient.BatchV1beta1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
 
 	// ignore not found error
@@ -197,7 +203,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 								Containers: []apicore.Container{
 									apicore.Container{
 										Name:            snapshotName,
-										Image:           baseCronImage,
+										Image:           s.CRD.Image,
 										ImagePullPolicy: "Always",
 										Resources: apicore.ResourceRequirements{
 											Requests: apicore.ResourceList{
