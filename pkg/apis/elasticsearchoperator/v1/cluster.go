@@ -118,6 +118,7 @@ type ClusterSpec struct {
 	//KeepSecretsOnDelete tells the operator to not delete secrets when a cluster is destroyed
 	KeepSecretsOnDelete bool `json:"keep-secrets-on-delete"`
 
+	// Use SSL for clients connections
 	UseSSL bool `json:"use-ssl"`
 }
 

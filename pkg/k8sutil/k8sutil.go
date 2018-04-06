@@ -360,6 +360,17 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 	return outSecrets
 }
 
+// GetESURL Returns Elasticsearch URL
+func GetESURL(esHost string, useSSL bool) string {
+
+	if !useSSL {
+		return fmt.Sprintf("http://%s:9200", esHost)
+	}
+
+	return fmt.Sprintf("https://%s:9200", esHost)
+
+}
+
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
 	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL bool) error {
@@ -501,6 +512,14 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										Value: "true",
 									},
 									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+										Value: strconv.FormatBool(useSSL),
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+										Value: strconv.FormatBool(useSSL),
+									},
+									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
 										Value: javaOptions,
 									},
@@ -598,9 +617,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			}
 		}
 
-		_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet)
-
-		if err != nil {
+		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
 			return err
 		}
@@ -618,6 +635,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
+				return err
 			}
 		}
 	}
@@ -625,7 +643,8 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	return nil
 }
 
-func (k *K8sutil) CreateCerebroConfiguration(clusterName string) map[string]string {
+// CreateCerebroConfiguration creates Cerebro configuration
+func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL bool) map[string]string {
 
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`
@@ -657,10 +676,9 @@ data.path = "./cerebro.db"
 hosts = [
 {
 	host = "%s"
-	name = "es-servers"
+	name = "%s"
 }
 ]
-		`, elasticsearchCertspath, elasticsearchCertspath, fmt.Sprintf("https://%s:9200",
-		fmt.Sprintf(fmt.Sprintf("elasticsearch-%s", clusterName))))
+		`, elasticsearchCertspath, elasticsearchCertspath, GetESURL(esHost, useSSL), esHost)
 	return x
 }

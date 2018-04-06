@@ -171,7 +171,7 @@ func (p *Processor) refreshClusters() error {
 							UserName: cluster.Spec.Snapshot.Authentication.UserName,
 							Password: cluster.Spec.Snapshot.Authentication.Password,
 						},
-						ElasticURL:  p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
+						ElasticURL:  k8sutil.GetESURL(p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace), cluster.Spec.UseSSL),
 						ClusterName: cluster.ObjectMeta.Name,
 						Namespace:   cluster.ObjectMeta.Namespace,
 					},
@@ -366,27 +366,28 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 	// Deploy Cerebro
 	if c.Spec.Cerebro.Image != "" {
+		host := fmt.Sprintf("elasticsearch-%s", c.ObjectMeta.Name)
+		cerebroConf := p.k8sclient.CreateCerebroConfiguration(host, c.Spec.UseSSL)
 		name := fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")
-		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
-			logrus.Error("Error creating cerebro deployment ", err)
-			return err
-		}
-		// TODO create service
-
-		cerebroConf := p.k8sclient.CreateCerebroConfiguration(c.ObjectMeta.Name)
 
 		// create/update cerebro configMap
-		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro")) {
-			if err := p.k8sclient.UpdateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf); err != nil {
+		if p.k8sclient.ConfigmapExists(c.ObjectMeta.Namespace, name) {
+			if err := p.k8sclient.UpdateConfigMap(c.ObjectMeta.Namespace, name, cerebroConf); err != nil {
 				logrus.Error("Error updating configmap ", err)
 				return err
 			}
 		} else {
-			if err := p.k8sclient.CreateConfigMap(c.ObjectMeta.Namespace, fmt.Sprintf("%s-%s", c.ObjectMeta.Name, "cerebro"), cerebroConf); err != nil {
+			if err := p.k8sclient.CreateConfigMap(c.ObjectMeta.Namespace, name, cerebroConf); err != nil {
 				logrus.Error("Error creating configmaop ", err)
 				return err
 			}
 		}
+
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
+			logrus.Error("Error creating cerebro deployment ", err)
+			return err
+		}
+
 	}
 
 	// Setup CronSchedule
