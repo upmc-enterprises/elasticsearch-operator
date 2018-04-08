@@ -139,7 +139,14 @@ func (p *Processor) refreshClusters() error {
 
 	for _, cluster := range currentClusters.Items {
 		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
-
+		// Default to true
+		if cluster.Spec.UseSSL == nil {
+			logrus.Infof("use-ssl not specified, defaulting to UseSSL=true")
+			t := true
+			cluster.Spec.UseSSL = &t
+		} else {
+			logrus.Infof("use-ssl %v", *cluster.Spec.UseSSL)
+		}
 		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = Cluster{
 			ESCluster: &myspec.ElasticsearchCluster{
 				Spec: myspec.ClusterSpec{

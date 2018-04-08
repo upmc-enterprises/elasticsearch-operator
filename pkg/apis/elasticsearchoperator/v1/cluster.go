@@ -119,7 +119,7 @@ type ClusterSpec struct {
 	KeepSecretsOnDelete bool `json:"keep-secrets-on-delete"`
 
 	// Use SSL for clients connections
-	UseSSL bool `json:"use-ssl"`
+	UseSSL *bool `json:"use-ssl,omitempty"`
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository

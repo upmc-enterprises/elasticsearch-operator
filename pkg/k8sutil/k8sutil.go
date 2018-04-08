@@ -361,9 +361,9 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // GetESURL Returns Elasticsearch URL
-func GetESURL(esHost string, useSSL bool) string {
+func GetESURL(esHost string, useSSL *bool) string {
 
-	if !useSSL {
+	if !*useSSL {
 		return fmt.Sprintf("http://%s:9200", esHost)
 	}
 
@@ -373,7 +373,7 @@ func GetESURL(esHost string, useSSL bool) string {
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
 
 	var deploymentName, role, isNodeMaster, isNodeData string
 
@@ -407,7 +407,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 		scheme := v1.URISchemeHTTP
-		if useSSL {
+		if *useSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -513,11 +513,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
-										Value: strconv.FormatBool(useSSL),
+										Value: strconv.FormatBool(*useSSL),
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
-										Value: strconv.FormatBool(useSSL),
+										Value: strconv.FormatBool(*useSSL),
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
@@ -644,7 +644,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 }
 
 // CreateCerebroConfiguration creates Cerebro configuration
-func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL bool) map[string]string {
+func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL *bool) map[string]string {
 
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`

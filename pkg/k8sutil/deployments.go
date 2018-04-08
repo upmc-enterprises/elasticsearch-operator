@@ -97,7 +97,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL bool) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -118,7 +118,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 		scheme := v1.URISchemeHTTP
-		if useSSL {
+		if *useSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -198,11 +198,11 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
-										Value: strconv.FormatBool(useSSL),
+										Value: strconv.FormatBool(*useSSL),
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
-										Value: strconv.FormatBool(useSSL),
+										Value: strconv.FormatBool(*useSSL),
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
@@ -306,7 +306,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, useSSL bool) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, useSSL *bool) error {
 
 	replicaCount := int32(1)
 
@@ -367,7 +367,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_ENABLED",
-										Value: strconv.FormatBool(useSSL),
+										Value: strconv.FormatBool(*useSSL),
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_KEY",

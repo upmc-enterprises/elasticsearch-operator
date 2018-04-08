@@ -24,7 +24,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 
 package processor
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestBaseImage(t *testing.T) {
 	expectedImage := "foo/image"

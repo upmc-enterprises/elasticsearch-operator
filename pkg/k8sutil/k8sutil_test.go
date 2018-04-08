@@ -16,7 +16,7 @@ func TestGetESURL(t *testing.T) {
 		{"es-bla", "http://es-bla:9200", false},
 	} {
 
-		esURL := GetESURL(v.host, v.useSSL)
+		esURL := GetESURL(v.host, &v.useSSL)
 
 		if esURL != v.expected {
 			t.Errorf(fmt.Sprintf("Expected %s, got %s", v.expected, esURL))
