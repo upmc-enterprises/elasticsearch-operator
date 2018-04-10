@@ -21,24 +21,3 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 */
-
-package elasticsearchoperator
-
-import (
-	"fmt"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
-
-const (
-	ResourceKind   = "ElasticsearchCluster"
-	ResourcePlural = "elasticsearchclusters"
-	GroupName      = "enterprises.upmc.com"
-	ShortName      = "elasticsearchcluster"
-	Version        = "v2"
-)
-
-var (
-	Name               = fmt.Sprintf("%s.%s", ResourcePlural, GroupName)
-	SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: Version}
-)

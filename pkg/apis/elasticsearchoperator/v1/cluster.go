@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -49,23 +50,17 @@ type ElasticsearchClusterList struct {
 	Items           []ElasticsearchCluster `json:"items"`
 }
 
+type CRDState string
+
 type CRDStatus struct {
 	State   CRDState `json:"state,omitempty"`
 	Message string   `json:"message,omitempty"`
 }
 
-type CRDState string
+type NodeSpec struct {
 
-// ClusterSpec defines cluster options
-type ClusterSpec struct {
 	// ClientNodeSize defines how many client nodes to have in cluster
-	ClientNodeReplicas int32 `json:"client-node-replicas"`
-
-	// MasterNodeSize defines how many client nodes to have in cluster
-	MasterNodeReplicas int `json:"master-node-replicas"`
-
-	// DataNodeSize defines how many client nodes to have in cluster
-	DataNodeReplicas int `json:"data-node-replicas"`
+	Replicas int32 `json:"replicas"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
 	// to run on a node, the node must have each of the indicated key-value pairs as
@@ -76,30 +71,17 @@ type ClusterSpec struct {
 	// to deploy persistent volumes for data nodes
 	Zones []string `json:"zones,omitempty"`
 
-	// DataDiskSize specifies how large the persistent volume should be attached
-	// to the data nodes in the ES cluster
-	DataDiskSize string `json:"data-volume-size"`
-
-	// DataDiskSize specifies the docker image to use (optional)
-	ElasticSearchImage string `json:"elastic-search-image"`
-
-	// Snapshot defines how snapshots are scheduled
-	Snapshot Snapshot `json:"snapshot"`
-
-	// Storage defines how volumes are provisioned
-	Storage Storage `json:"storage"`
+	// DiskSize specifies how large the persistent volume should be attached
+	// to the nodes in the ES cluster
+	DiskSize string `json:"volume-size"`
 
 	// JavaOptions defines args passed to elastic nodes
 	JavaOptions string `json:"java-options"`
 
-	// ImagePullSecrets defines credentials to pull image from private repository (optional)
-	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
-
 	// Resources defines memory / cpu constraints
-	Resources Resources `json:"resources"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 
-	// Instrumentation defines metrics for the cluster
-	Instrumentation Instrumentation `json:"instrumentation"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// Specify how the container binds to network ports
 	NetworkHost string `json:"network-host"`
@@ -107,11 +89,30 @@ type ClusterSpec struct {
 	//NodePort
 	NodePort int32 `json:"nodePort"`
 
+	// Image specifies the docker image to use (optional)
+	Image string `json:"image"`
+}
+
+// ClusterSpec defines cluster options
+type ClusterSpec struct {
+
+	// Snapshot defines how snapshots are scheduled
+	Snapshot Snapshot `json:"snapshot"`
+
+	// Storage defines how volumes are provisioned
+	Storage Storage `json:"storage"`
+
+	// ImagePullSecrets defines credentials to pull image from private repository (optional)
+	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
+
+	// Instrumentation defines metrics for the cluster
+	Instrumentation Instrumentation `json:"instrumentation"`
+
 	// Kibana
-	Kibana Kibana `json:"kibana"`
+	KibanaSpec NodeSpec `json:"kibana"`
 
 	//Cerebro
-	Cerebro Cerebro `json:"cerebro"`
+	CerebroSpec NodeSpec `json:"cerebro"`
 
 	Scheduler Scheduler
 
@@ -119,6 +120,12 @@ type ClusterSpec struct {
 	KeepSecretsOnDelete bool `json:"keep-secrets-on-delete"`
 
 	UseSSL bool `json:"use-ssl"`
+
+	MasterSpec NodeSpec `json:"master"`
+
+	ClientSpec NodeSpec `json:"client"`
+
+	DataSpec NodeSpec `json:"data"`
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository
@@ -183,19 +190,6 @@ type MemoryCPU struct {
 // Instrumentation handles all metrics for the cluster
 type Instrumentation struct {
 	StatsdHost string `json:"statsd-host"`
-}
-
-// Kibana properties if wanting operator to deploy for user
-type Kibana struct {
-	// Defines the image to use for deploying kibana
-	Image string `json:"image"`
-}
-
-// Cerebro properties if wanting operator to deploy for user
-type Cerebro struct {
-	// Defines the image to use for deploying Cerebro
-	Image         string `json:"image"`
-	Configuration string `json:"configuration"`
 }
 
 // Scheduler stores info about how to snapshot the cluster

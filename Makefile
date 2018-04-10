@@ -9,6 +9,10 @@ pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
+ifeq ($(GOBIN),)
+GOBIN :=${GOPATH}/bin
+endif
+
 all: container
 
 build:
@@ -22,6 +26,16 @@ push:
 
 clean:
 	rm -f elasticsearch-operator
+
+$(GOBIN)/deepcopy-gen:
+	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.9
+	go install k8s.io/code-generator/cmd/deepcopy-gen
+	
+deepcopy-gen: $(GOBIN)/deepcopy-gen
+
+generate-deepcopy: deepcopy-gen
+	$(GOBIN)/deepcopy-gen -i github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1 --go-header-file="$(GOPATH)/src/github.com/upmc-enterprises/elasticsearch-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/upmc-enterprises/elasticsearch-operator/pkg/client" --output-file-base zz_generated.deepcopy
 
 format:
 	go fmt $(pkgs)

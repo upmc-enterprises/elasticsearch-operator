@@ -31,7 +31,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	elasticsearchoperator "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator"
-	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
+	elasticsearchoperatorv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	clientset "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
 	genclient "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
 	apps "k8s.io/api/apps/v1beta2"
@@ -225,33 +225,33 @@ func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
 }
 
 // MonitorElasticSearchEvents watches for new or removed clusters
-func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *myspec.ElasticsearchCluster, <-chan error) {
-	events := make(chan *myspec.ElasticsearchCluster)
+func (k *K8sutil) MonitorElasticSearchEvents(stopchan chan struct{}) (<-chan *elasticsearchoperatorv1.ElasticsearchCluster, <-chan error) {
+	events := make(chan *elasticsearchoperatorv1.ElasticsearchCluster)
 	errc := make(chan error, 1)
 
 	source := cache.NewListWatchFromClient(k.CrdClient.EnterprisesV1().RESTClient(), elasticsearchoperator.ResourcePlural, v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
-		event := obj.(*myspec.ElasticsearchCluster)
+		event := obj.(*elasticsearchoperatorv1.ElasticsearchCluster)
 		event.Type = "ADDED"
 		events <- event
 	}
 
 	createDeleteHandler := func(obj interface{}) {
-		event := obj.(*myspec.ElasticsearchCluster)
+		event := obj.(*elasticsearchoperatorv1.ElasticsearchCluster)
 		event.Type = "DELETED"
 		events <- event
 	}
 
 	updateHandler := func(old interface{}, obj interface{}) {
-		event := obj.(*myspec.ElasticsearchCluster)
+		event := obj.(*elasticsearchoperatorv1.ElasticsearchCluster)
 		event.Type = "MODIFIED"
 		events <- event
 	}
 
 	_, controller := cache.NewInformer(
 		source,
-		&myspec.ElasticsearchCluster{},
+		&elasticsearchoperatorv1.ElasticsearchCluster{},
 		time.Minute*60,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    createAddHandler,
@@ -349,7 +349,7 @@ func (k *K8sutil) DeleteStatefulSet(deploymentType, clusterName, namespace strin
 	return nil
 }
 
-func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectReference {
+func TemplateImagePullSecrets(ips []elasticsearchoperatorv1.ImagePullSecrets) []v1.LocalObjectReference {
 	var outSecrets []v1.LocalObjectReference
 
 	for _, s := range ips {
@@ -361,8 +361,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 }
 
 // CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL bool) error {
+func (k *K8sutil) CreateDataNodeDeployment(deploymentType, clusterName, namespace string, clusterSpec elasticsearchoperatorv1.ClusterSpec) error {
 
 	var deploymentName, role, isNodeMaster, isNodeData string
 
@@ -380,23 +379,26 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
-	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
+	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, clusterSpec.Storage.StorageClass)
+
+	//TODO remove
+	// rReq, err := k.ParseRequirements(clusterSpec.DataSpec)
+	// if err != nil {
+	// 	return fmt.Errorf("Error parsing data node resources: %v", err)
+	// }
 
 	// Check if StatefulSet exists
 	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 
 	if len(statefulSet.Name) == 0 {
-		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
-
-		// Parse CPU / Memory
-		// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
-		// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
-		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
-		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
+		volumeSize, error := resource.ParseQuantity(clusterSpec.DataSpec.DiskSize)
+		if err != nil {
+			return fmt.Errorf("Error parsing data node diskSize: %v", error)
+		}
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 		scheme := v1.URISchemeHTTP
-		if useSSL {
+		if clusterSpec.UseSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -422,7 +424,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				},
 			},
 			Spec: apps.StatefulSetSpec{
-				Replicas:    replicas,
+				Replicas:    &clusterSpec.DataSpec.Replicas,
 				ServiceName: statefulSetName,
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
@@ -440,6 +442,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 							"name":      statefulSetName,
 							"cluster":   clusterName,
 						},
+						Annotations: clusterSpec.ClientSpec.Annotations,
 					},
 					Spec: v1.PodSpec{
 						Affinity: &v1.Affinity{
@@ -473,7 +476,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										},
 									},
 								},
-								Image:           baseImage,
+								Image:           clusterSpec.ClientSpec.Image,
 								ImagePullPolicy: "Always",
 								Env: []v1.EnvVar{
 									v1.EnvVar{
@@ -502,11 +505,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
-										Value: javaOptions,
+										Value: clusterSpec.DataSpec.JavaOptions,
 									},
 									v1.EnvVar{
 										Name:  "STATSD_HOST",
-										Value: statsdEndpoint,
+										Value: clusterSpec.Instrumentation.StatsdHost,
 									},
 									v1.EnvVar{
 										Name:  "DISCOVERY_SERVICE",
@@ -514,7 +517,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "NETWORK_HOST",
-										Value: networkHost,
+										Value: clusterSpec.DataSpec.NetworkHost,
 									},
 								},
 								Ports: []v1.ContainerPort{
@@ -541,16 +544,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 										MountPath: elasticsearchCertspath,
 									},
 								},
-								Resources: v1.ResourceRequirements{
-									// Limits: v1.ResourceList{
-									// 	"cpu":    limitCPU,
-									// 	"memory": limitMemory,
-									// },
-									Requests: v1.ResourceList{
-										"cpu":    requestCPU,
-										"memory": requestMemory,
-									},
-								},
+								Resources: clusterSpec.DataSpec.Resources,
 							},
 						},
 						Volumes: []v1.Volume{
@@ -563,7 +557,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 								},
 							},
 						},
-						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
+						ImagePullSecrets: TemplateImagePullSecrets(clusterSpec.ImagePullSecrets),
 					},
 				},
 				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
@@ -592,9 +586,9 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			},
 		}
 
-		if storageClass != "default" {
+		if clusterSpec.Storage.StorageClass != "default" {
 			statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
-				"volume.beta.kubernetes.io/storage-class": storageClass,
+				"volume.beta.kubernetes.io/storage-class": clusterSpec.Storage.StorageClass,
 			}
 		}
 
@@ -611,8 +605,8 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		}
 
 		//scale replicas?
-		if statefulSet.Spec.Replicas != replicas {
-			statefulSet.Spec.Replicas = replicas
+		if statefulSet.Spec.Replicas != &clusterSpec.DataSpec.Replicas {
+			statefulSet.Spec.Replicas = &clusterSpec.DataSpec.Replicas
 
 			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
 
