@@ -26,7 +26,6 @@ package k8sutil
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
@@ -109,6 +108,11 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
+	enableSSL := "false"
+	if useSSL != nil && *useSSL {
+		enableSSL = "true"
+	}
+
 	if len(deployment.Name) == 0 {
 		logrus.Infof("Deployment %s not found, creating...", deploymentName)
 
@@ -118,7 +122,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 		scheme := v1.URISchemeHTTP
-		if *useSSL {
+		if useSSL != nil && *useSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -198,11 +202,11 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
-										Value: strconv.FormatBool(*useSSL),
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
-										Value: strconv.FormatBool(*useSSL),
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
@@ -314,6 +318,11 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
 
+	enableSSL := "false"
+	if useSSL != nil && *useSSL {
+		enableSSL = "true"
+	}
+
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 	probe := &v1.Probe{
@@ -367,7 +376,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_ENABLED",
-										Value: strconv.FormatBool(*useSSL),
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_KEY",

@@ -363,7 +363,7 @@ func TemplateImagePullSecrets(ips []myspec.ImagePullSecrets) []v1.LocalObjectRef
 // GetESURL Returns Elasticsearch URL
 func GetESURL(esHost string, useSSL *bool) string {
 
-	if !*useSSL {
+	if useSSL == nil || !*useSSL {
 		return fmt.Sprintf("http://%s:9200", esHost)
 	}
 
@@ -389,6 +389,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		isNodeData = "false"
 	}
 
+	enableSSL := "false"
+	if useSSL != nil && *useSSL {
+		enableSSL = "true"
+	}
+
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
 	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
@@ -407,7 +412,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 		scheme := v1.URISchemeHTTP
-		if *useSSL {
+		if useSSL != nil && *useSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -513,11 +518,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
-										Value: strconv.FormatBool(*useSSL),
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
-										Value: strconv.FormatBool(*useSSL),
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
