@@ -22,23 +22,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 */
 
-package elasticsearchoperator
+package k8sutil
 
-import (
-	"fmt"
+import "testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
+func TestParseRequirements(t *testing.T) {
 
-const (
-	ResourceKind   = "ElasticsearchCluster"
-	ResourcePlural = "elasticsearchclusters"
-	GroupName      = "enterprises.upmc.com"
-	ShortName      = "elasticsearchcluster"
-	Version        = "v2"
-)
-
-var (
-	Name               = fmt.Sprintf("%s.%s", ResourcePlural, GroupName)
-	SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: Version}
-)
+}

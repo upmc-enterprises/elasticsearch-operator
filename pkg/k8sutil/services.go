@@ -28,6 +28,7 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
+	elasticsearchoperatorv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -93,7 +94,7 @@ func (k *K8sutil) GetClientServiceName(clusterName string) string {
 }
 
 // CreateClientService creates the client service
-func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort int32) error {
+func (k *K8sutil) CreateClientService(clusterName, namespace string, clusterSpec elasticsearchoperatorv1.ClusterSpec) error {
 
 	fullClientServiceName := k.GetClientServiceName(clusterName)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
@@ -126,9 +127,9 @@ func (k *K8sutil) CreateClientService(clusterName, namespace string, nodePort in
 				},
 			},
 		}
-		if nodePort > 0 {
+		if clusterSpec.ClientSpec.NodePort > 0 {
 			clientSvc.Spec.Type = v1.ServiceTypeNodePort
-			clientSvc.Spec.Ports[0].NodePort = nodePort
+			clientSvc.Spec.Ports[0].NodePort = clusterSpec.ClientSpec.NodePort
 		}
 
 		if _, err := k.Kclient.CoreV1().Services(namespace).Create(clientSvc); err != nil {
