@@ -107,6 +107,8 @@ _NOTE: In the example we're putting the operator into the namespace `operator`. 
 
 # Create Example ElasticSearch Cluster
 
+Run the following command to create a [sample cluster](example/example-es-cluster.yaml) on AWS and you most likely will have to update the [zones](example/example-es-cluster.yaml#L16) to match your AWS Account, other examples are available as well if not running on AWS: 
+
 ```bash
 $ kubectl create -n operator -f https://raw.githubusercontent.com/upmc-enterprises/elasticsearch-operator/master/example/example-es-cluster.yaml
 ```
