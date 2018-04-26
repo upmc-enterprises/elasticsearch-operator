@@ -113,3 +113,24 @@ func TestNoZonesPassed(t *testing.T) {
 		t.Error("Expected 1 zone, got ", len(zoneDistribution))
 	}
 }
+
+func TestDefaultUseSSL(t *testing.T) {
+	processor, _ := New(nil, "foo/image")
+
+	useSSL := processor.defaultUseSSL(nil)
+	if useSSL != true {
+		t.Error("Expected useSSL to default to true when not specified, got %v", useSSL)
+	}
+
+	useSSL = true
+	useSSL = processor.defaultUseSSL(&useSSL)
+	if useSSL != true {
+		t.Error("Expected useSSL to be true when specified as true, got %v", useSSL)
+	}
+
+	useSSL = false
+	useSSL = processor.defaultUseSSL(&useSSL)
+	if useSSL != false {
+		t.Error("Expected useSSL to be false when specified as false, got %v", useSSL)
+	}
+}

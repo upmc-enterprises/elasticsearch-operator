@@ -119,6 +119,17 @@ func (p *Processor) WatchDataPodEvents(done chan struct{}, wg *sync.WaitGroup) {
 	}()
 }
 
+func (p *Processor) defaultUseSSL(specUseSSL *bool) bool {
+	// Default to true
+	if specUseSSL == nil {
+		logrus.Infof("use-ssl not specified, defaulting to UseSSL=true")
+		return true
+	} else {
+		logrus.Infof("use-ssl %v", *specUseSSL)
+		return *specUseSSL
+	}
+}
+
 func (p *Processor) refreshClusters() error {
 
 	for key, cluster := range p.clusters {
@@ -139,14 +150,7 @@ func (p *Processor) refreshClusters() error {
 
 	for _, cluster := range currentClusters.Items {
 		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
-		// Default to true
-		if cluster.Spec.UseSSL == nil {
-			logrus.Infof("use-ssl not specified, defaulting to UseSSL=true")
-			t := true
-			cluster.Spec.UseSSL = &t
-		} else {
-			logrus.Infof("use-ssl %v", *cluster.Spec.UseSSL)
-		}
+		useSSL := p.defaultUseSSL(cluster.Spec.UseSSL)
 		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = Cluster{
 			ESCluster: &myspec.ElasticsearchCluster{
 				Spec: myspec.ClusterSpec{
@@ -201,7 +205,7 @@ func (p *Processor) refreshClusters() error {
 					Cerebro: myspec.Cerebro{
 						Image: cluster.Spec.Cerebro.Image,
 					},
-					UseSSL: cluster.Spec.UseSSL,
+					UseSSL: &useSSL,
 				},
 			},
 			Scheduler: snapshot.New(
@@ -260,6 +264,10 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
 
 	logrus.Infof("Using [%s] as image for es cluster", baseImage)
+
+	// Default UseSSL to true
+	useSSL := p.defaultUseSSL(c.Spec.UseSSL)
+	c.Spec.UseSSL = &useSSL
 
 	if p.k8sclient.CertsSecretExists(c.ObjectMeta.Namespace, c.ObjectMeta.Name) == false {
 		// Create certs
