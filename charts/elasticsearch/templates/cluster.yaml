@@ -42,10 +42,13 @@ spec:
      username: {{ .Values.snapshot.authentication.username }}
 {{- end }}
   storage:
+{{- if .Values.storage.class }}
+    storage-class: {{ .Values.storage.class }}
+{{- else }}
     type: {{ .Values.storage.type }}
     storage-class-provisioner: {{ .Values.storage.classProvisioner }}
     volume-reclaim-policy: {{ .Values.storage.reclaimPolicy }}
-    storage-class-provisioner: kubernetes.io/aws-ebs
+{{- end }}
 {{- if .Values.statsd.enabled }}
   statsd-host: {{ .Values.statsd.host }}
 {{- end }}

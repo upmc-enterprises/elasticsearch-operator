@@ -28,6 +28,8 @@ snapshot:
     username: test
 
 storage:
+# If class is set, then the other storage fields will not be used.
+#  class: local-storage
   # e.g. gp2 for AWS
   type: gp2
   # e.g. kubernetes.io/aws-ebs for AWS
