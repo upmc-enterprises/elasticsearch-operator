@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	defaultCronImage     = "upmcenterprises/elasticsearch-cron:0.0.1"
+	defaultCronImage     = "upmcenterprises/elasticsearch-cron:0.0.3"
 	cronActionRepository = "create-repository"
 	cronActionSnapshot   = "snapshot"
 )
