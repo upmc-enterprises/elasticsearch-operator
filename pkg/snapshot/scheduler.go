@@ -52,8 +52,7 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, svcURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
-	elasticURL := fmt.Sprintf("https://%s:9200", svcURL) // Internal service name of cluster
+func New(bucketName, cronSchedule string, enabled bool, userName, password, elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
 
 	return &Scheduler{
 		Kclient: kc,

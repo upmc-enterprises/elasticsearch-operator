@@ -96,7 +96,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL bool) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -108,6 +108,11 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
+	enableSSL := "false"
+	if useSSL != nil && *useSSL {
+		enableSSL = "true"
+	}
+
 	if len(deployment.Name) == 0 {
 		logrus.Infof("Deployment %s not found, creating...", deploymentName)
 
@@ -117,7 +122,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 		scheme := v1.URISchemeHTTP
-		if useSSL {
+		if useSSL != nil && *useSSL {
 			scheme = v1.URISchemeHTTPS
 		}
 		probe := &v1.Probe{
@@ -194,6 +199,14 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									v1.EnvVar{
 										Name:  "HTTP_ENABLE",
 										Value: "true",
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+										Value: enableSSL,
+									},
+									v1.EnvVar{
+										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
@@ -297,16 +310,18 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, elasticsearchUseSSL bool) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, useSSL *bool) error {
 
 	replicaCount := int32(1)
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
-	elasticHTTPEndpoint := fmt.Sprintf("https://%s:9200", component)
-	if !elasticsearchUseSSL {
-		elasticHTTPEndpoint = fmt.Sprintf("http://%s:9200", component)
-	}
+
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
+
+	enableSSL := "false"
+	if useSSL != nil && *useSSL {
+		enableSSL = "true"
+	}
 
 	// Check if deployment exists
 	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
@@ -353,7 +368,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 								Env: []v1.EnvVar{
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_URL",
-										Value: elasticHTTPEndpoint,
+										Value: GetESURL(component, useSSL),
 									},
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
@@ -361,7 +376,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_ENABLED",
-										Value: "true",
+										Value: enableSSL,
 									},
 									v1.EnvVar{
 										Name:  "SERVER_SSL_KEY",
