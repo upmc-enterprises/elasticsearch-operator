@@ -15,6 +15,7 @@ spec:
     scheduler-enabled: false
     bucket-name: elasticsnapshots99
     cron-schedule: "@every 2m"
+    image: upmcenterprises/elasticsearch-cron:0.0.3
   storage:
     storage-class: default
   resources:

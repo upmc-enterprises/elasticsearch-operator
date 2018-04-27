@@ -26,6 +26,7 @@ package snapshot
 
 import (
 	"fmt"
+	"net/http"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -34,16 +35,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	enterprisesv1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
-
 	batchv1 "k8s.io/api/batch/v1"
-	v2alpha1 "k8s.io/api/batch/v2alpha1"
+	v1beta1 "k8s.io/api/batch/v1beta1"
 	apicore "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 const (
-	baseCronImage          = "upmcenterprises/elasticsearch-cron:0.0.1"
-	CRON_ACTION_REPOSITORY = "create-repository"
-	CRON_ACTION_SNAPSHOT   = "snapshot"
+	defaultCronImage     = "upmcenterprises/elasticsearch-cron:0.0.3"
+	cronActionRepository = "create-repository"
+	cronActionSnapshot   = "snapshot"
 )
 
 type Scheduler struct {
@@ -52,7 +53,12 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+func New(bucketName, cronSchedule string, enabled bool, userName, password, image,
+	elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+
+	if image == "" {
+		image = defaultCronImage
+	}
 
 	return &Scheduler{
 		Kclient: kc,
@@ -67,6 +73,7 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, elas
 			Namespace:   namespace,
 			ClusterName: clusterName,
 			Enabled:     enabled,
+			Image:       image,
 		},
 	}
 }
@@ -91,18 +98,12 @@ func (s *Scheduler) Init() error {
 // CreateSnapshotRepository creates the snapshot repository cronjob
 func (s *Scheduler) CreateSnapshotRepository() error {
 	// TODO: This should wait until the api goes green and cluster is healthy
-	if err := s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_REPOSITORY, s.CRD.CronSchedule); err != nil {
-		return err
-	}
-	return nil
+	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, cronActionRepository, s.CRD.CronSchedule)
 }
 
 // CreateSnapshot creates snapshot cronjob
 func (s *Scheduler) CreateSnapshot() error {
-	if err := s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, CRON_ACTION_SNAPSHOT, s.CRD.CronSchedule); err != nil {
-		return err
-	}
-	return nil
+	return s.CreateCronJob(s.CRD.Namespace, s.CRD.ClusterName, cronActionSnapshot, s.CRD.CronSchedule)
 }
 
 // Stop cleans up Cron
@@ -119,26 +120,43 @@ func (s *Scheduler) deleteJobs(namespace, clusterName string) {
 			LabelSelector: fmt.Sprintf("app=elasticsearch-operator,clusterName=%s", clusterName),
 		})
 
+	// ignore not found error
 	if err != nil {
-		logrus.Error("Could not delete Jobs! ", err)
+		if err.(*apierrors.StatusError).ErrStatus.Code != http.StatusNotFound {
+			logrus.Error("Could not delete Jobs! ", err)
+		}
 	}
+
 }
 
 // DeleteCronJob deletes a cron job
 func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
 	// Repository CronJob
-	snapshotName := getSnapshotname(clusterName, CRON_ACTION_REPOSITORY)
-	err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+	snapshotName := getSnapshotname(clusterName, cronActionRepository)
+	err := s.Kclient.BatchV1beta1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+
+	// ignore not found error
 	if err != nil {
-		logrus.Error("Could not delete Repository CronJob! ", err)
+		if _, ok := err.(*apierrors.StatusError); ok {
+			if err.(*apierrors.StatusError).ErrStatus.Code != http.StatusNotFound {
+				logrus.Error("Could not delete Repository CronJob! ", err)
+			}
+		}
 	}
 
 	// Snapshot CronJob
-	snapshotName = getSnapshotname(clusterName, CRON_ACTION_SNAPSHOT)
-	err = s.Kclient.BatchV2alpha1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+	snapshotName = getSnapshotname(clusterName, cronActionSnapshot)
+	err = s.Kclient.BatchV1beta1().CronJobs(namespace).Delete(snapshotName, &metav1.DeleteOptions{})
+
+	// ignore not found error
 	if err != nil {
-		logrus.Error("Could not delete CronJob! ", err)
+		if _, ok := err.(*apierrors.StatusError); ok {
+			if err.(*apierrors.StatusError).ErrStatus.Code != http.StatusNotFound {
+				logrus.Error("Could not delete CronJob! ", err)
+			}
+		}
 	}
+
 }
 
 // CreateCronJob creates a cron job
@@ -146,7 +164,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 	snapshotName := getSnapshotname(clusterName, action)
 
 	// Check if CronJob exists
-	cronJob, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Get(snapshotName, metav1.GetOptions{})
+	cronJob, err := s.Kclient.BatchV1beta1().CronJobs(namespace).Get(snapshotName, metav1.GetOptions{})
 
 	if len(cronJob.Name) == 0 {
 
@@ -159,7 +177,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 		if err == nil {
 			return err
 		}
-		job := &v2alpha1.CronJob{
+		job := &v1beta1.CronJob{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: snapshotName,
 				Labels: map[string]string{
@@ -168,9 +186,9 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 					"name":        snapshotName,
 				},
 			},
-			Spec: v2alpha1.CronJobSpec{
+			Spec: v1beta1.CronJobSpec{
 				Schedule: cronSchedule,
-				JobTemplate: v2alpha1.JobTemplateSpec{
+				JobTemplate: v1beta1.JobTemplateSpec{
 					Spec: batchv1.JobSpec{
 						Template: apicore.PodTemplateSpec{
 							ObjectMeta: metav1.ObjectMeta{
@@ -185,7 +203,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 								Containers: []apicore.Container{
 									apicore.Container{
 										Name:            snapshotName,
-										Image:           baseCronImage,
+										Image:           s.CRD.Image,
 										ImagePullPolicy: "Always",
 										Resources: apicore.ResourceRequirements{
 											Requests: apicore.ResourceList{
@@ -209,7 +227,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 			},
 		}
 
-		if _, err := s.Kclient.BatchV2alpha1().CronJobs(namespace).Create(job); err != nil {
+		if _, err := s.Kclient.BatchV1beta1().CronJobs(namespace).Create(job); err != nil {
 			logrus.Error("Could not create CronJob! ", err)
 			return err
 		}
@@ -217,6 +235,8 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 		logrus.Error("Could not get cron job! ", err)
 		return err
 	}
+	logrus.Infof("CronJob %v succesfully created ! ", snapshotName)
+
 	return nil
 }
 
