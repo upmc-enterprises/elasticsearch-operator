@@ -270,7 +270,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	useSSL := p.defaultUseSSL(c.Spec.UseSSL)
 	c.Spec.UseSSL = &useSSL
 
-	if p.k8sclient.CertsSecretExists(c.ObjectMeta.Namespace, c.ObjectMeta.Name) == false {
+	if useSSL && p.k8sclient.CertsSecretExists(c.ObjectMeta.Namespace, c.ObjectMeta.Name) == false {
 		// Create certs
 		logrus.Info("Creating new certs!")
 		if err := p.k8sclient.GenerateCerts("/tmp/certs/config", "/tmp/certs/certs", c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
@@ -280,7 +280,6 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		if err := p.k8sclient.CreateCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name, "/tmp/certs/certs"); err != nil {
 			return err
 		}
-
 	}
 
 	// Create Services

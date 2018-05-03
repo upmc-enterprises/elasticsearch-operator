@@ -371,12 +371,8 @@ func GetESURL(esHost string, useSSL *bool) string {
 
 }
 
-// CreateDataNodeDeployment creates the data node deployment
-func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
-
+func processDeploymentType(deploymentType string, clusterName string) (string, string, string, string) {
 	var deploymentName, role, isNodeMaster, isNodeData string
-
 	if deploymentType == "data" {
 		deploymentName = fmt.Sprintf("%s-%s", dataDeploymentName, clusterName)
 		isNodeMaster = "false"
@@ -388,239 +384,265 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		role = "master"
 		isNodeData = "false"
 	}
+	return deploymentName, role, isNodeMaster, isNodeData
+}
 
-	enableSSL := "false"
-	if useSSL != nil && *useSSL {
-		enableSSL = "true"
+func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions,
+	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) *apps.StatefulSet {
+
+	_, role, isNodeMaster, isNodeData := processDeploymentType(deploymentType, clusterName)
+
+	volumeSize, _ := resource.ParseQuantity(dataDiskSize)
+
+	enableSSL := "true"
+	scheme := v1.URISchemeHTTPS
+	if useSSL != nil && !*useSSL {
+		enableSSL = "false"
+		scheme = v1.URISchemeHTTP
+	}
+
+	// Parse CPU / Memory
+	// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
+	// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
+	requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
+	requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
+
+	probe := &v1.Probe{
+		TimeoutSeconds:      30,
+		InitialDelaySeconds: 10,
+		FailureThreshold:    15,
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Port:   intstr.FromInt(9200),
+				Path:   clusterHealthURL,
+				Scheme: scheme,
+			},
+		},
 	}
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
-	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
 
-	// Check if StatefulSet exists
-	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
-
-	if len(statefulSet.Name) == 0 {
-		volumeSize, _ := resource.ParseQuantity(dataDiskSize)
-
-		// Parse CPU / Memory
-		// limitCPU, _ := resource.ParseQuantity(resources.Limits.CPU)
-		// limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
-		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
-		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
-
-		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
-		scheme := v1.URISchemeHTTP
-		if useSSL != nil && *useSSL {
-			scheme = v1.URISchemeHTTPS
-		}
-		probe := &v1.Probe{
-			TimeoutSeconds:      30,
-			InitialDelaySeconds: 10,
-			FailureThreshold:    15,
-			Handler: v1.Handler{
-				HTTPGet: &v1.HTTPGetAction{
-					Port:   intstr.FromInt(9200),
-					Path:   clusterHealthURL,
-					Scheme: scheme,
-				},
+	statefulSet := &apps.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: statefulSetName,
+			Labels: map[string]string{
+				"component": component,
+				"role":      role,
+				"name":      statefulSetName,
+				"cluster":   clusterName,
 			},
-		}
-		statefulSet := &apps.StatefulSet{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: statefulSetName,
-				Labels: map[string]string{
+		},
+		Spec: apps.StatefulSetSpec{
+			Replicas:    replicas,
+			ServiceName: statefulSetName,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
 					"component": component,
 					"role":      role,
 					"name":      statefulSetName,
 					"cluster":   clusterName,
 				},
 			},
-			Spec: apps.StatefulSetSpec{
-				Replicas:    replicas,
-				ServiceName: statefulSetName,
-				Selector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
 						"component": component,
 						"role":      role,
 						"name":      statefulSetName,
 						"cluster":   clusterName,
 					},
 				},
-				Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Affinity: &v1.Affinity{
+						PodAntiAffinity: &v1.PodAntiAffinity{
+							PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+								{
+									Weight: 100,
+									PodAffinityTerm: v1.PodAffinityTerm{
+										LabelSelector: &metav1.LabelSelector{
+											MatchExpressions: []metav1.LabelSelectorRequirement{
+												{
+													Key:      "role",
+													Operator: metav1.LabelSelectorOpIn,
+													Values:   []string{role},
+												},
+											},
+										},
+										TopologyKey: "kubernetes.io/hostname",
+									},
+								},
+							},
+						}},
+					Containers: []v1.Container{
+						v1.Container{
+							Name: statefulSetName,
+							SecurityContext: &v1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+								Capabilities: &v1.Capabilities{
+									Add: []v1.Capability{
+										"IPC_LOCK",
+									},
+								},
+							},
+							Image:           baseImage,
+							ImagePullPolicy: "Always",
+							Env: []v1.EnvVar{
+								v1.EnvVar{
+									Name: "NAMESPACE",
+									ValueFrom: &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+								v1.EnvVar{
+									Name:  "CLUSTER_NAME",
+									Value: clusterName,
+								},
+								v1.EnvVar{
+									Name:  "NODE_MASTER",
+									Value: isNodeMaster,
+								},
+								v1.EnvVar{
+									Name:  "NODE_DATA",
+									Value: isNodeData,
+								},
+								v1.EnvVar{
+									Name:  "HTTP_ENABLE",
+									Value: "true",
+								},
+								v1.EnvVar{
+									Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
+									Value: enableSSL,
+								},
+								v1.EnvVar{
+									Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
+									Value: enableSSL,
+								},
+								v1.EnvVar{
+									Name:  "ES_JAVA_OPTS",
+									Value: javaOptions,
+								},
+								v1.EnvVar{
+									Name:  "STATSD_HOST",
+									Value: statsdEndpoint,
+								},
+								v1.EnvVar{
+									Name:  "DISCOVERY_SERVICE",
+									Value: discoveryServiceNameCluster,
+								},
+								v1.EnvVar{
+									Name:  "NETWORK_HOST",
+									Value: networkHost,
+								},
+							},
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{
+									Name:          "transport",
+									ContainerPort: 9300,
+									Protocol:      v1.ProtocolTCP,
+								},
+								v1.ContainerPort{
+									Name:          "http",
+									ContainerPort: 9200,
+									Protocol:      v1.ProtocolTCP,
+								},
+							},
+							ReadinessProbe: probe,
+							LivenessProbe:  probe,
+							VolumeMounts: []v1.VolumeMount{
+								v1.VolumeMount{
+									Name:      "es-data",
+									MountPath: "/data",
+								},
+							},
+							Resources: v1.ResourceRequirements{
+								// Limits: v1.ResourceList{
+								// 	"cpu":    limitCPU,
+								// 	"memory": limitMemory,
+								// },
+								Requests: v1.ResourceList{
+									"cpu":    requestCPU,
+									"memory": requestMemory,
+								},
+							},
+						},
+					},
+					Volumes:          []v1.Volume{},
+					ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
+				},
+			},
+			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
+				v1.PersistentVolumeClaim{
 					ObjectMeta: metav1.ObjectMeta{
+						Name: "es-data",
 						Labels: map[string]string{
-							"component": component,
+							"component": "elasticsearch",
 							"role":      role,
 							"name":      statefulSetName,
 							"cluster":   clusterName,
 						},
 					},
-					Spec: v1.PodSpec{
-						Affinity: &v1.Affinity{
-							PodAntiAffinity: &v1.PodAntiAffinity{
-								PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
-									{
-										Weight: 100,
-										PodAffinityTerm: v1.PodAffinityTerm{
-											LabelSelector: &metav1.LabelSelector{
-												MatchExpressions: []metav1.LabelSelectorRequirement{
-													{
-														Key:      "role",
-														Operator: metav1.LabelSelectorOpIn,
-														Values:   []string{role},
-													},
-												},
-											},
-											TopologyKey: "kubernetes.io/hostname",
-										},
-									},
-								},
-							}},
-						Containers: []v1.Container{
-							v1.Container{
-								Name: statefulSetName,
-								SecurityContext: &v1.SecurityContext{
-									Privileged: &[]bool{true}[0],
-									Capabilities: &v1.Capabilities{
-										Add: []v1.Capability{
-											"IPC_LOCK",
-										},
-									},
-								},
-								Image:           baseImage,
-								ImagePullPolicy: "Always",
-								Env: []v1.EnvVar{
-									v1.EnvVar{
-										Name: "NAMESPACE",
-										ValueFrom: &v1.EnvVarSource{
-											FieldRef: &v1.ObjectFieldSelector{
-												FieldPath: "metadata.namespace",
-											},
-										},
-									},
-									v1.EnvVar{
-										Name:  "CLUSTER_NAME",
-										Value: clusterName,
-									},
-									v1.EnvVar{
-										Name:  "NODE_MASTER",
-										Value: isNodeMaster,
-									},
-									v1.EnvVar{
-										Name:  "NODE_DATA",
-										Value: isNodeData,
-									},
-									v1.EnvVar{
-										Name:  "HTTP_ENABLE",
-										Value: "true",
-									},
-									v1.EnvVar{
-										Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
-										Value: enableSSL,
-									},
-									v1.EnvVar{
-										Name:  "SEARCHGUARD_SSL_HTTP_ENABLED",
-										Value: enableSSL,
-									},
-									v1.EnvVar{
-										Name:  "ES_JAVA_OPTS",
-										Value: javaOptions,
-									},
-									v1.EnvVar{
-										Name:  "STATSD_HOST",
-										Value: statsdEndpoint,
-									},
-									v1.EnvVar{
-										Name:  "DISCOVERY_SERVICE",
-										Value: discoveryServiceNameCluster,
-									},
-									v1.EnvVar{
-										Name:  "NETWORK_HOST",
-										Value: networkHost,
-									},
-								},
-								Ports: []v1.ContainerPort{
-									v1.ContainerPort{
-										Name:          "transport",
-										ContainerPort: 9300,
-										Protocol:      v1.ProtocolTCP,
-									},
-									v1.ContainerPort{
-										Name:          "http",
-										ContainerPort: 9200,
-										Protocol:      v1.ProtocolTCP,
-									},
-								},
-								ReadinessProbe: probe,
-								LivenessProbe:  probe,
-								VolumeMounts: []v1.VolumeMount{
-									v1.VolumeMount{
-										Name:      "es-data",
-										MountPath: "/data",
-									},
-									v1.VolumeMount{
-										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: elasticsearchCertspath,
-									},
-								},
-								Resources: v1.ResourceRequirements{
-									// Limits: v1.ResourceList{
-									// 	"cpu":    limitCPU,
-									// 	"memory": limitMemory,
-									// },
-									Requests: v1.ResourceList{
-										"cpu":    requestCPU,
-										"memory": requestMemory,
-									},
-								},
-							},
+					Spec: v1.PersistentVolumeClaimSpec{
+						AccessModes: []v1.PersistentVolumeAccessMode{
+							v1.ReadWriteOnce,
 						},
-						Volumes: []v1.Volume{
-							v1.Volume{
-								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
-								VolumeSource: v1.VolumeSource{
-									Secret: &v1.SecretVolumeSource{
-										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
-									},
-								},
-							},
-						},
-						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
-					},
-				},
-				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
-					v1.PersistentVolumeClaim{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: "es-data",
-							Labels: map[string]string{
-								"component": "elasticsearch",
-								"role":      role,
-								"name":      statefulSetName,
-								"cluster":   clusterName,
-							},
-						},
-						Spec: v1.PersistentVolumeClaimSpec{
-							AccessModes: []v1.PersistentVolumeAccessMode{
-								v1.ReadWriteOnce,
-							},
-							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
-									v1.ResourceStorage: volumeSize,
-								},
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceStorage: volumeSize,
 							},
 						},
 					},
 				},
 			},
-		}
+		},
+	}
 
-		if storageClass != "default" {
-			statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
-				"volume.beta.kubernetes.io/storage-class": storageClass,
-			}
+	if *useSSL {
+		// Certs volume
+		statefulSet.Spec.Template.Spec.Volumes = append(statefulSet.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+				},
+			},
+		})
+		// Mount certs
+		statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts,
+			v1.VolumeMount{
+				Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+				MountPath: elasticsearchCertspath,
+			})
+	}
+
+	if storageClass != "default" {
+		statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
+			"volume.beta.kubernetes.io/storage-class": storageClass,
 		}
+	}
+
+	return statefulSet
+}
+
+// CreateDataNodeDeployment creates the data node deployment
+func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
+	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
+
+	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
+
+	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
+
+	// Check if StatefulSet exists
+	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
+
+	if len(statefulSet.Name) == 0 {
+
+		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
+
+		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions,
+			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets)
 
 		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)

@@ -3,6 +3,8 @@ package k8sutil
 import (
 	"fmt"
 	"testing"
+
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 )
 
 func TestGetESURL(t *testing.T) {
@@ -22,5 +24,42 @@ func TestGetESURL(t *testing.T) {
 			t.Errorf(fmt.Sprintf("Expected %s, got %s", v.expected, esURL))
 		}
 
+	}
+}
+
+func TestSSLCertConfig(t *testing.T) {
+
+	memoryCPU := v1.MemoryCPU{
+		Memory: "128Mi",
+		CPU:    "100m",
+	}
+	resources := v1.Resources{
+		Requests: memoryCPU,
+		Limits:   memoryCPU,
+	}
+	clusterName := "test"
+	useSSL := false
+	statefulSet := buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
+		"", "", nil, &useSSL, resources, nil)
+
+	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
+		if volume.Name == fmt.Sprintf("%s-%s", secretName, clusterName) {
+			t.Errorf("Found volume for certificates, was not expecting it since useSSL is false")
+		}
+	}
+
+	useSSL = true
+	statefulSet = buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
+		"", "", nil, &useSSL, resources, nil)
+
+	found := false
+	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
+		if volume.Name == fmt.Sprintf("%s-%s", secretName, clusterName) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Volume for certificates not found, was expecting it since useSSL is true")
 	}
 }
