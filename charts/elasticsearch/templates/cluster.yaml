@@ -36,6 +36,7 @@ spec:
     scheduler-enabled: {{ .Values.snapshot.enabled }}
     bucket-name: {{ .Values.snapshot.bucketName }}
     cron-schedule: "{{ .Values.snapshot.schedule }}"
+    image: "{{ .Values.snapshot.image }}"
 {{- if .Values.snapshot.authentication.enabled }}
     authentication:
      password: {{ .Values.snapshot.authentication.password }}
