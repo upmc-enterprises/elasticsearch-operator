@@ -599,20 +599,22 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 		},
 	}
 
+	clusterSecretName := fmt.Sprintf("%s-%s", secretName, clusterName)
+
 	if *useSSL {
 		// Certs volume
 		statefulSet.Spec.Template.Spec.Volumes = append(statefulSet.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+			Name: clusterSecretName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+					SecretName: clusterSecretName,
 				},
 			},
 		})
 		// Mount certs
 		statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts,
 			v1.VolumeMount{
-				Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+				Name:      clusterSecretName,
 				MountPath: elasticsearchCertspath,
 			})
 	}

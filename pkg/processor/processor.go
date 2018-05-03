@@ -445,7 +445,7 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) {
 
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Scheduler.Stop()
 
-	if !c.Spec.KeepSecretsOnDelete {
+	if !c.Spec.KeepSecretsOnDelete && *c.Spec.UseSSL {
 		if err := p.k8sclient.DeleteCertsSecret(c.ObjectMeta.Namespace, c.ObjectMeta.Name); err != nil {
 			logrus.Errorf("Could not delete cert secret %s: %v", c.ObjectMeta.Name, err)
 		}
