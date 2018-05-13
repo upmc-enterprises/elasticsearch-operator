@@ -389,9 +389,11 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		isNodeData = "false"
 	}
 
-	enableSSL := "false"
-	if useSSL != nil && *useSSL {
-		enableSSL = "true"
+	enableSSL := "true"
+	scheme := v1.URISchemeHTTPS
+	if useSSL != nil && !*useSSL {
+		enableSSL = "false"
+		scheme = v1.URISchemeHTTP
 	}
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
@@ -411,10 +413,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
-		scheme := v1.URISchemeHTTP
-		if useSSL != nil && *useSSL {
-			scheme = v1.URISchemeHTTPS
-		}
+
 		probe := &v1.Probe{
 			TimeoutSeconds:      30,
 			InitialDelaySeconds: 10,
