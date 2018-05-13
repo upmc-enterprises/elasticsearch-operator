@@ -22,6 +22,7 @@ snapshot:
   enabled: false
   bucketName: elasticsnapshots
   schedule: "@every 2m"
+  image: upmcenterprises/elasticsearch-cron:0.0.3
   authentication:
     enabled: false
     password: test
