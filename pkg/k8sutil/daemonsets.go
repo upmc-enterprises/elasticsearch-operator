@@ -25,6 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
+	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
@@ -36,6 +38,20 @@ const (
 	esOperatorSysctlName = "elasticsearch-operator-sysctl"
 )
 
+// DeleteNodeInitDaemonset delete the node init daemonset
+func (k *K8sutil) DeleteNodeInitDaemonset(namespace string) error {
+
+	ds, err := k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Get(esOperatorSysctlName, metav1.GetOptions{})
+
+	if err != nil {
+		return fmt.Errorf("Could not delete daemonset: %s ", ds.Name)
+	}
+
+	logrus.Infof("Deleted daemonset: %s", ds.Name)
+	return nil
+
+}
+
 // CreateNodeInitDaemonset creates the node init daemonset
 func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 
@@ -43,7 +59,7 @@ func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 
 	if err != nil && len(ds.Name) == 0 {
 
-		logrus.Infof("Daemonset %s not found, creating...", ds)
+		logrus.Infof("Daemonset %s not found, creating...", ds.Name)
 
 		resourceCPU, _ := resource.ParseQuantity("10m")
 		resourceMemory, _ := resource.ParseQuantity("50Mi")

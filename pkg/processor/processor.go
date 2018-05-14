@@ -444,6 +444,10 @@ func (p *Processor) deleteElasticSearchCluster(c *myspec.ElasticsearchCluster) {
 		logrus.Errorf("Could not delete storage class %s: %v", c.ObjectMeta.Name, err)
 	}
 
+	if err := p.k8sclient.DeleteNodeInitDaemonset(c.ObjectMeta.Name); err != nil {
+		logrus.Errorf("Could not delete daemonset %s: %v", c.ObjectMeta.Namespace, err)
+	}
+
 	p.clusters[fmt.Sprintf("%s-%s", c.ObjectMeta.Name, c.ObjectMeta.Namespace)].Scheduler.Stop()
 
 	if !c.Spec.KeepSecretsOnDelete {

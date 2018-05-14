@@ -163,6 +163,7 @@ func (s *Scheduler) deleteCronJob(namespace, clusterName string) {
 func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule string) error {
 	snapshotName := getSnapshotname(clusterName, action)
 
+	var jobHistorySize int32 = 20
 	// Check if CronJob exists
 	cronJob, err := s.Kclient.BatchV1beta1().CronJobs(namespace).Get(snapshotName, metav1.GetOptions{})
 
@@ -187,7 +188,9 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 				},
 			},
 			Spec: v1beta1.CronJobSpec{
-				Schedule: cronSchedule,
+				Schedule:                   cronSchedule,
+				SuccessfulJobsHistoryLimit: &jobHistorySize,
+				FailedJobsHistoryLimit:     &jobHistorySize,
 				JobTemplate: v1beta1.JobTemplateSpec{
 					Spec: batchv1.JobSpec{
 						Template: apicore.PodTemplateSpec{
