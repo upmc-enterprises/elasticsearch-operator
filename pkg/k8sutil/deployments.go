@@ -318,9 +318,11 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 
 	deploymentName := fmt.Sprintf("%s-%s", kibanaDeploymentName, clusterName)
 
-	enableSSL := "false"
-	if useSSL != nil && *useSSL {
-		enableSSL = "true"
+	enableSSL := "true"
+	scheme := v1.URISchemeHTTPS
+	if useSSL != nil && !*useSSL {
+		enableSSL = "false"
+		scheme = v1.URISchemeHTTP
 	}
 
 	// Check if deployment exists
@@ -333,7 +335,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 			HTTPGet: &v1.HTTPGetAction{
 				Port:   intstr.FromInt(5601),
 				Path:   "/", //TODO since kibana doesn't have a healthcheck url, the root is enough
-				Scheme: v1.URISchemeHTTPS,
+				Scheme: scheme,
 			},
 		},
 	}
