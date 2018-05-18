@@ -42,6 +42,7 @@ spec:
      password: {{ .Values.snapshot.authentication.password }}
      username: {{ .Values.snapshot.authentication.username }}
 {{- end }}
+  use-ssl: {{ index .Values "use-ssl" }}
   storage:
 {{- if .Values.storage.class }}
     storage-class: {{ .Values.storage.class }}

@@ -18,6 +18,9 @@ javaOpts: "-Xms256m -Xmx256m"
 #  - us-east-1d
 #  - us-east-1e
 
+# Enable ssl or not
+use-ssl: True
+
 snapshot:
   enabled: false
   bucketName: elasticsnapshots
