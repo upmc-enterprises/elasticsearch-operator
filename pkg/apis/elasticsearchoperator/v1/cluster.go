@@ -212,6 +212,7 @@ type Scheduler struct {
 	Namespace    string
 	ClusterName  string
 	Image        string
+	UseSSL       bool
 }
 
 // SchedulerAuthentication stores credentials used to authenticate against snapshot endpoint
