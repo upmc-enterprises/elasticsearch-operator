@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.8
+  - "1.10"
 
 sudo: required
 
@@ -12,3 +12,9 @@ script:
 - make check
 - make test
 - make build
+
+deploy:
+  provider: script
+  script: hack/image_push.sh
+  on:
+    branch: master
