@@ -53,7 +53,7 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled bool, userName, password, image,
+func New(bucketName, cronSchedule string, enabled, useSSL bool, userName, password, image,
 	elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
 
 	if image == "" {
@@ -70,6 +70,7 @@ func New(bucketName, cronSchedule string, enabled bool, userName, password, imag
 				UserName: userName,
 				Password: password,
 			},
+			UseSSL:      useSSL,
 			Namespace:   namespace,
 			ClusterName: clusterName,
 			Enabled:     enabled,
@@ -217,6 +218,7 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 											fmt.Sprintf("--elastic-url=%s", s.CRD.ElasticURL),
 											fmt.Sprintf("--auth-username=%s", s.CRD.Auth.UserName),
 											fmt.Sprintf("--auth-password=%s", s.CRD.Auth.Password),
+											fmt.Sprintf("--use-ssl=%t", s.CRD.UseSSL),
 										},
 									},
 								},
