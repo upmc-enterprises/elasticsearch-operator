@@ -38,6 +38,7 @@ Following parameters are available to customize the elastic cluster:
 - data-volume-size: Size of persistent volume to attach to data nodes
 - elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0`)
 - keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
+- use-ssl: Use SSL for communication with the cluster and inside the cluster. Default value is true.
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
   - bucket-name: Name of S3 bucket to dump snapshots
