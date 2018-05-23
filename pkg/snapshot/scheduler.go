@@ -53,8 +53,12 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(bucketName, cronSchedule string, enabled, useSSL bool, userName, password, image,
+func New(repoType, bucketName, cronSchedule string, enabled, useSSL bool, userName, password, image,
 	elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+
+	if repoType == "" {
+		repoType = "s3"
+	}
 
 	if image == "" {
 		image = defaultCronImage
@@ -63,7 +67,8 @@ func New(bucketName, cronSchedule string, enabled, useSSL bool, userName, passwo
 	return &Scheduler{
 		Kclient: kc,
 		CRD: enterprisesv1.Scheduler{
-			S3bucketName: bucketName,
+			RepoType:     repoType,
+			BucketName:   bucketName,
 			CronSchedule: cronSchedule,
 			ElasticURL:   elasticURL,
 			Auth: enterprisesv1.SchedulerAuthentication{
@@ -214,7 +219,8 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 										},
 										Args: []string{
 											fmt.Sprintf("--action=%s", action),
-											fmt.Sprintf("--s3-bucket-name=%s", s.CRD.S3bucketName),
+											fmt.Sprintf("--repo-type=%s", s.CRD.RepoType),
+											fmt.Sprintf("--bucket-name=%s", s.CRD.BucketName),
 											fmt.Sprintf("--elastic-url=%s", s.CRD.ElasticURL),
 											fmt.Sprintf("--auth-username=%s", s.CRD.Auth.UserName),
 											fmt.Sprintf("--auth-password=%s", s.CRD.Auth.Password),
