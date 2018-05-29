@@ -403,22 +403,6 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 										Value: GetESURL(component, useSSL),
 									},
 									v1.EnvVar{
-										Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
-										Value: fmt.Sprintf("%s/ca.pem", elasticsearchCertspath),
-									},
-									v1.EnvVar{
-										Name:  "SERVER_SSL_ENABLED",
-										Value: enableSSL,
-									},
-									v1.EnvVar{
-										Name:  "SERVER_SSL_KEY",
-										Value: fmt.Sprintf("%s/kibana-key.pem", elasticsearchCertspath),
-									},
-									v1.EnvVar{
-										Name:  "SERVER_SSL_CERTIFICATE",
-										Value: fmt.Sprintf("%s/kibana.pem", elasticsearchCertspath),
-									},
-									v1.EnvVar{
 										Name:  "NODE_DATA",
 										Value: "false",
 									},
@@ -432,28 +416,50 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 								},
 								LivenessProbe:  probe,
 								ReadinessProbe: probe,
-								VolumeMounts: []v1.VolumeMount{
-									v1.VolumeMount{
-										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: elasticsearchCertspath,
-									},
-								},
-							},
-						},
-						Volumes: []v1.Volume{
-							v1.Volume{
-								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
-								VolumeSource: v1.VolumeSource{
-									Secret: &v1.SecretVolumeSource{
-										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
-									},
-								},
 							},
 						},
 						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
 					},
 				},
 			},
+		}
+
+		if *useSSL {
+			// SSL config
+
+			deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env,
+				v1.EnvVar{
+					Name:  "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES",
+					Value: fmt.Sprintf("%s/ca.pem", elasticsearchCertspath),
+				},
+				v1.EnvVar{
+					Name:  "SERVER_SSL_ENABLED",
+					Value: enableSSL,
+				},
+				v1.EnvVar{
+					Name:  "SERVER_SSL_KEY",
+					Value: fmt.Sprintf("%s/kibana-key.pem", elasticsearchCertspath),
+				},
+				v1.EnvVar{
+					Name:  "SERVER_SSL_CERTIFICATE",
+					Value: fmt.Sprintf("%s/kibana.pem", elasticsearchCertspath),
+				},
+			)
+
+			// Certs volume
+			deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
+				Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+					},
+				},
+			})
+			// Mount certs
+			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[0].VolumeMounts, v1.VolumeMount{
+				Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+				MountPath: elasticsearchCertspath,
+			})
 		}
 
 		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
@@ -473,7 +479,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 }
 
 // CreateCerebroDeployment creates a deployment of Cerebro
-func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets) error {
+func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets, useSSL *bool) error {
 	replicaCount := int32(1)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
@@ -516,7 +522,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 					},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
-							v1.Container{
+							{
 								Name:            deploymentName,
 								Image:           baseImage,
 								ImagePullPolicy: "Always",
@@ -535,10 +541,6 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 								LivenessProbe:  probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
-										Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
-										MountPath: elasticsearchCertspath,
-									},
-									v1.VolumeMount{
 										Name:      cert,
 										MountPath: "/usr/local/cerebro/cfg",
 									},
@@ -556,19 +558,46 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 									},
 								},
 							},
-							v1.Volume{
-								Name: fmt.Sprintf("%s-%s", secretName, clusterName),
-								VolumeSource: v1.VolumeSource{
-									Secret: &v1.SecretVolumeSource{
-										SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
-									},
-								},
-							},
 						},
 						ImagePullSecrets: TemplateImagePullSecrets(imagePullSecrets),
 					},
 				},
 			},
+		}
+
+		if *useSSL {
+			// Certs volume
+			deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes,
+				v1.Volume{
+					Name: cert,
+					VolumeSource: v1.VolumeSource{
+						ConfigMap: &v1.ConfigMapVolumeSource{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: cert,
+							},
+						},
+					},
+				},
+				v1.Volume{
+					Name: fmt.Sprintf("%s-%s", secretName, clusterName),
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: fmt.Sprintf("%s-%s", secretName, clusterName),
+						},
+					},
+				},
+			)
+			// Mount certs
+			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[0].VolumeMounts,
+				v1.VolumeMount{
+					Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
+					MountPath: elasticsearchCertspath,
+				},
+				v1.VolumeMount{
+					Name:      cert,
+					MountPath: "/usr/local/cerebro/cfg",
+				},
+			)
 		}
 
 		if _, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment); err != nil {
