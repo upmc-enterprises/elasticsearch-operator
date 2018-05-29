@@ -569,16 +569,6 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 			// Certs volume
 			deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes,
 				v1.Volume{
-					Name: cert,
-					VolumeSource: v1.VolumeSource{
-						ConfigMap: &v1.ConfigMapVolumeSource{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: cert,
-							},
-						},
-					},
-				},
-				v1.Volume{
 					Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
@@ -592,10 +582,6 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 				v1.VolumeMount{
 					Name:      fmt.Sprintf("%s-%s", secretName, clusterName),
 					MountPath: elasticsearchCertspath,
-				},
-				v1.VolumeMount{
-					Name:      cert,
-					MountPath: "/usr/local/cerebro/cfg",
 				},
 			)
 		}
