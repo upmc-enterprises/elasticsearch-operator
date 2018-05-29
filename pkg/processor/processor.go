@@ -300,11 +300,6 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		return err
 	}
 
-	if err := p.k8sclient.CreateMgmtServices(c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
-		logrus.Error("Error creating mgmt service ", err)
-		return err
-	}
-
 	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
 		c.Spec.Resources, c.Spec.ImagePullSecrets, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.UseSSL); err != nil {
 		logrus.Error("Error creating client deployment ", err)
@@ -378,7 +373,11 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			logrus.Error("Error creating kibana deployment ", err)
 			return err
 		}
-		// TODO create service
+
+		if err := p.k8sclient.CreateMgmtService("kibana", c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+			logrus.Error("Error creating kibana mgmt service ", err)
+			return err
+		}
 	}
 
 	// Deploy Cerebro
@@ -402,6 +401,11 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets); err != nil {
 			logrus.Error("Error creating cerebro deployment ", err)
+			return err
+		}
+
+		if err := p.k8sclient.CreateMgmtService("cerebro", c.ObjectMeta.Name, c.ObjectMeta.Namespace); err != nil {
+			logrus.Error("Error creating cerebro mgmt service ", err)
 			return err
 		}
 
