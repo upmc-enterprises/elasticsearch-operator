@@ -675,16 +675,22 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 // CreateCerebroConfiguration creates Cerebro configuration
 func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL *bool) map[string]string {
 
+	sslConfig := ""
+
+	if *useSSL {
+		sslConfig = fmt.Sprintf(`play.ws.ssl {
+	trustManager = {
+		stores = [
+		{ type = "PEM", path = "%s/cerebro.pem" },
+		{ path: %s/truststore.jks, type: "JKS" }
+		]
+	}
+}`,elasticsearchCertspath, elasticsearchCertspath)
+	}
+
 	x := map[string]string{}
 	x["application.conf"] = fmt.Sprintf(`
-play.ws.ssl {
-        trustManager = {
-                stores = [
-				{ type = "PEM", path = "%s/cerebro.pem" },
-				{ path: %s/truststore.jks, type: "JKS" }
-                ]
-        }
-}
+%s
 //play.crypto.secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 //play.http.secret.key = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
 secret = "ki:s:[[@=Ag?QIW2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
@@ -708,6 +714,6 @@ hosts = [
 	name = "%s"
 }
 ]
-		`, elasticsearchCertspath, elasticsearchCertspath, GetESURL(esHost, useSSL), esHost)
+		`, sslConfig, GetESURL(esHost, useSSL), esHost)
 	return x
 }
