@@ -78,16 +78,17 @@ var (
 
 // K8sutil defines the kube object
 type K8sutil struct {
-	Config     *rest.Config
-	CrdClient  genclient.Interface
-	Kclient    kubernetes.Interface
-	KubeExt    apiextensionsclient.Interface
-	K8sVersion []int
-	MasterHost string
+	Config                 *rest.Config
+	CrdClient              genclient.Interface
+	Kclient                kubernetes.Interface
+	KubeExt                apiextensionsclient.Interface
+	K8sVersion             []int
+	MasterHost             string
+	InitDaemonsetNamespace string
 }
 
 // New creates a new instance of k8sutil
-func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
+func New(kubeCfgFile, masterHost, initDaemonsetNamespace string) (*K8sutil, error) {
 
 	crdClient, kubeClient, kubeExt, k8sVersion, err := newKubeClient(kubeCfgFile)
 
@@ -96,11 +97,12 @@ func New(kubeCfgFile, masterHost string) (*K8sutil, error) {
 	}
 
 	k := &K8sutil{
-		Kclient:    kubeClient,
-		MasterHost: masterHost,
-		K8sVersion: k8sVersion,
-		CrdClient:  crdClient,
-		KubeExt:    kubeExt,
+		Kclient:                kubeClient,
+		MasterHost:             masterHost,
+		K8sVersion:             k8sVersion,
+		CrdClient:              crdClient,
+		KubeExt:                kubeExt,
+		InitDaemonsetNamespace: initDaemonsetNamespace,
 	}
 
 	return k, nil
@@ -685,7 +687,7 @@ func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL *bool) map[st
 		{ path: %s/truststore.jks, type: "JKS" }
 		]
 	}
-}`,elasticsearchCertspath, elasticsearchCertspath)
+}`, elasticsearchCertspath, elasticsearchCertspath)
 	}
 
 	x := map[string]string{}

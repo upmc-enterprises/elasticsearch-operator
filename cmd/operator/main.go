@@ -47,10 +47,11 @@ import (
 var (
 	appVersion = "0.0.12"
 
-	printVersion bool
-	baseImage    string
-	kubeCfgFile  string
-	masterHost   string
+	printVersion           bool
+	baseImage              string
+	kubeCfgFile            string
+	masterHost             string
+	initDaemonsetNamespace string
 )
 
 func init() {
@@ -58,6 +59,7 @@ func init() {
 	flag.StringVar(&baseImage, "baseImage", "upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0", "Base image to use when spinning up the elasticsearch components.")
 	flag.StringVar(&kubeCfgFile, "kubecfg-file", "", "Location of kubecfg file for access to kubernetes master service; --kube_master_url overrides the URL part of this; if neither this nor --kube_master_url are provided, defaults to service account tokens")
 	flag.StringVar(&masterHost, "masterhost", "http://127.0.0.1:8001", "Full url to k8s api server")
+	flag.StringVar(&initDaemonsetNamespace, "initDaemonsetNamespace", "default", "Namespace to deploy the sysctl init daemonset into")
 	flag.Parse()
 }
 
@@ -75,7 +77,7 @@ func Main() int {
 	logrus.Infof("   baseImage: %s", baseImage)
 
 	// Init
-	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost)
+	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost, initDaemonsetNamespace)
 	if err != nil {
 		logrus.Error("Could not init k8sclient! ", err)
 		return 1
