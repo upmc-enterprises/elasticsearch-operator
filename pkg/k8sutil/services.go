@@ -192,51 +192,49 @@ func (k *K8sutil) CreateDiscoveryService(clusterName, namespace string) error {
 	return nil
 }
 
-// CreateMgmtServices creates service for kibana and cerebro
-func (k *K8sutil) CreateMgmtServices(clusterName, namespace string) error {
+// CreateMgmtServices creates service for kibana or cerebro
+func (k *K8sutil) CreateMgmtService(service string, clusterName, namespace string) error {
 
-	for role, port := range mgmtServices {
+	port := mgmtServices[service]
+	serviceName := fmt.Sprintf("%s-%s", service, clusterName)
 
-		serviceName := fmt.Sprintf("%s-%s", role, clusterName)
+	// Check if service exists
+	s, err := k.Kclient.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 
-		// Check if service exists
-		s, err := k.Kclient.CoreV1().Services(namespace).Get(serviceName, metav1.GetOptions{})
+	// Service missing, create
+	if len(s.Name) == 0 {
+		logrus.Info(fmt.Sprintf("%v not found, creating...", serviceName))
 
-		// Service missing, create
-		if len(s.Name) == 0 {
-			logrus.Info(fmt.Sprintf("%v not found, creating...", serviceName))
-
-			svc := &v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: serviceName,
-					Labels: map[string]string{
-						"role": role,
+		svc := &v1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: serviceName,
+				Labels: map[string]string{
+					"role": service,
+				},
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"role": service,
+				},
+				Ports: []v1.ServicePort{
+					v1.ServicePort{
+						Name:       "http",
+						Port:       80,
+						Protocol:   "TCP",
+						TargetPort: intstr.FromInt(port),
 					},
 				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"role": role,
-					},
-					Ports: []v1.ServicePort{
-						v1.ServicePort{
-							Name:       "http",
-							Port:       80,
-							Protocol:   "TCP",
-							TargetPort: intstr.FromInt(port),
-						},
-					},
-				},
-			}
+			},
+		}
 
-			if _, err := k.Kclient.CoreV1().Services(namespace).Create(svc); err != nil {
-				logrus.Error("Could not create service %v ! ", serviceName, err)
-				return err
-			}
-
-		} else if err != nil {
-			logrus.Error("Could not get service %v! ", serviceName, err)
+		if _, err := k.Kclient.CoreV1().Services(namespace).Create(svc); err != nil {
+			logrus.Error("Could not create service %v ! ", serviceName, err)
 			return err
 		}
+
+	} else if err != nil {
+		logrus.Error("Could not get service %v! ", serviceName, err)
+		return err
 	}
 	return nil
 }
@@ -264,12 +262,18 @@ func (k *K8sutil) DeleteServices(clusterName, namespace string) error {
 
 	for component, _ := range mgmtServices {
 
-		fullClientServiceName := fmt.Sprintf("%s-%s", component, clusterName)
+		// Check if service exists
+		s, _ := k.Kclient.CoreV1().Services(namespace).Get(component, metav1.GetOptions{})
 
-		if err := k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{}); err != nil {
-			logrus.Error("Could not delete service "+fullClientServiceName+":", err)
+		// Service exists, delete
+		if len(s.Name) >= 1 {
+			fullClientServiceName := fmt.Sprintf("%s-%s", component, clusterName)
+
+			if err := k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{}); err != nil {
+				logrus.Error("Could not delete service "+fullClientServiceName+":", err)
+			}
+			logrus.Infof("Deleted service: %s", fullClientServiceName)
 		}
-		logrus.Infof("Deleted service: %s", fullClientServiceName)
 
 	}
 
