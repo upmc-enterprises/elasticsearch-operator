@@ -167,6 +167,7 @@ func (p *Processor) refreshClusters() error {
 						RepoType:         cluster.Spec.Snapshot.RepoType,
 						BucketName:       cluster.Spec.Snapshot.BucketName,
 						CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
+						RepoRegion:       cluster.Spec.Snapshot.RepoRegion,
 					},
 					Storage: myspec.Storage{
 						StorageType:            cluster.Spec.Storage.StorageType,
@@ -183,6 +184,12 @@ func (p *Processor) refreshClusters() error {
 							UserName: cluster.Spec.Snapshot.Authentication.UserName,
 							Password: cluster.Spec.Snapshot.Authentication.Password,
 						},
+						UseRepoAuth: cluster.Spec.Snapshot.UseRepoAuth,
+						RepoAuth: myspec.RepoSchedulerAuthentication{
+							RepoAccessKey: cluster.Spec.Snapshot.RepoAuthentication.RepoAccessKey,
+							RepoSecretKey: cluster.Spec.Snapshot.RepoAuthentication.RepoSecretKey,
+						},
+						RepoRegion:  cluster.Spec.Snapshot.RepoRegion,
 						UseSSL:      useSSL,
 						ElasticURL:  k8sutil.GetESURL(p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace), cluster.Spec.UseSSL),
 						ClusterName: cluster.ObjectMeta.Name,
@@ -218,6 +225,7 @@ func (p *Processor) refreshClusters() error {
 				cluster.Spec.Snapshot.BucketName,
 				cluster.Spec.Snapshot.CronSchedule,
 				cluster.Spec.Snapshot.SchedulerEnabled,
+				cluster.Spec.Snapshot.UseRepoAuth,
 				useSSL,
 				cluster.Spec.Snapshot.Authentication.UserName,
 				cluster.Spec.Snapshot.Authentication.Password,
@@ -225,6 +233,9 @@ func (p *Processor) refreshClusters() error {
 				p.k8sclient.GetClientServiceNameFullDNS(cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace),
 				cluster.ObjectMeta.Name,
 				cluster.ObjectMeta.Namespace,
+				cluster.Spec.Snapshot.RepoAuthentication.RepoAccessKey,
+				cluster.Spec.Snapshot.RepoAuthentication.RepoSecretKey,
+				cluster.Spec.Snapshot.RepoRegion,
 				p.k8sclient.Kclient,
 			),
 		}

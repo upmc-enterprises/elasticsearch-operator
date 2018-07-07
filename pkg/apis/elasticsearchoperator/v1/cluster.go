@@ -151,6 +151,17 @@ type Snapshot struct {
 
 	// Defines the image to run cronjobs
 	Image string `json:"image"`
+
+	UseRepoAuth bool `json:"repo-auth"`
+
+	RepoRegion string `json:"repo-region"`
+
+	RepoAuthentication RepoAuthentication `json:"repo-authentication"`
+}
+
+type RepoAuthentication struct {
+	RepoAccessKey string `json:"access-key"`
+	RepoSecretKey string `json:"secret-key"`
 }
 
 // Authentication defines credentials for snapshot requests
@@ -221,11 +232,19 @@ type Scheduler struct {
 	CronSchedule string
 	Enabled      bool
 	Auth         SchedulerAuthentication
+	RepoAuth     RepoSchedulerAuthentication
+	RepoRegion   string
 	ElasticURL   string
 	Namespace    string
 	ClusterName  string
 	Image        string
+	UseRepoAuth  bool
 	UseSSL       bool
+}
+
+type RepoSchedulerAuthentication struct {
+	RepoAccessKey string
+	RepoSecretKey string
 }
 
 // SchedulerAuthentication stores credentials used to authenticate against snapshot endpoint

@@ -53,8 +53,8 @@ type Scheduler struct {
 }
 
 // New creates an instance of Scheduler
-func New(repoType, bucketName, cronSchedule string, enabled, useSSL bool, userName, password, image,
-	elasticURL, clusterName, namespace string, kc kubernetes.Interface) *Scheduler {
+func New(repoType, bucketName, cronSchedule string, enabled, useRepoAuth, useSSL bool, userName, password, image,
+	elasticURL, clusterName, namespace, repoAccessKey, repoSecretKey, repoRegion string, kc kubernetes.Interface) *Scheduler {
 
 	if repoType == "" {
 		repoType = "s3"
@@ -75,6 +75,12 @@ func New(repoType, bucketName, cronSchedule string, enabled, useSSL bool, userNa
 				UserName: userName,
 				Password: password,
 			},
+			UseRepoAuth: useRepoAuth,
+			RepoAuth: enterprisesv1.RepoSchedulerAuthentication{
+				RepoAccessKey: repoAccessKey,
+				RepoSecretKey: repoSecretKey,
+			},
+			RepoRegion:  repoRegion,
 			UseSSL:      useSSL,
 			Namespace:   namespace,
 			ClusterName: clusterName,
@@ -224,6 +230,10 @@ func (s *Scheduler) CreateCronJob(namespace, clusterName, action, cronSchedule s
 											fmt.Sprintf("--elastic-url=%s", s.CRD.ElasticURL),
 											fmt.Sprintf("--auth-username=%s", s.CRD.Auth.UserName),
 											fmt.Sprintf("--auth-password=%s", s.CRD.Auth.Password),
+											fmt.Sprintf("--repo-auth-access-key=%s", s.CRD.RepoAuth.RepoAccessKey),
+											fmt.Sprintf("--repo-auth-secret-key=%s", s.CRD.RepoAuth.RepoSecretKey),
+											fmt.Sprintf("--repo-region=%s", s.CRD.RepoRegion),
+											fmt.Sprintf("--use-repo-auth=%t", s.CRD.UseRepoAuth),
 											fmt.Sprintf("--use-ssl=%t", s.CRD.UseSSL),
 										},
 									},
