@@ -165,6 +165,7 @@ func (p *Processor) refreshClusters() error {
 					KeepSecretsOnDelete: cluster.Spec.KeepSecretsOnDelete,
 					Snapshot: myspec.Snapshot{
 						SchedulerEnabled: cluster.Spec.Snapshot.SchedulerEnabled,
+						RepoType:         cluster.Spec.Snapshot.RepoType,
 						BucketName:       cluster.Spec.Snapshot.BucketName,
 						CronSchedule:     cluster.Spec.Snapshot.CronSchedule,
 					},
@@ -175,7 +176,8 @@ func (p *Processor) refreshClusters() error {
 						VolumeReclaimPolicy:    cluster.Spec.Storage.VolumeReclaimPolicy,
 					},
 					Scheduler: myspec.Scheduler{
-						S3bucketName: cluster.Spec.Snapshot.BucketName,
+						RepoType:     cluster.Spec.Snapshot.RepoType,
+						BucketName:   cluster.Spec.Snapshot.BucketName,
 						CronSchedule: cluster.Spec.Snapshot.CronSchedule,
 						Enabled:      cluster.Spec.Snapshot.SchedulerEnabled,
 						Auth: myspec.SchedulerAuthentication{
@@ -210,6 +212,7 @@ func (p *Processor) refreshClusters() error {
 				},
 			},
 			Scheduler: snapshot.New(
+				cluster.Spec.Snapshot.RepoType,
 				cluster.Spec.Snapshot.BucketName,
 				cluster.Spec.Snapshot.CronSchedule,
 				cluster.Spec.Snapshot.SchedulerEnabled,

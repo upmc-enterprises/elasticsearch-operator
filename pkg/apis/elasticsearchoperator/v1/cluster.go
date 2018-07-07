@@ -133,7 +133,10 @@ type Snapshot struct {
 	// Enabled determines if snapshots are enabled
 	SchedulerEnabled bool `json:"scheduler-enabled"`
 
-	// BucketName defines the AWS S3 bucket to store snapshots
+	// RepoType defines the type of Elasticsearch Repository, s3 or gcs
+	RepoType string `json:"type"`
+
+	// BucketName defines the AWS S3 or GCS bucket to store snapshots
 	BucketName string `json:"bucket-name"`
 
 	// CronSchedule defines how to run the snapshots
@@ -204,7 +207,8 @@ type Cerebro struct {
 
 // Scheduler stores info about how to snapshot the cluster
 type Scheduler struct {
-	S3bucketName string
+	RepoType     string
+	BucketName   string
 	CronSchedule string
 	Enabled      bool
 	Auth         SchedulerAuthentication

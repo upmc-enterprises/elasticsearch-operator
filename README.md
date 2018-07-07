@@ -176,7 +176,7 @@ If changes are required to the cluster, say the replica count of the data nodes 
 
 # Snapshot
 
-Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 as the backup repository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) which enables this feature in AWS. 
+Elasticsearch can snapshot it's indexes for easy backup / recovery of the cluster. Currently there's an integration to Amazon S3 or Google Cloud Storage as the backup repository for snapshots. The `upmcenterprises` docker images include the [S3 Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-s3.html) and the [GCS Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-gcs.html) which enables this feature in AWS and GCP. 
 
 ## Schedule
 
@@ -219,6 +219,21 @@ To enable the snapshots create a bucket in S3, then apply the following IAM perm
     ],
     "Version": "2012-10-17"
 }
+```
+
+## GCP Setup
+
+To enable snapshots with GCS on GKE, create a bucket in GCS and bind the `storage.admin` role to the cluster service account replacing `${BUCKET}` with your bucket name:
+
+```
+gsutil mb gs://${BUCKET}
+
+SA_EMAIL=$(kubectl run shell --rm --restart=Never -it --image google/cloud-sdk --command /usr/bin/curl -- -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
+
+PROJECT=$(gcloud config get-value project)
+
+gcloud projects add-iam-policy-binding ${PROJECT} \
+  --role roles/storage.admin --member serviceAccount:${SA_EMAIL}
 ```
 
 ## Snapshot Authentication
