@@ -66,16 +66,11 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) init() error {
-	err := c.k8sclient.CreateKubernetesCustomResourceDefinition()
+	crd, err := c.k8sclient.CreateKubernetesCustomResourceDefinition()
 	if err != nil {
 		return err
 	}
 
-	err = c.k8sclient.CreateNodeInitDaemonset("default")
+	return c.k8sclient.CreateNodeInitDaemonset(crd.ObjectMeta.Namespace)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

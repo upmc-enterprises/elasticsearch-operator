@@ -158,7 +158,7 @@ func newKubeClient(kubeCfgFile string) (genclient.Interface, kubernetes.Interfac
 }
 
 // CreateKubernetesCustomResourceDefinition checks if ElasticSearch CRD exists. If not, create
-func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
+func (k *K8sutil) CreateKubernetesCustomResourceDefinition() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
 
 	crd, err := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Get(elasticsearchoperator.Name, metav1.GetOptions{})
 	if err != nil {
@@ -208,9 +208,9 @@ func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
 			if err != nil {
 				deleteErr := k.KubeExt.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(elasticsearchoperator.Name, nil)
 				if deleteErr != nil {
-					return errors.NewAggregate([]error{err, deleteErr})
+					return nil, errors.NewAggregate([]error{err, deleteErr})
 				}
-				return err
+				return nil, err
 			}
 
 			logrus.Info("CRD ready!")
@@ -221,7 +221,7 @@ func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
 		logrus.Infof("SKIPPING: already exists %#v\n", crd.ObjectMeta.Name)
 	}
 
-	return nil
+	return crd, err
 }
 
 // MonitorElasticSearchEvents watches for new or removed clusters
