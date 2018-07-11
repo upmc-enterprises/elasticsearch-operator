@@ -12,8 +12,6 @@ spec:
   master-node-replicas: 2
   data-node-replicas: 3
   network-host: 0.0.0.0
-  zones:
-  - us-east1-d
   data-volume-size: 10Gi
   java-options: "-Xms512m -Xmx512m"
   snapshot:
@@ -23,10 +21,3 @@ spec:
     image: upmcenterprises/elasticsearch-cron:0.0.4
   storage:
     storage-class-provisioner: kubernetes.io/gce-pd
-  resources:
-    requests:
-      memory: 512Mi
-      cpu: 500m
-    limits:
-      memory: 1024Mi
-      cpu: '1'
