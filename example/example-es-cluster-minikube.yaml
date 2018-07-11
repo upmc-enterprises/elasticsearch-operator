@@ -19,7 +19,7 @@ spec:
     scheduler-enabled: false
     bucket-name: elasticsnapshots99
     cron-schedule: "@every 2m"
-    image: upmcenterprises/elasticsearch-cron:0.0.3
+    image: upmcenterprises/elasticsearch-cron:0.0.4
   storage:
     type: standard
     storage-class-version: volume.alpha.kubernetes.io/storage-class
