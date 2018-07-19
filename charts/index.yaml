@@ -2,9 +2,9 @@ apiVersion: v1
 entries:
   elasticsearch:
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.526439771+02:00
+    created: 2018-07-19T14:48:19.451517982+12:00
     description: A Helm chart for Elasticsearch cluster
-    digest: 3437e67980b4369ae18d10bbb64ad62b9e6af6da0d11dc79628d39ce00ba06fa
+    digest: a490a976cdd2ab5947cd36662c9bc3e5cd0b9bfd5be076e2bd8163ffe562bae4
     maintainers:
     - email: alen.komljen@live.com
       name: komljen
@@ -16,7 +16,7 @@ entries:
     - elasticsearch-0.1.4.tgz
     version: 0.1.4
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.524761919+02:00
+    created: 2018-07-19T14:48:19.451333789+12:00
     description: A Helm chart for Elasticsearch cluster
     digest: 2dee389105b87cfaf0150f4215f927bcb79c22f877e801850419a17284191343
     maintainers:
@@ -30,7 +30,7 @@ entries:
     - elasticsearch-0.1.3.tgz
     version: 0.1.3
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.524083599+02:00
+    created: 2018-07-19T14:48:19.451152951+12:00
     description: A Helm chart for Elasticsearch cluster
     digest: 398bcb148fe08fe7ae0d5918af25efd28fe60fd77f47ae2760f1347643d76aab
     maintainers:
@@ -44,7 +44,7 @@ entries:
     - elasticsearch-0.1.2.tgz
     version: 0.1.2
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.523506705+02:00
+    created: 2018-07-19T14:48:19.4509691+12:00
     description: A Helm chart for Elasticsearch cluster
     digest: de2209bffb7a05c436354b2514abadacb83007dd0d59941cb78b340c6db9cc52
     maintainers:
@@ -58,7 +58,7 @@ entries:
     - elasticsearch-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.522807146+02:00
+    created: 2018-07-19T14:48:19.450781603+12:00
     description: A Helm chart for Elasticsearch cluster
     digest: 37bc0b51a58e73e29221062df665ce7234f36689dc7051164141680b6c0096bd
     maintainers:
@@ -72,7 +72,21 @@ entries:
     version: 0.1.0
   elasticsearch-operator:
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.529238357+02:00
+    created: 2018-07-19T14:48:19.452412465+12:00
+    description: A Helm chart for Elasticsearch operator
+    digest: c037ff00001ea772f81a49f52635aae63eac61b936afa7974cbd06fa26de94a0
+    maintainers:
+    - email: alen.komljen@live.com
+      name: komljen
+      url: https://akomljen.com
+    name: elasticsearch-operator
+    sources:
+    - https://github.com/upmc-enterprises/elasticsearch-operator
+    urls:
+    - elasticsearch-operator-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v1
+    created: 2018-07-19T14:48:19.45223444+12:00
     description: A Helm chart for Elasticsearch operator
     digest: 07a48f24d2a1e86e41acfb427a4e479b35067042a48385bd4df2caa7b38d9787
     maintainers:
@@ -86,7 +100,7 @@ entries:
     - elasticsearch-operator-0.1.3.tgz
     version: 0.1.3
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.528006956+02:00
+    created: 2018-07-19T14:48:19.452058191+12:00
     description: A Helm chart for Elasticsearch operator
     digest: bf9e1bf0f857acdbb281ac2480add1f5a9d33b303e3cba4fffdc6921cbf27f5f
     maintainers:
@@ -100,7 +114,7 @@ entries:
     - elasticsearch-operator-0.1.2.tgz
     version: 0.1.2
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.527458159+02:00
+    created: 2018-07-19T14:48:19.451877547+12:00
     description: A Helm chart for Elasticsearch operator
     digest: 65b48cf707f5bd8170a22f4827236c36591dde215712b29a8df0136e64d57a49
     maintainers:
@@ -114,7 +128,7 @@ entries:
     - elasticsearch-operator-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v1
-    created: 2018-05-03T13:28:14.52696271+02:00
+    created: 2018-07-19T14:48:19.451691559+12:00
     description: A Helm chart for Elasticsearch operator
     digest: 1c21e32521c3843f04e38892ea432a2529d819019f7bb919cc48bedf9a629400
     maintainers:
@@ -126,4 +140,4 @@ entries:
     urls:
     - elasticsearch-operator-0.1.0.tgz
     version: 0.1.0
-generated: 2018-05-03T13:28:14.522000634+02:00
+generated: 2018-07-19T14:48:19.4504714+12:00
