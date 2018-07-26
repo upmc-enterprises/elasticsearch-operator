@@ -387,7 +387,7 @@ func processDeploymentType(deploymentType string, clusterName string) (string, s
 	return deploymentName, role, isNodeMaster, isNodeData
 }
 
-func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions,
+func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, serviceAccountName,
 	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets) *apps.StatefulSet {
 
 	_, role, isNodeMaster, isNodeData := processDeploymentType(deploymentType, clusterName)
@@ -619,6 +619,10 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 			})
 	}
 
+	if serviceAccountName != "" {
+		statefulSet.Spec.Template.Spec.ServiceAccountName = serviceAccountName
+	}
+
 	if storageClass != "default" {
 		statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
 			"volume.beta.kubernetes.io/storage-class": storageClass,
@@ -630,7 +634,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -643,7 +647,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
-		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions,
+		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, serviceAccountName,
 			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets)
 
 		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
@@ -685,7 +689,7 @@ func (k *K8sutil) CreateCerebroConfiguration(esHost string, useSSL *bool) map[st
 		{ path: %s/truststore.jks, type: "JKS" }
 		]
 	}
-}`,elasticsearchCertspath, elasticsearchCertspath)
+}`, elasticsearchCertspath, elasticsearchCertspath)
 	}
 
 	x := map[string]string{}

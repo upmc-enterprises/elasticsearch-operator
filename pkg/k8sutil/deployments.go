@@ -96,7 +96,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -313,6 +313,10 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 			deployment.Spec.Template.Spec.Volumes = volumes
 		}
 
+		if serviceAccountName != "" {
+			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
+		}
+
 		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
@@ -340,7 +344,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, useSSL *bool) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName string, useSSL *bool) error {
 
 	replicaCount := int32(1)
 
@@ -462,6 +466,10 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 			})
 		}
 
+		if serviceAccountName != "" {
+			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
+		}
+
 		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
@@ -479,7 +487,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 }
 
 // CreateCerebroDeployment creates a deployment of Cerebro
-func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets, useSSL *bool) error {
+func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName string, useSSL *bool) error {
 	replicaCount := int32(1)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
@@ -584,6 +592,10 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 					MountPath: elasticsearchCertspath,
 				},
 			)
+		}
+
+		if serviceAccountName != "" {
+			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
 		}
 
 		if _, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment); err != nil {

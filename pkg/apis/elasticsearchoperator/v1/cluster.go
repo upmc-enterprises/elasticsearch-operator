@@ -120,6 +120,9 @@ type ClusterSpec struct {
 
 	// Use SSL for clients connections
 	UseSSL *bool `json:"use-ssl,omitempty"`
+
+	// serviceAccount to use when running nodes
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // ImagePullSecrets defines credentials to pull image from private repository
@@ -196,6 +199,9 @@ type Instrumentation struct {
 type Kibana struct {
 	// Defines the image to use for deploying kibana
 	Image string `json:"image"`
+
+	// serviceAccount to use when running kibana
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // Cerebro properties if wanting operator to deploy for user
@@ -203,6 +209,9 @@ type Cerebro struct {
 	// Defines the image to use for deploying Cerebro
 	Image         string `json:"image"`
 	Configuration string `json:"configuration"`
+
+	// serviceAccount to use when running cerebro
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // Scheduler stores info about how to snapshot the cluster
