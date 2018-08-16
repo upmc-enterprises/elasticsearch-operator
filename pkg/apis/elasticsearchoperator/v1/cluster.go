@@ -58,13 +58,13 @@ type CRDState string
 
 // ClusterSpec defines cluster options
 type ClusterSpec struct {
-	// ClientNodeSize defines how many client nodes to have in cluster
+	// ClientNodeReplicas defines how many client nodes to have in cluster
 	ClientNodeReplicas int32 `json:"client-node-replicas"`
 
-	// MasterNodeSize defines how many client nodes to have in cluster
+	// MasterNodeReplicas defines how many master nodes to have in cluster
 	MasterNodeReplicas int `json:"master-node-replicas"`
 
-	// DataNodeSize defines how many client nodes to have in cluster
+	// DataNodeReplicas defines how many data nodes to have in cluster
 	DataNodeReplicas int `json:"data-node-replicas"`
 
 	// NodeSelector specifies a map of key-value pairs. For the pod to be eligible
@@ -80,7 +80,7 @@ type ClusterSpec struct {
 	// to the data nodes in the ES cluster
 	DataDiskSize string `json:"data-volume-size"`
 
-	// DataDiskSize specifies the docker image to use (optional)
+	// ElasticSearchImage specifies the docker image to use (optional)
 	ElasticSearchImage string `json:"elastic-search-image"`
 
 	// Snapshot defines how snapshots are scheduled
