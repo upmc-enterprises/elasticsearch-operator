@@ -71,7 +71,7 @@ func (c *Controller) init() error {
 		return err
 	}
 
-	err = c.k8sclient.CreateNodeInitDaemonset("default")
+	err = c.k8sclient.CreateNodeInitDaemonset()
 
 	if err != nil {
 		return err

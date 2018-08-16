@@ -37,9 +37,9 @@ const (
 )
 
 // CreateNodeInitDaemonset creates the node init daemonset
-func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
+func (k *K8sutil) CreateNodeInitDaemonset() error {
 
-	ds, err := k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Get(esOperatorSysctlName, metav1.GetOptions{})
+	ds, err := k.Kclient.ExtensionsV1beta1().DaemonSets(k.InitDaemonsetNamespace).Get(esOperatorSysctlName, metav1.GetOptions{})
 
 	if err != nil && len(ds.Name) == 0 {
 
@@ -54,7 +54,7 @@ func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 				Labels: map[string]string{
 					"k8s-app": "elasticsearch-operator",
 				},
-				Namespace: namespace,
+				Namespace: k.InitDaemonsetNamespace,
 			},
 			Spec: v1beta1.DaemonSetSpec{
 				Template: v1.PodTemplateSpec{
@@ -94,7 +94,7 @@ func (k *K8sutil) CreateNodeInitDaemonset(namespace string) error {
 			},
 		}
 
-		_, err = k.Kclient.ExtensionsV1beta1().DaemonSets(namespace).Create(daemonset)
+		_, err = k.Kclient.ExtensionsV1beta1().DaemonSets(k.InitDaemonsetNamespace).Create(daemonset)
 
 	} else {
 		logrus.Infof("Daemonset %s already exist, skipping creation ...", ds)
