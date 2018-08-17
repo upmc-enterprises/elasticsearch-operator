@@ -67,7 +67,7 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 						Containers: []v1.Container{
 							v1.Container{
 								Name:  "sysctl-conf",
-								Image: "busybox:1.26.2",
+								Image: k.BusyboxImage,
 								Command: []string{
 									"sh",
 									"-c",

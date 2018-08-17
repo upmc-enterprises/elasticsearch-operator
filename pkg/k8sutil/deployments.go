@@ -158,9 +158,6 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 							"name":      deploymentName,
 							"cluster":   clusterName,
 						},
-						Annotations: map[string]string{
-							"pod.beta.kubernetes.io/init-containers": "[ { \"name\": \"sysctl\", \"image\": \"busybox\", \"imagePullPolicy\": \"IfNotPresent\", \"command\": [\"sysctl\", \"-w\", \"vm.max_map_count=262144\"], \"securityContext\": { \"privileged\": true } }]",
-						},
 					},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
