@@ -52,6 +52,7 @@ var (
 	kubeCfgFile            string
 	masterHost             string
 	initDaemonsetNamespace string
+	busyboxImage           string
 )
 
 func init() {
@@ -60,6 +61,7 @@ func init() {
 	flag.StringVar(&kubeCfgFile, "kubecfg-file", "", "Location of kubecfg file for access to kubernetes master service; --kube_master_url overrides the URL part of this; if neither this nor --kube_master_url are provided, defaults to service account tokens")
 	flag.StringVar(&masterHost, "masterhost", "http://127.0.0.1:8001", "Full url to k8s api server")
 	flag.StringVar(&initDaemonsetNamespace, "initDaemonsetNamespace", "default", "Namespace to deploy the sysctl init daemonset into")
+	flag.StringVar(&busyboxImage, "busybox-image", "busybox:1.26.2", "Image to use for sysctl init daemonset")
 	flag.Parse()
 }
 
@@ -77,7 +79,7 @@ func Main() int {
 	logrus.Infof("   baseImage: %s", baseImage)
 
 	// Init
-	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost, initDaemonsetNamespace)
+	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost, initDaemonsetNamespace, busyboxImage)
 	if err != nil {
 		logrus.Error("Could not init k8sclient! ", err)
 		return 1

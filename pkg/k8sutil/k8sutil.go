@@ -85,10 +85,11 @@ type K8sutil struct {
 	K8sVersion             []int
 	MasterHost             string
 	InitDaemonsetNamespace string
+	BusyboxImage           string
 }
 
 // New creates a new instance of k8sutil
-func New(kubeCfgFile, masterHost, initDaemonsetNamespace string) (*K8sutil, error) {
+func New(kubeCfgFile, masterHost, initDaemonsetNamespace, busyboxImage string) (*K8sutil, error) {
 
 	crdClient, kubeClient, kubeExt, k8sVersion, err := newKubeClient(kubeCfgFile)
 
@@ -103,6 +104,7 @@ func New(kubeCfgFile, masterHost, initDaemonsetNamespace string) (*K8sutil, erro
 		CrdClient:              crdClient,
 		KubeExt:                kubeExt,
 		InitDaemonsetNamespace: initDaemonsetNamespace,
+		BusyboxImage:           busyboxImage,
 	}
 
 	return k, nil
