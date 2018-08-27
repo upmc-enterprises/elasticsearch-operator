@@ -152,8 +152,6 @@ type Snapshot struct {
 	// Defines the image to run cronjobs
 	Image string `json:"image"`
 
-	UseRepoAuth bool `json:"repo-auth"`
-
 	RepoRegion string `json:"repo-region"`
 
 	RepoAuthentication RepoAuthentication `json:"repo-authentication"`
@@ -238,7 +236,6 @@ type Scheduler struct {
 	Namespace    string
 	ClusterName  string
 	Image        string
-	UseRepoAuth  bool
 	UseSSL       bool
 }
 

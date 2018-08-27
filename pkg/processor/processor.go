@@ -184,7 +184,6 @@ func (p *Processor) refreshClusters() error {
 							UserName: cluster.Spec.Snapshot.Authentication.UserName,
 							Password: cluster.Spec.Snapshot.Authentication.Password,
 						},
-						UseRepoAuth: cluster.Spec.Snapshot.UseRepoAuth,
 						RepoAuth: myspec.RepoSchedulerAuthentication{
 							RepoAccessKey: cluster.Spec.Snapshot.RepoAuthentication.RepoAccessKey,
 							RepoSecretKey: cluster.Spec.Snapshot.RepoAuthentication.RepoSecretKey,
@@ -225,7 +224,6 @@ func (p *Processor) refreshClusters() error {
 				cluster.Spec.Snapshot.BucketName,
 				cluster.Spec.Snapshot.CronSchedule,
 				cluster.Spec.Snapshot.SchedulerEnabled,
-				cluster.Spec.Snapshot.UseRepoAuth,
 				useSSL,
 				cluster.Spec.Snapshot.Authentication.UserName,
 				cluster.Spec.Snapshot.Authentication.Password,
