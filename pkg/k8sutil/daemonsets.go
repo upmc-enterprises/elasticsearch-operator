@@ -64,6 +64,9 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 						},
 					},
 					Spec: v1.PodSpec{
+						NodeSelector: map[string]string{
+							"beta.kubernetes.io/os": "linux",
+						},
 						Containers: []v1.Container{
 							v1.Container{
 								Name:  "sysctl-conf",
