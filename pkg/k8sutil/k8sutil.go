@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/upmc-enterprises/elasticsearch-operator/pkg/elasticsearchutil"
+
 	"github.com/Sirupsen/logrus"
 	elasticsearchoperator "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
@@ -84,7 +86,7 @@ type K8sutil struct {
 	KubeExt                apiextensionsclient.Interface
 	K8sVersion             []int
 	MasterHost             string
-	EnableInitDaemonset	   bool
+	EnableInitDaemonset    bool
 	InitDaemonsetNamespace string
 	BusyboxImage           string
 }
@@ -292,7 +294,7 @@ func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-cha
 	updateHandler := func(old interface{}, obj interface{}) {
 		event := obj.(*v1.Pod)
 		for k, v := range event.ObjectMeta.Labels {
-			if k == "role" && v == "data" {
+			if k == "role" && (v == "data" || v == "master") {
 				events <- event
 				break
 			}
@@ -640,7 +642,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -668,12 +670,20 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {
+			currentReplicas := *statefulSet.Spec.Replicas
+			if *replicas < currentReplicas {
+				minMasterNodes := elasticsearchutil.MinMasterNodes(int(*replicas))
+				logrus.Infof("Detected master scale-down. Setting 'discovery.zen.minimum_master_nodes' to %d", minMasterNodes)
+				elasticsearchutil.UpdateDiscoveryMinMasterNodes(esUrl, minMasterNodes)
+			}
 			statefulSet.Spec.Replicas = replicas
-
 			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
+				minMasterNodes := elasticsearchutil.MinMasterNodes(int(currentReplicas))
+				logrus.Infof("Setting 'discovery.zen.minimum_master_nodes' to %d", minMasterNodes)
+				elasticsearchutil.UpdateDiscoveryMinMasterNodes(esUrl, minMasterNodes)
 				return err
 			}
 		}
