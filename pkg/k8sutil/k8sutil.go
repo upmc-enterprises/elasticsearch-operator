@@ -84,7 +84,7 @@ type K8sutil struct {
 	KubeExt                apiextensionsclient.Interface
 	K8sVersion             []int
 	MasterHost             string
-	EnableInitDaemonset	   bool
+	EnableInitDaemonset    bool
 	InitDaemonsetNamespace string
 	BusyboxImage           string
 }
@@ -401,10 +401,8 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	volumeSize, _ := resource.ParseQuantity(dataDiskSize)
 
 	enableSSL := "true"
-	scheme := v1.URISchemeHTTPS
 	if useSSL != nil && !*useSSL {
 		enableSSL = "false"
-		scheme = v1.URISchemeHTTP
 	}
 
 	// Parse CPU / Memory
@@ -418,10 +416,8 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 		InitialDelaySeconds: 10,
 		FailureThreshold:    15,
 		Handler: v1.Handler{
-			HTTPGet: &v1.HTTPGetAction{
-				Port:   intstr.FromInt(9200),
-				Path:   clusterHealthURL,
-				Scheme: scheme,
+			TCPSocket: &v1.TCPSocketAction{
+				Port: intstr.FromInt(9300),
 			},
 		},
 	}
