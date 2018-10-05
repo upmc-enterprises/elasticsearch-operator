@@ -143,6 +143,7 @@ func (k *K8sutil) generateConfig(configDir, certsDir, namespace, clusterName str
 				fmt.Sprintf("%s-%s", k, clusterName),
 				fmt.Sprintf("%s.%s", fmt.Sprintf("%s-%s", k, clusterName), namespace),
 				fmt.Sprintf("%s.%s.svc.cluster.local", fmt.Sprintf("%s-%s", k, clusterName), namespace),
+				fmt.Sprintf("elasticsearch-%s", clusterName),
 			},
 			Key: key{
 				Algo: "rsa",
