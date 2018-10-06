@@ -130,9 +130,10 @@ func (k *K8sutil) generateConfig(configDir, certsDir, namespace, clusterName str
 	}
 
 	for k, v := range map[string]string{
-		"elasticsearch": "req-csr.json",
-		"kibana":        "req-kibana-csr.json",
-		"cerebro":       "req-cerebro-csr.json",
+		"node":    "req-node-csr.json",
+		"sgadmin": "req-sgadmin-csr.json",
+		"kibana":  "req-kibana-csr.json",
+		"cerebro": "req-cerebro-csr.json",
 	} {
 
 		req := csr{
@@ -142,6 +143,7 @@ func (k *K8sutil) generateConfig(configDir, certsDir, namespace, clusterName str
 				fmt.Sprintf("%s-%s", k, clusterName),
 				fmt.Sprintf("%s.%s", fmt.Sprintf("%s-%s", k, clusterName), namespace),
 				fmt.Sprintf("%s.%s.svc.cluster.local", fmt.Sprintf("%s-%s", k, clusterName), namespace),
+				fmt.Sprintf("elasticsearch-%s", clusterName),
 			},
 			Key: key{
 				Algo: "rsa",
@@ -190,16 +192,29 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 	}
 
 	// Generate client Certs
-	for _, name := range []string{"node", "kibana", "cerebro"} {
+	for _, name := range []string{"node", "kibana", "cerebro", "sgadmin"} {
 
 		logrus.Infof("Creating %s cert...", name)
-		cmd1 := exec.Command("cfssl", "gencert", "-ca", fmt.Sprintf("%s/ca.pem", certsDir), "-ca-key", fmt.Sprintf("%s/ca-key.pem", certsDir), "-config", fmt.Sprintf("%s/ca-config.json", configDir), "-profile=server", fmt.Sprintf("%s/req-csr.json", configDir))
+		cmd1 := exec.Command("cfssl", "gencert", "-ca", fmt.Sprintf("%s/ca.pem", certsDir), "-ca-key", fmt.Sprintf("%s/ca-key.pem", certsDir), "-config", fmt.Sprintf("%s/ca-config.json", configDir), "-profile=server", fmt.Sprintf("%s/req-%s-csr.json", configDir, name))
 		cmd2 := exec.Command("cfssljson", "-bare", fmt.Sprintf("%s/%s", certsDir, name))
 		if _, err := pipeCommands(cmd1, cmd2); err != nil {
 			logrus.Error(err)
 			return err
 		}
+	}
 
+	logrus.Info("Converting node to pkcs8...")
+	cmdConvertNodePkcs8 := exec.Command("openssl", "pkcs8", "-topk8", "-in", fmt.Sprintf("%s/node-key.pem", certsDir), "-out", fmt.Sprintf("%s/node-key.pkcs8.pem", certsDir), "-nocrypt")
+	if out, err := cmdConvertNodePkcs8.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
+	}
+
+	logrus.Info("Converting sgadmin to pkcs12...")
+	cmdConvertSgadmin := exec.Command("openssl", "pkcs12", "-export", "-inkey", fmt.Sprintf("%s/sgadmin-key.pem", certsDir), "-in", fmt.Sprintf("%s/sgadmin.pem", certsDir), "-out", fmt.Sprintf("%s/sgadmin.pkcs12", certsDir), "-password", "pass:changeit", "-certfile", fmt.Sprintf("%s/ca.pem", certsDir))
+	if out, err := cmdConvertSgadmin.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
 	}
 
 	logrus.Info("Converting node to pkcs12...")
@@ -213,6 +228,14 @@ func (k *K8sutil) GenerateCerts(configDir, certsDir, namespace, clusterName stri
 	cmdCAJKS := exec.Command("keytool", "-import", "-file", fmt.Sprintf("%s/ca.pem", certsDir), "-alias", "root-ca", "-keystore", fmt.Sprintf("%s/truststore.jks", certsDir),
 		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-noprompt")
 	if out, err := cmdCAJKS.Output(); err != nil {
+		logrus.Error(string(out), err)
+		return err
+	}
+
+	logrus.Info("Converting sgadmin cert to jks...")
+	cmdSgadminJKS := exec.Command("keytool", "-importkeystore", "-srckeystore", fmt.Sprintf("%s/sgadmin.pkcs12", certsDir), "-srcalias", "1", "-destkeystore", fmt.Sprintf("%s/sgadmin-keystore.jks", certsDir),
+		"-storepass", "changeit", "-srcstoretype", "pkcs12", "-srcstorepass", "changeit", "-destalias", "elasticsearch-admin")
+	if out, err := cmdSgadminJKS.Output(); err != nil {
 		logrus.Error(string(out), err)
 		return err
 	}
@@ -254,12 +277,21 @@ func (k *K8sutil) CreateCertsSecret(namespace, clusterName, certsDir string) err
 		return err
 	}
 
+	sgadminKeyStore, err := ioutil.ReadFile(fmt.Sprintf("%s/sgadmin-keystore.jks", certsDir))
+	if err != nil {
+		logrus.Error("Could not read certs:", err)
+		return err
+	}
+
 	//TODO return err
 	trustStore, _ := ioutil.ReadFile(fmt.Sprintf("%s/truststore.jks", certsDir))
 	ca, _ := ioutil.ReadFile(fmt.Sprintf("%s/ca.pem", certsDir))
 	caKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/ca-key.pem", certsDir))
 	node, _ := ioutil.ReadFile(fmt.Sprintf("%s/node.pem", certsDir))
 	nodeKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/node-key.pem", certsDir))
+	nodeKeyPkcs8, _ := ioutil.ReadFile(fmt.Sprintf("%s/node-key.pkcs8.pem", certsDir))
+	sgadmin, _ := ioutil.ReadFile(fmt.Sprintf("%s/sgadmin.pem", certsDir))
+	sgadminKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/sgadmin-key.pem", certsDir))
 	kibanaKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/kibana-key.pem", certsDir))
 	kibana, _ := ioutil.ReadFile(fmt.Sprintf("%s/kibana.pem", certsDir))
 	cerebroKey, _ := ioutil.ReadFile(fmt.Sprintf("%s/cerebro-key.pem", certsDir))
@@ -269,16 +301,20 @@ func (k *K8sutil) CreateCertsSecret(namespace, clusterName, certsDir string) err
 			Name: fmt.Sprintf("%s-%s", secretName, clusterName),
 		},
 		Data: map[string][]byte{
-			"node-keystore.jks": nodeKeyStore,
-			"truststore.jks":    trustStore,
-			"ca.pem":            ca,
-			"ca-key.pem":        caKey,
-			"node.pem":          node,
-			"node-key.pem":      nodeKey,
-			"kibana-key.pem":    kibanaKey,
-			"kibana.pem":        kibana,
-			"cerebro-key.pem":   cerebroKey,
-			"cerebro.pem":       cerebro,
+			"node-keystore.jks":    nodeKeyStore,
+			"sgadmin-keystore.jks": sgadminKeyStore,
+			"truststore.jks":       trustStore,
+			"ca.pem":               ca,
+			"ca-key.pem":           caKey,
+			"node.pem":             node,
+			"node-key.pem":         nodeKey,
+			"node-key.pkcs8.pem":   nodeKeyPkcs8,
+			"sgadmin.pem":          sgadmin,
+			"sgadmin-key.pem":      sgadminKey,
+			"kibana-key.pem":       kibanaKey,
+			"kibana.pem":           kibana,
+			"cerebro-key.pem":      cerebroKey,
+			"cerebro.pem":          cerebro,
 		},
 	}
 

@@ -415,9 +415,20 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 	requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
-	probe := &v1.Probe{
+	readinessProbe := &v1.Probe{
 		TimeoutSeconds:      30,
 		InitialDelaySeconds: 10,
+		FailureThreshold:    15,
+		Handler: v1.Handler{
+			TCPSocket: &v1.TCPSocketAction{
+				Port: intstr.FromInt(9300),
+			},
+		},
+	}
+
+	livenessProbe := &v1.Probe{
+		TimeoutSeconds:      30,
+		InitialDelaySeconds: 120,
 		FailureThreshold:    15,
 		Handler: v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
@@ -557,8 +568,8 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 									Protocol:      v1.ProtocolTCP,
 								},
 							},
-							ReadinessProbe: probe,
-							LivenessProbe:  probe,
+							ReadinessProbe: readinessProbe,
+							LivenessProbe:  livenessProbe,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "es-data",
