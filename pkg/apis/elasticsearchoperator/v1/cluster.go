@@ -83,6 +83,9 @@ type ClusterSpec struct {
 	// ElasticSearchImage specifies the docker image to use (optional)
 	ElasticSearchImage string `json:"elastic-search-image"`
 
+	// ImagePullPolicy specifies the image-pull-policy to use (optional)
+	ImagePullPolicy string `json:"image-pull-policy"`
+
 	// Snapshot defines how snapshots are scheduled
 	Snapshot Snapshot `json:"snapshot"`
 
@@ -209,6 +212,9 @@ type Kibana struct {
 	// Defines the image to use for deploying kibana
 	Image string `json:"image"`
 
+	// ImagePullPolicy specifies the image-pull-policy to use (optional)
+	ImagePullPolicy string `json:"image-pull-policy"`
+
 	// serviceAccount to use when running kibana
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
@@ -217,6 +223,10 @@ type Kibana struct {
 type Cerebro struct {
 	// Defines the image to use for deploying Cerebro
 	Image         string `json:"image"`
+
+	// ImagePullPolicy specifies the image-pull-policy to use (optional)
+	ImagePullPolicy string `json:"image-pull-policy"`
+
 	Configuration string `json:"configuration"`
 
 	// serviceAccount to use when running cerebro

@@ -96,7 +96,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -172,7 +172,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 								},
 								Image:           baseImage,
-								ImagePullPolicy: "Always",
+								ImagePullPolicy: v1.PullPolicy(imagePullPolicy),
 								Env: []v1.EnvVar{
 									v1.EnvVar{
 										Name: "NAMESPACE",
@@ -341,7 +341,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 }
 
 // CreateKibanaDeployment creates a deployment of Kibana
-func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName string, useSSL *bool) error {
+func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace string, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, serviceAccountName string, useSSL *bool) error {
 
 	replicaCount := int32(1)
 
@@ -397,7 +397,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 							v1.Container{
 								Name:            deploymentName,
 								Image:           baseImage,
-								ImagePullPolicy: "Always",
+								ImagePullPolicy: v1.PullPolicy(imagePullPolicy),
 								Env: []v1.EnvVar{
 									v1.EnvVar{
 										Name:  "ELASTICSEARCH_URL",
@@ -484,7 +484,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 }
 
 // CreateCerebroDeployment creates a deployment of Cerebro
-func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets, serviceAccountName string, useSSL *bool) error {
+func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cert string, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, serviceAccountName string, useSSL *bool) error {
 	replicaCount := int32(1)
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
@@ -530,7 +530,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 							{
 								Name:            deploymentName,
 								Image:           baseImage,
-								ImagePullPolicy: "Always",
+								ImagePullPolicy: v1.PullPolicy(imagePullPolicy),
 								Command: []string{
 									"bin/cerebro",
 									"-Dconfig.file=/usr/local/cerebro/cfg/application.conf",
