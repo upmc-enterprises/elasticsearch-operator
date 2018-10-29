@@ -211,10 +211,12 @@ func (p *Processor) refreshClusters() error {
 					},
 					Kibana: myspec.Kibana{
 						Image:              cluster.Spec.Kibana.Image,
+						ImagePullPolicy:    cluster.Spec.Kibana.ImagePullPolicy,
 						ServiceAccountName: cluster.Spec.Kibana.ServiceAccountName,
 					},
 					Cerebro: myspec.Cerebro{
 						Image:              cluster.Spec.Cerebro.Image,
+						ImagePullPolicy:    cluster.Spec.Cerebro.ImagePullPolicy,
 						ServiceAccountName: cluster.Spec.Cerebro.ServiceAccountName,
 					},
 					UseSSL:             &useSSL,
@@ -364,7 +366,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions,
-		c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.UseSSL); err != nil {
+		c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.UseSSL); err != nil {
 		logrus.Error("Error creating client deployment ", err)
 		return err
 	}
@@ -387,7 +389,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// Create Master Nodes
 		for index, count := range zoneDistributionMaster {
 			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
 				return err
@@ -397,7 +399,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// Create Data Nodes
 		for index, count := range zoneDistributionData {
 			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
-				c.Spec.ImagePullSecrets, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
+				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 
@@ -413,7 +415,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
 
@@ -422,7 +424,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Data Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
+			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL); err != nil {
 			logrus.Error("Error creating data node deployment ", err)
 			return err
@@ -432,7 +434,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	// Deploy Kibana
 	if c.Spec.Kibana.Image != "" {
 
-		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets, c.Spec.Kibana.ServiceAccountName, c.Spec.UseSSL); err != nil {
+		if err := p.k8sclient.CreateKibanaDeployment(c.Spec.Kibana.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, c.Spec.ImagePullSecrets, c.Spec.Kibana.ImagePullPolicy, c.Spec.Kibana.ServiceAccountName, c.Spec.UseSSL); err != nil {
 			logrus.Error("Error creating kibana deployment ", err)
 			return err
 		}
@@ -462,7 +464,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			}
 		}
 
-		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets, c.Spec.Cerebro.ServiceAccountName, c.Spec.UseSSL); err != nil {
+		if err := p.k8sclient.CreateCerebroDeployment(c.Spec.Cerebro.Image, c.ObjectMeta.Name, c.ObjectMeta.Namespace, name, c.Spec.ImagePullSecrets, c.Spec.Cerebro.ImagePullPolicy, c.Spec.Cerebro.ServiceAccountName, c.Spec.UseSSL); err != nil {
 			logrus.Error("Error creating cerebro deployment ", err)
 			return err
 		}
