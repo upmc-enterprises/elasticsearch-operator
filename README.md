@@ -49,6 +49,11 @@ Following parameters are available to customize the elastic cluster:
     - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
   - Using an existing Storage Class (e.g. storage class for GlusterFS)
     - storage-class: Name of an existing StorageClass object to use (zones can be [])
+  - Using a custom Storage Class per zone
+    - Useful if additional `parameters` are required by provisioner over and above `type` and `storage-class-provisioner`.
+    - Manually create a Storage Class per zone. 
+    - Storage Class names must match zone names in `zones`. You are free to choose any naming scheme providing they match. Master and Data pod names will include the zone name.
+    - Per the `Using a provisioner` section, specify `type:` and `provisioner:` values that match your custom Storage Classes.
   - Omitting the storage section, results in a VolumeClaimTemplates without storage-class annotation (uses default StorageClass in this case. See [change default StorageClass](https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/))
   - volume-reclaim-policy: Define what PV's should use (`Retain` or `Delete`)
 - instrumentation
