@@ -1,0 +1,90 @@
+# Storage classes must be created first with all IBM's required `parameters`
+# See: https://github.com/upmc-enterprises/elasticsearch-operator/issues/259
+---
+# ibmcloud-block-storage-plugin/templates/ibmc-block-retain-gold-StorageClass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: dal10
+provisioner: ibm.io/ibmc-block
+parameters:
+  zone: "dal10"
+  region: "us-south"
+  type: "Endurance"
+  iopsPerGB: "10"
+  sizeRange: "[20-4000]Gi"
+  fsType: "ext4"
+  billingType: "hourly"
+  classVersion: "2"
+reclaimPolicy: "Retain"
+---
+# ibmcloud-block-storage-plugin/templates/ibmc-block-retain-gold-StorageClass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: dal12
+provisioner: ibm.io/ibmc-block
+parameters:
+  zone: "dal12"
+  region: "us-south"
+  type: "Endurance"
+  iopsPerGB: "10"
+  sizeRange: "[20-4000]Gi"
+  fsType: "ext4"
+  billingType: "hourly"
+  classVersion: "2"
+reclaimPolicy: "Retain"
+---
+# ibmcloud-block-storage-plugin/templates/ibmc-block-retain-gold-StorageClass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: dal13
+provisioner: ibm.io/ibmc-block
+parameters:
+  zone: "dal13"
+  region: "us-south"
+  type: "Endurance"
+  iopsPerGB: "10"
+  sizeRange: "[20-4000]Gi"
+  fsType: "ext4"
+  billingType: "hourly"
+  classVersion: "2"
+reclaimPolicy: "Retain"
+---
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  name: example-es-cluster
+spec:
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.1.3
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0
+  client-node-replicas: 3
+  master-node-replicas: 2
+  data-node-replicas: 3
+  network-host: 0.0.0.0
+  zones:  # []  # Single zone cluster
+  - dal10
+  - dal12
+  - dal13
+  data-volume-size: 10Gi
+  java-options: "-Xms512m -Xmx512m"
+  snapshot:  # Not verified with IBM Cloud Object Storage
+    scheduler-enabled: false
+    bucket-name: elasticsnapshots99
+    cron-schedule: "@every 2m"
+    image: upmcenterprises/elasticsearch-cron:0.0.4
+  storage:
+    # storage-class: ibmc-block-retain-gold  # Single zone cluster
+    type: Endurance  # Multi zone cluster
+    storage-class-provisioner: ibm.io/ibmc-block  # Multi zone cluster
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 1024Mi
+      cpu: '1'
