@@ -151,7 +151,7 @@ func (p *Processor) refreshClusters() error {
 	}
 
 	for _, cluster := range currentClusters.Items {
-		logrus.Infof("jana Found cluster: %s", cluster.ObjectMeta.Name)
+		logrus.Infof("Found cluster: %s", cluster.ObjectMeta.Name)
 		useSSL := p.defaultUseSSL(cluster.Spec.UseSSL)
 		p.clusters[fmt.Sprintf("%s-%s", cluster.ObjectMeta.Name, cluster.ObjectMeta.Namespace)] = Cluster{
 			ESCluster: &myspec.ElasticsearchCluster{

@@ -15,7 +15,7 @@ import (
 )
 
 func k8_check_DataNodeRestarted(namespace, statefulSetName string, k *K8sutil) error {
-	ret := fmt.Errorf("Scaling POD is not up")
+	ret := fmt.Errorf("Scaling: POD is not up: ",statefulSetName)
 	dnodename := statefulSetName + "-0"
 	newstatefulset, _ := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 	//logrus.Infof("Scaling: statefulset : %v ", newstatefulset)
@@ -23,22 +23,22 @@ func k8_check_DataNodeRestarted(namespace, statefulSetName string, k *K8sutil) e
 	ss_version , _ := strconv.Atoi(newstatefulset.ObjectMeta.ResourceVersion)
 	
 	pod, _ := k.Kclient.CoreV1().Pods(namespace).Get(dnodename, metav1.GetOptions{})
-	logrus.Infof("Scaling NEW POD  ",pod.ObjectMeta.ResourceVersion)
+	logrus.Infof("Scaling: NEW POD  ",pod.ObjectMeta.ResourceVersion)
 	waitSeconds := 400
 	for i := 0; i < waitSeconds; i++ {
 		pod, _ = k.Kclient.CoreV1().Pods(namespace).Get(dnodename, metav1.GetOptions{})
 		if (pod == nil){
-			logrus.Infof("Scaling POD Terminated ")
+			logrus.Infof("Scaling: POD Terminated ")
 		}else{
 			pod_version , _ := strconv.Atoi(pod.ObjectMeta.ResourceVersion)
 			if pod_version > ss_version {
-				logrus.Infof("Scaling POD started pod_version:",pod_version," dd_version:",ss_version," state: ",pod.Status.ContainerStatuses)
+				logrus.Infof("Scaling: POD started pod_version:",pod_version," dd_version:",ss_version," state: ",pod.Status.ContainerStatuses)
 				if strings.Contains(dn.runningStatus,"ContainerStateRunning") {
 					ret = nil
 				    break
 				}
 			}else{
-				logrus.Infof("Scaling pod revision: ", pod.ObjectMeta.ResourceVersion, " ss revision: ", newstatefulset.ObjectMeta.ResourceVersion)
+				logrus.Infof("Scaling: pod revision: ", pod.ObjectMeta.ResourceVersion, " ss revision: ", newstatefulset.ObjectMeta.ResourceVersion)
 			}
 		}
 		time.Sleep(5 * time.Second)
@@ -53,7 +53,7 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 // Step-1: check if there is any change in the 3-resources: javaoptions,cpu and memory
 	resourceMatch := true
 	if cpu != statefulSet.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"] {
-		logrus.Infof("CPU Changed USER: ", cpu, " from k8: ", statefulSet.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"])
+		logrus.Infof("Scaling: step-1 : CPU Changed USER: ", cpu, " from k8: ", statefulSet.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"])
 		resourceMatch = false
 		statefulSet.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"] = cpu
 	}
@@ -65,7 +65,7 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 	for index, env := range statefulSet.Spec.Template.Spec.Containers[0].Env {
 		if env.Name == "ES_JAVA_OPTS" {
 			if env.Value != javaOptions {
-				logrus.Infof(" JAVA OPTS Changed USER: ", javaOptions, " from k8: ", env.Value)
+				logrus.Infof("Scaling: step-1 JAVA OPTS Changed USER: ", javaOptions, " from k8: ", env.Value)
 				resourceMatch = false
 				statefulSet.Spec.Template.Spec.Containers[0].Env[index].Value = javaOptions
 			}
@@ -74,7 +74,7 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 	}
 
 	if !resourceMatch {
-		logrus.Infof(" RESOURCES CHANGED: updating Stateful set: ", statefulSetName)
+		logrus.Infof("Scaling: step-1 RESOURCES CHANGED: updating Stateful set: ", statefulSetName)
 		// TODO : only memory request is updated, memory limit as need to be updated.
 		statefulSet.Spec.Template.Spec.Containers[0].Resources.Requests["memory"] = memory
 
@@ -82,19 +82,19 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 		
 		// Step-2: ES-chanage:  change default time from 1 min to 3 to n min to avoid copying of shards belonging to the data node that is going to be scaled.
 		if !es_set_delaytimeout(masterip) {
-			err := fmt.Errorf("Setting delaytimeout  failed")
+			err := fmt.Errorf("Scaling: step-2 Setting delaytimeout  failed")
 			return err
 		}
         // Step-3: ES-chanage: check if ES cluster is green state, suppose if one of the data node is down and state is yellow then do not proceed with scaling.
 		if err := es_checkForGreen(masterip); err != nil { // TODO : check green not implemented
-			err = fmt.Errorf("ES cluster is not in green state")
+			err = fmt.Errorf("Scaling: step-3 ES cluster is not in green state")
 			return err
 		}
 		
 		// Step-4: scale the Data node by updating the new resources in the stateful set
 		_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
 		if err != nil {
-			logrus.Error("ERROR: Could not scale statefulSet: ", err)
+			logrus.Error("ERROR: Scaling: Could not scale statefulSet: ", err)
 			return err
 		}
 		dnodename := statefulSetName + "-0"
@@ -106,7 +106,7 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 		if err = es_checkForNodeUp(masterip, dnodename, 180); err != nil {
 			return err
 		}
-		logrus.Infof("Datanode Up in K8: ", dnodename)
+	
 		// Step-7: check if all shards are registered with Master, At this ES should turn in to green from yellow, now it is safe to scale next data node.
 		if err = es_checkForShards(masterip, dnodename, 180); err != nil {
 			return err
