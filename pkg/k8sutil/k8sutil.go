@@ -45,7 +45,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	//"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -403,10 +403,10 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	volumeSize, _ := resource.ParseQuantity(dataDiskSize)
 
 	enableSSL := "true"
-	scheme := v1.URISchemeHTTPS
+	//	scheme := v1.URISchemeHTTPS
 	if useSSL != nil && !*useSSL {
 		enableSSL = "false"
-		scheme = v1.URISchemeHTTP
+		//		scheme = v1.URISchemeHTTP
 	}
 
 	// Parse CPU / Memory
@@ -415,7 +415,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 	requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
-	readinessProbe := &v1.Probe{
+	/*readinessProbe := &v1.Probe{
 		TimeoutSeconds:      30,
 		InitialDelaySeconds: 10,
 		FailureThreshold:    15,
@@ -437,7 +437,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 				Scheme: scheme,
 			},
 		},
-	}
+	}*/
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -520,6 +520,14 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 									Value: clusterName,
 								},
 								v1.EnvVar{
+									Name: "NODE_NAME",
+									ValueFrom: &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+								v1.EnvVar{
 									Name:  "NODE_MASTER",
 									Value: isNodeMaster,
 								},
@@ -568,8 +576,8 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 									Protocol:      v1.ProtocolTCP,
 								},
 							},
-							ReadinessProbe: readinessProbe,
-							LivenessProbe:  livenessProbe,
+							/*ReadinessProbe: readinessProbe,
+							LivenessProbe:  livenessProbe,*/
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "es-data",
@@ -653,11 +661,11 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
-	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
+	statefulSetName := fmt.Sprintf("%s-%s-%d", deploymentName, storageClass, index)
 
 	// Check if StatefulSet exists
 	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
@@ -678,10 +686,13 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			logrus.Error("Could not get stateful set! ", err)
 			return err
 		}
-
+		if deploymentType == "data"  && scaling {
+			return scale_datanode(k, namespace, statefulSetName, resources, javaOptions, statefulSet)
+		}
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {
 			currentReplicas := *statefulSet.Spec.Replicas
+			logrus.Infof(" Current replicas: ",currentReplicas," New replica: ",*replicas)
 			if *replicas < currentReplicas {
 				minMasterNodes := elasticsearchutil.MinMasterNodes(int(*replicas))
 				logrus.Infof("Detected master scale-down. Setting 'discovery.zen.minimum_master_nodes' to %d", minMasterNodes)
@@ -689,7 +700,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			}
 			statefulSet.Spec.Replicas = replicas
 			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
-
+			logrus.Infof("  updated Stateful set: ", statefulSetName)
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
 				minMasterNodes := elasticsearchutil.MinMasterNodes(int(currentReplicas))
