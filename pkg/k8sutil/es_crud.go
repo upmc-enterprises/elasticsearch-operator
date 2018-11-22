@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+		"github.com/Sirupsen/logrus"
 )
 
 
@@ -23,18 +24,16 @@ TODO-2:
 
 After scaling operation it can be converted to async.
 */
-func es_unset_delaytimeout(es_ip string)(bool){  /* TODO : need to undio this setting at the end */
-	ret := false
-	return ret
-}
-func es_set_delaytimeout(es_ip string)(bool){  /* TODO : need to undio this setting at the end */
-	ret := false
-	//	return true
 
+func es_set_delaytimeout(es_ip , duration string)(error){  
+	var ret error
+	ret = errors.New("Scaling: error in setting delay timeout")
+
+	logrus.Infof("Scaling: setting ES delay timeout to ", duration)
 	client := &http.Client{
 	}
 	body:="{ "
-	body = body + "\"settings\": { \"index.unassigned.node_left.delayed_timeout\": \"6m\"  }"
+	body = body + "\"settings\": { \"index.unassigned.node_left.delayed_timeout\": \""+duration+"\"  }"
 	body = body +  " }"
 
 	//fmt.Println("set BODY :",body,":")
@@ -43,29 +42,30 @@ func es_set_delaytimeout(es_ip string)(bool){  /* TODO : need to undio this sett
 	resp, _ := client.Do(req)
 	data, _ := ioutil.ReadAll(resp.Body)
 
-
 	if (resp.StatusCode == 200){
-		ret = true
+		ret = nil
 	}else{
 		if (strings.Contains(string(data), "index_not_found_exception")){
-			ret = true  /* if there are no indexes , then this function need tpo pass */
+			ret = nil  /* if there are no indexes , then this function need po pass */
 			fmt.Println("WARNING in setting delaytimeout: response: ",resp, string(data))
 			return ret
 		}
-		fmt.Println("ERROR in setting delaytimeout: response: ",resp, string(data))
+		//string str:= "Scaling: setting delaytimeout: response: " + resp + string(data)
+		ret = errors.New("Scaling: setting delaytimeout: response: ")
 	}
 	return ret;
 }
-func es_checkForGreen(nodename string)(error){ /* TODO */
-	return nil
+func es_checkForGreen(es_ip string)(error){ /* TODO */
+	logrus.Infof("Scaling: ES checking for green  ")
+	return es_checkForShards(es_ip , "", 180)
 }
-func WordCount(input string, nodename string) (int,int) {
+func util_wordcount(input string, nodename string) (int,int) {
 	node_count := 0
 	unassigned_count :=0
 	initializing_count :=0
 	words := strings.Fields(input)
 	for _, word := range words {
-		if (word == nodename){
+		if (nodename != "" && word == nodename){
 			node_count++
 		} else if (word == "UNASSIGNED"){
 			unassigned_count++
@@ -81,14 +81,15 @@ func WordCount(input string, nodename string) (int,int) {
 func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 	var ret error
 	ret = errors.New("still unassigned shards are there")
-
+	
+	logrus.Infof("Scaling: ES checking for shards")
 	for i := 0; i < waitSeconds; i++ {
 		response, err := http.Get("http://" + es_ip + "/_cat/shards")
 		if err != nil {
 			fmt.Printf("The HTTP request failed with error %s\n", err)
 		} else {
 			data, _ := ioutil.ReadAll(response.Body)
-			_,unassigned_count := WordCount(string(data), nodeName)
+			_,unassigned_count := util_wordcount(string(data), nodeName)
 			if (unassigned_count>0) {
 				time.Sleep(1 * time.Second)
 				continue
@@ -107,6 +108,7 @@ func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 	 var ret error
 	 ret = errors.New("ES node is not up")
 
+	 logrus.Infof("Scaling: ES checking if the data node joined master")
  	 for i := 0; i < waitSeconds; i++ {
 		 response, err := http.Get("http://" + es_ip + "/_cat/nodes?v&h=n,ip,v")
 		 if err != nil {
