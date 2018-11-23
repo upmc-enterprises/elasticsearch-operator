@@ -670,7 +670,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 		statefulSet.Spec.Template.Spec.ServiceAccountName = serviceAccountName
 	}
 
-	if storageClass != "default" {
+	if storageClass != "default" && storageClass != "localdisk"{
 		statefulSet.Spec.VolumeClaimTemplates[0].Annotations = map[string]string{
 			"volume.beta.kubernetes.io/storage-class": storageClass,
 		}
@@ -681,7 +681,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool,scalingMasterIP string) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -707,7 +707,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			return err
 		}
 		if deploymentType == "data"  && scaling {
-			return scale_datanode(k, namespace, statefulSetName, resources, javaOptions, statefulSet)
+			return scale_datanode(k, namespace, statefulSetName, resources, javaOptions, statefulSet,scalingMasterIP)
 		}
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {

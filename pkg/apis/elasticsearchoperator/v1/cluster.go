@@ -144,6 +144,9 @@ type Scaling struct {
 	
 	// JavaOptions defines args passed to elastic nodes
 	JavaOptions string `json:"java-options"`
+	
+	// master node IP:port TODO: later this can be removed and learn dynamically from the service meta data.
+	MasterNodeIP  string `json:"masternodeip"`
 }
 
 // Snapshot defines all params to create / store snapshots

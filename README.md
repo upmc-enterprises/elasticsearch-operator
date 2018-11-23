@@ -284,52 +284,8 @@ $ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
 $ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
 # Scaling feature:
-The following are  changes present in scaling patch
 
-- Every Data node will have stateful set: currently all data nodes are part of one Statefule set, scaling needs every data node to be seperate statefulset with one replica,  every datanode resource are updated independently to corresponding statefulset, so that the control will be in the hands of operator instead of k8.
-- Scaling is optional feature: Seperate section is defined for scaling as shown in below example spec. If the scaling section is not present then entire scaling feature will be disabled.
-- when Scaling will be triggered: Scaling will be triggered if there is any change in the one of the following 3 fields inside the scaling section. javaoptions and resources entries corresponds only to non-data nodes incase scaling section is present. If scaling section is abscent then it corresponds to all nodes.
-    - JavaOptions:  This is the new field present inside the scaling section corresponds only  to Data nodes.
-    - CPU inside resources : number of cpu cores.
-    - Memory inside resources : Memory size.
- - Steps involved in vertical scaling of  Elastic cluster: Repeating the following steps for each data node one after another, if there is any failure rest of scaling will be halted.
-    - Step-1: check if there is any change in the 3-resources: javaoptions,cpu and memory. 
-    - Step-2: ES-chanage:  change default time from 1 min to 3 to n min to avoid copying of shards belonging to the data node that is going to be scaled.
-    - Step-3: ES-chanage: check if ES cluster is green state, suppose if one of the data node is down and state is yellow then do not proceed with scaling.
-    - Step-4: scale the Data node by updating the new resources in the stateful set
-    - Step-5: check if the POD is restarted and in running state from k8 point of view.
-    - Step-6: check if the POD is up from the ES point of view
-    - Step-7: check if all shards are registered with Master, At this ES should turn in to green from yellow, now it is safe to scale next data node.
-    - Step-8: Undo the timeout settings.
- - Future Enhancements:
-    - Horizontal scaling of Data nodes: increasing the "data-node-replica" will function as expected, but if "data-node-replica" is decreased by more then 2 then the Elastic search cluster can enter in to red state and there will be data loss, this can prevented by executing similar to vertical scaling one after another.
- 
-
-```
-Example Spec containing optional scaling section
-
-spec:
-  client-node-replicas: 3
-  data-node-replicas: 3
-  data-volume-size: 10Gi
-  java-options: -Xms256m -Xmx256m
-  master-node-replicas: 2
-  scaling:
-    java-options: -Xms1052m -Xmx1052m
-    resources:
-      limits:
-        cpu: 2m
-        memory: 2048Mi
-      requests:
-        cpu: 1m
-        memory: 1024Mi
-  zones:
-  - us-east-1a
-  - us-east-1b
-  - us-east-1c
-```
-
-
+[Details of scaling](docs/scaling.md)
 
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/
