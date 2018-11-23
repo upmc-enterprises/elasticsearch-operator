@@ -5,28 +5,29 @@ The following are  changes present in scaling patch
 
 - Every Data node will have stateful set: currently all data nodes are part of one Statefule set, scaling needs every data node to be seperate statefulset with one replica,  every datanode resource are updated independently to corresponding statefulset, so that the control will be in the hands of operator instead of k8.
 - Scaling is optional feature: Seperate section is defined for scaling as shown in below example spec. If the scaling section is not present then entire scaling feature will be disabled.
-- Added changes to support local disk, but the is tested for multiple nodes. 
-- when Scaling will be triggered: Scaling will be triggered if there is any change in the one of the following 3 fields inside the scaling section. javaoptions and resources entries corresponds only to non-data nodes incase scaling section is present. If scaling section is abscent then it corresponds to all nodes.
-    - JavaOptions:  This is the new field present inside the scaling section corresponds only  to Data nodes.
+- Added changes to support local disk, but it is not tested for multiple nodes, MAY need to add affinity between POD and node. 
+- when Scaling will be triggered: Scaling will be triggered if there is any change in the one of the following 3 fields inside the scaling section: javaoptions,cpu and memory. javaoptions and resources entries corresponds only to non-data nodes incase scaling section is present. If scaling section is abscent then it corresponds to all nodes.
+    - JavaOptions:  
     - CPU inside resources : number of cpu cores.
     - Memory inside resources : Memory size.
- - Steps involved in vertical scaling of  Elastic cluster: Repeating the following steps for each data node one after another, if there is any failure rest of scaling will be halted.
-    - Step-1: check if there is any change in the 3-resources: javaoptions,cpu and memory. 
-    - Step-2: ES-change:  change default time from 1 min to 3 to n min to avoid copying of shards belonging to the data node that is going to be scaled.
+ - Steps involved in vertical scaling of  Elastic cluster: Repeating the following steps for each data node one after another, if there is any failure  then scaling will be halted for the rest of data nodes:
+    - Step-1: check if there is any changes in  3-resources inside scaling section: javaoptions,cpu and memory. 
+    - Step-2: ES-setting-change:  change default time from 1 min to 6 min to avoid copying of shards belonging to the data node that is going to be scaled.
+    - step-2: ES-setting-change:  change translong durability from async to sync/request basis, this is to make no data is loss.
     - Step-3: ES-change: check if ES cluster is green state, suppose if one of the data node is down and state is yellow then do not proceed with scaling.
-    - Step-4: scale the Data node by updating the new resources in the statefull set
+    - Step-4: scale the Data node by updating the new resources in the statefull set. Here the Data node will be restarted. 
     - Step-5: check if the POD is restarted and in running state from k8 point of view.
-    - Step-6: check if the POD is up from the ES point of view
+    - Step-6: check if the POD is up from the ES point of view. means Data node is register with the master.
     - Step-7: check if all shards are registered with Master, At this ES should turn in to green from yellow, now it is safe to scale next data node.
-    - Step-8: Undo the timeout settings.
+    - Step-8: Undo the  settings done in step-2.
  - Future Enhancements:
     - Horizontal scaling of Data nodes: increasing the "data-node-replica" will function as expected, but if "data-node-replica" is decreased by more then 2 then the Elastic search cluster can enter in to red state and there will be data loss, this can prevented by executing similar to vertical scaling one after another without entering into red state.
     - Picking "masternodeip" from services k8 objects instead from user.
     - Vertical scaling improvements: periodic scaling: currently vertical scaling is triggered from user, instead it can be triggered based on time automatically.
     - Multiple threads: Currently vertical for each elasticsearch cluster takes considerable amount of time, during this time other elastic cluster MAY not be done, this can be parallelised by running scaling operation in multiple threads.
     - elasticsearch api's TODO: change is settings assuming the default settings.
-    - Depends on ELasticSearch Version: It it depends on elasticsearch version as 6.3, if there is lot of changes in  api's then scaling operation will fail. 
-    - Local disk support: added changes to support local disk , but not tested with multiple nodes, it need to check that the pod will have affinity to the node, this can be enforced during the stateful set creation..
+    - Dependency on ElasticSearch Version: It it depends on elasticsearch version as 6.3, if there is lot of changes in  api's then scaling operation will fail. 
+    - Local disk support: added changes to support local disk, but not tested with multiple nodes, it need to check that the pod will have affinity to the node, this can be enforced during the statefull set creation..
   - Usecases:
     - case1: scale down during start of non-peak time , and scale-up during the start of peak time every day. doing scaling operation twice in a day, this can done using a cron job without interrupting the service.
     - case2: scale down and scale up once in a while.
@@ -59,7 +60,7 @@ spec:
 
 # Log :
 
-Below is actual log when there is a trigger for scaling.
+Below is actual log when there is a trigger for scaling, This is for a four data node cluster.
 
 ```
 INFO[0032] Found cluster: es-cluster                    
