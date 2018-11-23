@@ -22,7 +22,7 @@ const (
 )
 
 func k8_check_DataNodeRestarted(namespace, statefulSetName string, k *K8sutil) error {
-	ret := fmt.Errorf("Scaling: POD is not up: ",statefulSetName)
+	ret := fmt.Errorf("Scaling: POD is not up: ")
 	dnodename := statefulSetName + "-0"
 	newstatefulset, _ := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 	
@@ -98,7 +98,7 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 		
 // Step-3: ES-chanage: check if ES cluster is green state, suppose if one of the data node is down and state is yellow then do not proceed with scaling.
 		if err := es_checkForGreen(masterip); err != nil { 
-			err = fmt.Errorf("Scaling: ES cluster is not in green state", " name: ",statefulSetName)
+			err = fmt.Errorf("Scaling: ES cluster is not in green state")
 			return err
 		}
 		
