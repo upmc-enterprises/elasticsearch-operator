@@ -25,7 +25,7 @@ The following are  changes present in scaling patch
     - Picking "masternodeip" from services k8 objects instead from user.
     - Vertical scaling improvements: periodic scaling: currently vertical scaling is triggered from user, instead it can be triggered based on time automatically.
     - Multiple threads: Currently vertical for each elasticsearch cluster takes considerable amount of time, during this time other elastic cluster MAY not be done, this can be parallelised by running scaling operation in multiple threads.
-    - elasticsearch api's TODO: change is settings assuming the default settings.
+    - elasticsearch api's TODO: reverse in settings assuming the default settings.
     - Dependency on ElasticSearch Version: It it depends on elasticsearch version as 6.3, if there is lot of changes in  api's then scaling operation will fail. 
     - Local disk support: added changes to support local disk, but not tested with multiple nodes, it need to check that the pod will have affinity to the node, this can be enforced during the statefull set creation..
   - Usecases:

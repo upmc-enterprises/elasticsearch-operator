@@ -122,11 +122,11 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		limitMemory, _ := resource.ParseQuantity(resources.Limits.Memory)
 		requestCPU, _ := resource.ParseQuantity(resources.Requests.CPU)
 		requestMemory, _ := resource.ParseQuantity(resources.Requests.Memory)
-//		scheme := v1.URISchemeHTTP
+		scheme := v1.URISchemeHTTP
 		if useSSL != nil && *useSSL {
-//			scheme = v1.URISchemeHTTPS
+			scheme = v1.URISchemeHTTPS
 		}
-		/*probe := &v1.Probe{
+		probe := &v1.Probe{
 			TimeoutSeconds:      30,
 			InitialDelaySeconds: 10,
 			FailureThreshold:    15,
@@ -137,7 +137,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 					Scheme: scheme,
 				},
 			},
-		}*/
+		}
 		deployment := &v1beta1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
@@ -239,8 +239,8 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 										Protocol:      v1.ProtocolTCP,
 									},
 								},
-								//ReadinessProbe: probe,
-								//LivenessProbe:  probe,
+								ReadinessProbe: probe,
+								LivenessProbe:  probe,
 								VolumeMounts: []v1.VolumeMount{
 									v1.VolumeMount{
 										Name:      "storage",

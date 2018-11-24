@@ -51,9 +51,9 @@ func es_change_settings(es_ip , duration,translog_durability string)(error){
 	}
 	return ret;
 }
-func es_checkForGreen(es_ip string)(error){ /* TODO */
+func es_checkForGreen(es_ip string)(error){ 
 	logrus.Infof("Scaling: ES checking for green  ")
-	return es_checkForShards(es_ip , "", 180)
+	return es_checkForShards(es_ip , "", MAX_EsCommunicationTime)
 }
 func util_wordcount(input string, nodename string) (int,int) {
 	node_count := 0
