@@ -63,8 +63,26 @@ func k8_check_DataNodeRestarted(namespace, statefulSetName string, k *K8sutil) e
 	}
 	return ret
 }
-
-func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources myspec.Resources, javaOptions string, statefulSet *v1beta2.StatefulSet, masterip string) error {
+func get_masterIP(k *K8sutil, namespace, clusterName string)(string){
+	listN, _ := k.Kclient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+	for _, s := range listN.Items {
+		service_name := "elasticsearch-"+ clusterName
+		if (service_name == s.Name){
+			if (len(s.Spec.ExternalIPs)> 0 && (len(s.Spec.Ports) > 0)){
+				ret := s.Spec.ExternalIPs[0] + ":"+ strconv.Itoa(int(s.Spec.Ports[0].NodePort))
+				logrus.Infof("Scaling:  MasterIP external port: %s",ret)
+				return ret
+			}
+			if (len(s.Spec.ClusterIP)> 0 && (len(s.Spec.Ports) > 0)){
+				ret := s.Spec.ClusterIP+ ":"+ strconv.Itoa(int(s.Spec.Ports[0].Port))
+				logrus.Infof("Scaling:  MasterIP Internal port: %s",ret)
+				return ret
+			}
+		}
+	}
+	return ""
+}
+func scale_datanode(k *K8sutil, namespace, clusterName, statefulSetName string, resources myspec.Resources, javaOptions string, statefulSet *v1beta2.StatefulSet ) error {
 	cpu, _ := resource.ParseQuantity(resources.Requests.CPU)
 	memory, _ := resource.ParseQuantity(resources.Requests.Memory)
 
@@ -91,6 +109,12 @@ func scale_datanode(k *K8sutil, namespace, statefulSetName string, resources mys
 		}
 	}
 
+	masterip := get_masterIP(k,namespace,clusterName)
+	if (masterip == ""){
+			err := fmt.Errorf("MasterIP is empty")
+			return err
+	}
+	
 	if !resourceMatch { 
 		logrus.Infof("Scaling:STARTED scaling with new resources ... : %s", statefulSetName)
 		// TODO : only memory request is updated, memory limit as need to be updated.

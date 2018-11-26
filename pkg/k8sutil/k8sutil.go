@@ -681,7 +681,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool,scalingMasterIP string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -707,7 +707,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			return err
 		}
 		if deploymentType == "data"  && scaling {
-			return scale_datanode(k, namespace, statefulSetName, resources, javaOptions, statefulSet,scalingMasterIP)
+			return scale_datanode(k, namespace, clusterName, statefulSetName, resources, javaOptions, statefulSet)
 		}
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {

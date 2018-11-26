@@ -173,7 +173,6 @@ func (p *Processor) refreshClusters() error {
 					},
 					Scaling: myspec.Scaling{
 						JavaOptions:         cluster.Spec.Scaling.JavaOptions,
-						MasterNodeIP:        cluster.Spec.Scaling.MasterNodeIP,
 						Resources: myspec.Resources{
 							Limits: myspec.MemoryCPU{
 								Memory: cluster.Spec.Scaling.Resources.Limits.Memory,
@@ -404,7 +403,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		for index, count := range zoneDistributionMaster {
 			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
 				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,0 , false,""); err != nil {
+				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,0 , false); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
 				return err
 			}
@@ -422,15 +421,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			resources = c.Spec.Scaling.Resources	
 			scaling = true	
 		}
-		scalingMasterIP := ""
-		if scaling {
-			scalingMasterIP = c.Spec.Scaling.MasterNodeIP
-		}
-		logrus.Info("Scaling enabled: ",scaling," zone distribution  JavaOptions:",javaOptions," Resources: ",resources, "masterip: ",scalingMasterIP)
+
+		logrus.Info("Scaling enabled: ",scaling," zone distribution  JavaOptions:",javaOptions," Resources: ",resources)
 		for index, count := range zoneDistributionData {
 			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, resources,
 				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,index,scaling,scalingMasterIP); err != nil {
+				c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,index,scaling); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 
 				return err
@@ -446,7 +442,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// Create Master Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
 			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
-			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, 0, false,""); err != nil {
+			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, 0, false); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
 
 			return err
@@ -465,15 +461,12 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 			resources = c.Spec.Scaling.Resources
 			scaling = true		
 		}
-		scalingMasterIP := ""
-		if scaling {
-			scalingMasterIP = c.Spec.Scaling.MasterNodeIP
-		}
-		logrus.Info("Scaling enabled: ",scaling,"  JavaOptions:",javaOptions," Resources: ",resources," masterIP: ",scalingMasterIP)
+
+		logrus.Info("Scaling enabled: ",scaling,"  JavaOptions:",javaOptions," Resources: ",resources)
 		for nodeindex := 0; nodeindex < dataNodeCount; nodeindex++ {
 			if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(1); return &i }(), baseImage, c.Spec.Storage.StorageClass,
 				c.Spec.DataDiskSize, resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
-				c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, nodeindex , scaling, scalingMasterIP); err != nil {
+				c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, nodeindex , scaling); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 				return err
 			}
