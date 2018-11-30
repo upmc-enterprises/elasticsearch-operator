@@ -27,7 +27,6 @@ package processor
 import (
 	"fmt"
 	"sync"
-	//"runtime/debug"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/elasticsearchutil"
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
@@ -333,8 +332,8 @@ func (p *Processor) processMasterPodEvent(c *v1.Pod) error {
 }
 
 func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) error {
-	logrus.Println("--------> Received ElasticSearch Event!:", c)
-	//debug.PrintStack()
+	logrus.Println("--------> Received ElasticSearch Event!")
+
 	// Refresh
 	if err := p.refreshClusters(); err != nil {
 		logrus.Error("Error refreshing cluster ", err)
@@ -344,7 +343,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	// Is a base image defined in the custom cluster?
 	var baseImage = p.calcBaseImage(p.baseImage, c.Spec.ElasticSearchImage)
 
-	logrus.Infof(" Using [%s] as image for es cluster", baseImage)
+	logrus.Infof("Using [%s] as image for es cluster", baseImage)
 
 	// Default UseSSL to true
 	useSSL := p.defaultUseSSL(c.Spec.UseSSL)
@@ -403,7 +402,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		for index, count := range zoneDistributionMaster {
 			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
 				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,0 , false); err != nil {
+				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, false); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
 				return err
 			}
@@ -426,7 +425,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		for index, count := range zoneDistributionData {
 			if err := p.k8sclient.CreateDataNodeDeployment("data", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, resources,
 				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
-				c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,index,scaling); err != nil {
+				c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL,scaling); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 
 				return err
@@ -442,14 +441,13 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		// Create Master Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
 			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
-			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, 0, false); err != nil {
+			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, false); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
 
 			return err
 		}
 
 		// Create Data Nodes
-		dataNodeCount := int(c.Spec.DataNodeReplicas) /* TODO: if the replica count is decreased, then need to handle accordingly */
 		javaOptions := c.Spec.JavaOptions
 		resources := c.Spec.Resources
 		scaling := false
@@ -463,14 +461,13 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 		}
 
 		logrus.Info("Scaling enabled: ",scaling,"  JavaOptions:",javaOptions," Resources: ",resources)
-		for nodeindex := 0; nodeindex < dataNodeCount; nodeindex++ {
-			if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(1); return &i }(), baseImage, c.Spec.Storage.StorageClass,
+		
+		if err := p.k8sclient.CreateDataNodeDeployment("data", func() *int32 { i := int32(c.Spec.DataNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
 				c.Spec.DataDiskSize, resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
-				c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, nodeindex , scaling); err != nil {
+				c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, javaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL , scaling); err != nil {
 				logrus.Error("Error creating data node deployment ", err)
 				return err
-			}
-		}
+				}
 	}
 	
 	// Deploy Kibana

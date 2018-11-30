@@ -446,7 +446,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	volumeClaimTemplates := []v1.PersistentVolumeClaim{}
 	if storageClass == "localdisk" {
 		hostpath := "/mnt/"+statefulSetName
-   // hosttype := "Directory"
+   // TODO:  localdisk does not work, since the local path is same for all data nodes, this need to be fixed.
 		volumes =  []v1.Volume{
 						v1.Volume{
 							Name: "es-data",
@@ -496,6 +496,9 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 		},
 		Spec: apps.StatefulSetSpec{
 			Replicas:    replicas,
+			UpdateStrategy: apps.StatefulSetUpdateStrategy {
+				Type: apps.OnDeleteStatefulSetStrategyType,
+			},
 			ServiceName: statefulSetName,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -681,11 +684,11 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string, index int,scaling bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string,scaling bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
-	statefulSetName := fmt.Sprintf("%s-%s-%d", deploymentName, storageClass, index)
+	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
 
 	// Check if StatefulSet exists
 	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
@@ -707,12 +710,12 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			return err
 		}
 		if deploymentType == "data"  && scaling {
-			return scale_datanode(k, namespace, clusterName, statefulSetName, resources, javaOptions, statefulSet)
+			ret := scale_statefulset(k, namespace, clusterName, statefulSetName, resources, javaOptions, statefulSet, *replicas)
+			return ret
 		}
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {
 			currentReplicas := *statefulSet.Spec.Replicas
-			logrus.Infof(" Current replicas: ",currentReplicas," New replica: ",*replicas)
 			if *replicas < currentReplicas {
 				minMasterNodes := elasticsearchutil.MinMasterNodes(int(*replicas))
 				logrus.Infof("Detected master scale-down. Setting 'discovery.zen.minimum_master_nodes' to %d", minMasterNodes)
@@ -720,7 +723,6 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			}
 			statefulSet.Spec.Replicas = replicas
 			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
-			logrus.Infof("  updated Stateful set: ", statefulSetName)
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
 				minMasterNodes := elasticsearchutil.MinMasterNodes(int(currentReplicas))
