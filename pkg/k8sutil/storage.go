@@ -33,11 +33,16 @@ import (
 
 // CreateStorageClass creates a storage class
 // NOTE: Right now only creating AWS EBS volumes type gp2
-func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string, clusterName string) error {
+func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType string, clusterName string, useEncryption string) error {
 
 	component := "elasticsearch" + "-" + clusterName
 	// Check if storage class exists
 	storageClass, err := k.Kclient.StorageV1beta1().StorageClasses().Get(zone, metav1.GetOptions{})
+
+	// Default encryption to true
+	if useEncryption == "" {
+		useEncryption = "true"
+	}
 
 	if len(storageClass.Name) == 0 {
 		logrus.Infof("StorageClass %s not found, creating...", zone)
@@ -52,7 +57,8 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 			},
 			Provisioner: storageClassProvisioner,
 			Parameters: map[string]string{
-				"type": storageType,
+				"type":      storageType,
+				"encrypted": useEncryption,
 			},
 		}
 
