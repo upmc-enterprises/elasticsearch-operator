@@ -185,6 +185,9 @@ type Storage struct {
 
 	// Volume Reclaim Policy on Persistent Volumes
 	VolumeReclaimPolicy string `json:"volume-reclaim-policy"`
+
+	// Encrypted chooses whether or not to use encryption ("true or false")
+	Encrypted string `json:"encrypted,omitempty"`
 }
 
 // Resources defines CPU / Memory restrictions on pods
@@ -222,7 +225,7 @@ type Kibana struct {
 // Cerebro properties if wanting operator to deploy for user
 type Cerebro struct {
 	// Defines the image to use for deploying Cerebro
-	Image         string `json:"image"`
+	Image string `json:"image"`
 
 	// ImagePullPolicy specifies the image-pull-policy to use (optional)
 	ImagePullPolicy string `json:"image-pull-policy"`

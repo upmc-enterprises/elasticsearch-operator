@@ -377,7 +377,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Storage Classes
 		for _, sc := range c.Spec.Zones {
-			if err := p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name); err != nil {
+			if err := p.k8sclient.CreateStorageClass(sc, c.Spec.Storage.StorageClassProvisoner, c.Spec.Storage.StorageType, c.ObjectMeta.Name, c.Spec.Storage.Encrypted); err != nil {
 				logrus.Error("Error creating storage class ", err)
 				return err
 			}

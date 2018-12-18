@@ -47,6 +47,7 @@ Following parameters are available to customize the elastic cluster:
   - Using a provisioner
     - type: Defines the type of storage to provision based upon cloud (e.g. `gp2`)
     - storage-class-provisioner: Defines which type of provisioner to use (e.g. `kubernetes.io/aws-ebs`)
+    - encrypted: Whether or not to use encryption. `"true"` or `"false"` Defaults to: `"true"`
   - Using an existing Storage Class (e.g. storage class for GlusterFS)
     - storage-class: Name of an existing StorageClass object to use (zones can be [])
   - Using a custom Storage Class per zone
