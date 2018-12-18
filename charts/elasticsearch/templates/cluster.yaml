@@ -34,6 +34,7 @@ spec:
 {{- end }}
   snapshot:
     scheduler-enabled: {{ .Values.snapshot.enabled }}
+    type: {{ .Values.snapshot.type }}
     bucket-name: {{ .Values.snapshot.bucketName }}
     cron-schedule: "{{ .Values.snapshot.schedule }}"
     image: "{{ .Values.snapshot.image }}"
