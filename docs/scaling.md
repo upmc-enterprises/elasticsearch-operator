@@ -3,7 +3,6 @@
 
 The following are  changes present in scaling patch
 
-- Every Data node will have stateful set: currently all data nodes are part of one Statefule set, scaling needs every data node to be seperate statefulset with one replica,  every datanode resource are updated independently to corresponding statefulset, so that the control will be in the hands of operator instead of k8.
 - Scaling is optional feature: Seperate section is defined for scaling as shown in below example spec. If the scaling section is not present then entire scaling feature will be disabled.
 - Added changes to support local disk, but it is not tested for multiple nodes, MAY need to add affinity between POD and node. 
 - when Scaling will be triggered: Scaling will be triggered if there is any change in the one of the following 3 fields inside the scaling section: javaoptions,cpu and memory. javaoptions and resources entries corresponds only to non-data nodes incase scaling section is present. If scaling section is abscent then it corresponds to all nodes.
@@ -35,27 +34,69 @@ The following are  changes present in scaling patch
 ```
 Example Spec containing optional scaling section
 
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  clusterName: ""
+  creationTimestamp: 2018-11-19T08:49:23Z
+  generation: 1
+  name: es-cluster
+  namespace: default
+  resourceVersion: "1636643"
+  selfLink: /apis/enterprises.upmc.com/v1/namespaces/default/elasticsearchclusters/es-cluster
+  uid: 03267c65-ebd8-11e8-8e6a-000d3a000cf8
 spec:
-  client-node-replicas: 3
-  data-node-replicas: 3
+  cerebro:
+    image: hub.docker.prod.walmart.com/upmcenterprises/cerebro:0.6.8
+  client-node-replicas: 1
+  data-node-replicas: 4
   data-volume-size: 10Gi
-  java-options: -Xms256m -Xmx256m
-  master-node-replicas: 2
+  elastic-search-image: quay.docker.prod.walmart.com/pires/docker-elasticsearch-kubernetes:6.3.2
+  java-options: -Xms1052m -Xmx1052m
+  master-node-replicas: 1
+  network-host: 0.0.0.0
+  resources:
+    limits:
+      cpu: 4m
+      memory: 3048Mi
+    requests:
+      cpu: 3m
+      memory: 2024Mi
   scaling:
-    java-options: -Xms1052m -Xmx1052m
+    java-options: -Xms1078m -Xmx1078m
     resources:
       limits:
-        cpu: 2m
+        cpu: 5m
         memory: 2048Mi
       requests:
-        cpu: 1m
+        cpu: 4m
         memory: 1024Mi
-  zones:
-  - us-east-1a
-  - us-east-1b
-  - us-east-1c
+  storage:
+    storage-class: standard-disk
+  zones: []
 ```
 
+# TestCases :
+
+- Testcase-1 : Normal scaling operation on Network block storage.
+    - Description:  Scaling operation can be triggered by changing the scaling parameters in ElasticSearch Cluster configuration,this can be done using "kubectl edit ..". If there is any change in jvm-heap memory in java-options or cpu cores inside the scaling section then scaling operation will be triggered. This can be observed in elastic search operator log. During scaling operation, the following should be full filled: a) At any time only one data node should be restarted, b) The State of ElasticSearch cluster should not be entered into Red state anytime during scaling operation. In case if the Elasticsearch cluster enter in to Redstate then the scaling operation will be automatically halted by the elasaticsearch opeartor.  
+    - Test Status: Passed.
+- Testcase-2 : Stop and start the ES operator during scaling operation.
+    - Description:   when the scaling operation is halfway, stop the elasticsearch operator.  example: out 20 nodes, 10 nodes have completed scaling, during that time stop the elastic operator, and start the elasticsearch operator after few minutes, when the elasticsearch operator is  started then scaling of the rest of nodes should  continue where it was stopped last time instead of starting from the beginning. 
+    - Test Status: Passed.
+- Testcase-3 : Trigger scaling operation when Elastic cluster is in "Yellow/Red" state
+    - Description:  When the Elastic cluster in non-green state, and if scaling operation is started it  should not start scaling operation. means not single data pod should be restarted. Scaling operation should be started only if the Elastic cluster is in green state.
+    - Test Status : Passed.
+- Testcase-4 :  Trigger of scaling operation: changes in Non-scaling parameter
+    - Description: If there is any change in non-scalar parameter, then scaling operation should not be triggered. Scaling operation should be triggered only of there is change in Java-options, cpu or memory inside scaling section.  To trigger scaling atleast any one of jvm heap or cpu is required.
+    - Test Status: Passed
+- Testcase-5 : Normal scaling operation on local/nfs storage.
+    - Description: Similar to Testcase-1 except localdisk is set as storage-class instead of network block storage.
+    - Test status : Failed .
+    - Reason for Failure: Since all data nodes share same statefull set, the mount point for all data nodes is same, due to this second data nodes will not comesup, this need to addressed in future.
+  
+    
+          
 # Log :
 
 Below is actual log when there is a trigger for scaling, This is for a four data node cluster.
