@@ -28,7 +28,7 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -228,12 +228,12 @@ func (k *K8sutil) CreateMgmtService(service string, clusterName, namespace strin
 		}
 
 		if _, err := k.Kclient.CoreV1().Services(namespace).Create(svc); err != nil {
-			logrus.Error("Could not create service %v ! ", serviceName, err)
+			logrus.Errorf("Could not create service %v %v! ", serviceName, err)
 			return err
 		}
 
 	} else if err != nil {
-		logrus.Error("Could not get service %v! ", serviceName, err)
+		logrus.Errorf("Could not get service %v %v! ", serviceName, err)
 		return err
 	}
 	return nil

@@ -39,6 +39,11 @@ Following parameters are available to customize the elastic cluster:
 - elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0`)
 - keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
 - use-ssl: Use SSL for communication with the cluster and inside the cluster. Default value is true.
+- java-options: sets java-options for all nodes
+- master-java-options: sets java-options for Master nodes (overrides java-options)
+- client-java-options: sets java-options for Client nodes (overrides java-options)
+- data-java-options: sets java-options for Data nodes (overrides java-options)
+
 - [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
   - scheduler-enabled: If the cron scheduler should be running to enable snapshotting
   - bucket-name: Name of S3 bucket to dump snapshots
