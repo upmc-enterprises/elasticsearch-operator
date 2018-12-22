@@ -78,81 +78,50 @@ spec:
 
 # TestCases :
 
-- Testcase-1 : Normal scaling operation on Network block storage.
-    - Description:  Scaling operation can be triggered by changing the scaling parameters in ElasticSearch Cluster configuration,this can be done using "kubectl edit ..". If there is any change in jvm-heap memory in java-options or cpu cores inside the scaling section then scaling operation will be triggered. This can be observed in elastic search operator log. During scaling operation, the following should be full filled: a) At any time only one data node should be restarted, b) The State of ElasticSearch cluster should not be entered into Red state anytime during scaling operation. In case if the Elasticsearch cluster enter in to Redstate then the scaling operation will be automatically halted by the elasaticsearch opeartor.  
-    - Test Status: Passed.
-- Testcase-2 : Stop and start the ES operator during scaling operation.
-    - Description:   when the scaling operation is halfway, stop the elasticsearch operator.  example: out 20 nodes, 10 nodes have completed scaling, during that time stop the elastic operator, and start the elasticsearch operator after few minutes, when the elasticsearch operator is  started then scaling of the rest of nodes should  continue where it was stopped last time instead of starting from the beginning. 
-    - Test Status: Passed.
-- Testcase-3 : Trigger scaling operation when Elastic cluster is in "Yellow/Red" state
-    - Description:  When the Elastic cluster in non-green state, and if scaling operation is started it  should not start scaling operation. means not single data pod should be restarted. Scaling operation should be started only if the Elastic cluster is in green state.
-    - Test Status : Passed.
-- Testcase-4 :  Trigger of scaling operation: changes in Non-scaling parameter
-    - Description: If there is any change in non-scalar parameter, then scaling operation should not be triggered. Scaling operation should be triggered only of there is change in Java-options, cpu or memory inside scaling section.  To trigger scaling atleast any one of jvm heap or cpu is required.
-    - Test Status: Passed
-- Testcase-5 : Normal scaling operation on local/nfs storage.
-    - Description: Similar to Testcase-1 except localdisk is set as storage-class instead of network block storage.
-    - Test status : Failed .
-    - Reason for Failure: Since all data nodes share same statefull set, the mount point for all data nodes is same, due to this second data nodes will not comesup, this need to addressed in future.
+# Testcase-1 : Normal scaling operation on Network block storage.
+ - Description:  Scaling operation can be triggered by changing the scaling parameters in ElasticSearch Cluster configuration,this can be done using "kubectl edit ..". If there is any change in jvm-heap memory in java-options or cpu cores inside the scaling section then scaling operation will be triggered. This can be observed in elastic search operator log. During scaling operation, the following should be full filled: a) At any time only one data node should be restarted, b) The State of ElasticSearch cluster should not be entered into Red state anytime during scaling operation. In case if the Elasticsearch cluster enter in to Redstate then the scaling operation will be automatically halted by the elasaticsearch opeartor. 
+- Steps to Reproduce the test:
+    - step-1: edit the configuration of elastic cluster, this can done using "kubectl edit,..", change the parameters like jvm heap memory size or cpu cores inside the scaling section and save the file. 
+    - step-2:  After step-1, elastic search operator will receive the signal about the change in configuration of cluster, then the scaling code will check if there is any change in parameters related to scaling, this triggers scaling operation, this can be monitored in operator log.
+    - step-3: elasticsearch operator will update the data node pods one after another, and making sure the elastic search cluster is in yellow/green. 
+- Test Status: Passed.
+
+# Testcase-2 : Stop and start the ES operator during scaling operation.
+- Description:   when the scaling operation is halfway, stop the elasticsearch operator.  example: out 20 nodes, 10 nodes have completed scaling, during that time stop the elastic operator, and start the elasticsearch operator after few minutes, when the elasticsearch operator is  started then scaling of the rest of nodes should  continue where it was stopped last time instead of starting from the beginning. 
+- Steps to Reproduce the test:
+    - step-1: edit the configuration of elastic cluster, this can done using "kubectl edit,..", change the parameters like jvm heap memory size or cpu cores inside the scaling section and save the file.
+    - step-2: After step-1, elastic search operator will receive the signal about the change in configuration of cluster, then the scaling code will check if there is any change in parameters related to scaling, this triggers scaling operation, this can be monitored in operator log.
+    - step-3: Elasticsearch operator will update the data node pods one after another, and making sure the elastic search cluster is in yellow/green. 
+    - step-4: After scaling is half way of the data nodes, stop the elastic search operator.example: out of 20 nodes, after completing 10 nodes, stop the ES operator.
+    - step-5: Wait for 10 min, and start ES operator 
+    - step-6: When the ES operator is started, rest of the datanodes will get scaled without starting from the start.
+    - step-7: check in elasticsearch cluster the starting time of each data node. half of the data nodes would have started 10 min later.
+ - Test Status: Passed.
+
+# Testcase-3 : Trigger scaling operation when Elastic cluster is in "Yellow/Red" state
+- Description:  When the Elastic cluster in non-green state, and if scaling operation is started it  should not start scaling operation. means not single data pod should be restarted. Scaling operation should be started only if the Elastic cluster is in green state.
+- Steps to Reproduce the test:
+    - step-1: make the elastic search cluster to change in to yellow state by stopping one of the data node or by other means.
+    - step-2: edit the configuration of elastic cluster, this can done using "kubectl edit,..", change the parameters like jvm heap memory size or cpu cores inside the scaling section and save the file.
+    - step-3: After step-2, elastic search operator will receive the signal about the change in configuration of cluster, then the scaling code will check if there is any change in parameters related to scaling, this triggers scaling operation, this can be monitored in operator log.
+    - step-4: scaling of Data nodes will started, but immedietly it will generate an error saying ES cluster is in yellow state and scaling operation is aborted.
+- Test Status : Passed.
+
+# Testcase-4 :  Trigger of scaling operation: changes in Non-scaling parameter
+- Description: If there is any change in non-scalar parameter, then scaling operation should not be triggered. Scaling operation should be triggered only of there is change in Java-options, cpu or memory inside scaling section.  To trigger scaling atleast any one of jvm heap or cpu is required.
+- Steps to Reproduce the test:
+    - step-1: edit the configuration of elastic cluster, this can done using "kubectl edit,..", change the parameters not related to scaling.
+    - step-2: After step-1, elastic search operator will receive the signal about the change in configuration of cluster, but scaling operaton of data nodes will not started saying there is no change in memory and cpu.
+- Test Status: Passed
+
+# Testcase-5 : Normal scaling operation on local/nfs storage.
+- Description: Similar to Testcase-1 except localdisk is set as storage-class instead of network block storage.
+- Steps to Reproduce the test:
+    - step-1: edit the configuration of elastic cluster, this can done using "kubectl edit,..", change the parameters like jvm heap memory size or cpu cores inside the scaling section and save the file. 
+    - step-2:  After step-1, elastic search operator will receive the signal about the change in configuration of cluster, then the scaling code will check if there is any change in parameters related to scaling, this triggers scaling operation, this can be monitored in operator log.
+    - step-3: elasticsearch operator will update the data node pods one after another, and making sure the elastic search cluster is in yellow/green.
+- Test status : Failed .
+- Reason for Failure: Since all data nodes share same statefull set, the mount point for all data nodes is same, due to this second data nodes will not comesup, this need to addressed in future.
   
     
           
-# Log :
-
-Below is actual log when there is a trigger for scaling, This is for a four data node cluster.
-
-```
-INFO[0032] Found cluster: es-cluster                    
-INFO[0032] use-ssl not specified, defaulting to UseSSL=true 
-INFO[0032]  Using [hub.docker.prod.walmart.com/upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0] as image for es cluster 
-INFO[0032] use-ssl not specified, defaulting to UseSSL=true 
-INFO[0034]  Current replicas: %!(EXTRA int32=1, string= New replica: , int32=1) 
-INFO[0035]   updated Stateful set: %!(EXTRA string=es-master-es-cluster-localdisk-0) 
-INFO[0035] Scaling enabled: true  JavaOptions:-Xms1072m -Xmx1072m Resources: {{1024Mi 4m} {2048Mi 6m}} masterIP: 10.12.17.168:30004 
-INFO[0035] Scaling: java_opts Changed by user: %!(EXTRA string=-Xms1072m -Xmx1072m, string= current value: , string=-Xms1062m -Xmx1062m, string= name: , string=es-data-es-cluster-localdisk-0) 
-INFO[0035] Scaling:STARTED scaling with new resources ... : es-data-es-cluster-localdisk-0 
-INFO[0035] Scaling: ES checking for green               
-INFO[0035] Scaling: ES checking for shards name:        
-INFO[0036] Scaling: change ES setting:  delay timeout:6m  and translog durability: request 
-INFO[0042] Scaling: checking Datanode if it restarted or not by k8: es-data-es-cluster-localdisk-0 
-INFO[0047] Scaling: POD started pod_version: 107346%!(EXTRA string= ss_version: %d, int=107321, string= Status: %s, string=&ContainerStateRunning{StartedAt:2018-11-23 17:30:54 +0530 IST,}) 
-INFO[0047] Scaling: ES checking if the data node: es-data-es-cluster-localdisk-0-0 joined master  
-INFO[0057] Scaling: ES checking for shards name: es-data-es-cluster-localdisk-0-0 
-INFO[0058] Scaling: change ES setting:  delay timeout:1m  and translog durability: async 
-INFO[0058] Scaling:------------- sucessfully Completed  for: es-data-es-cluster-localdisk-0 :-------------------------------- 
-INFO[0058] Scaling: java_opts Changed by user: %!(EXTRA string=-Xms1072m -Xmx1072m, string= current value: , string=-Xms1062m -Xmx1062m, string= name: , string=es-data-es-cluster-localdisk-1) 
-INFO[0058] Scaling:STARTED scaling with new resources ... : es-data-es-cluster-localdisk-1 
-INFO[0058] Scaling: ES checking for green               
-INFO[0058] Scaling: ES checking for shards name:        
-INFO[0059] Scaling: change ES setting:  delay timeout:6m  and translog durability: request 
-INFO[0060] Scaling: checking Datanode if it restarted or not by k8: es-data-es-cluster-localdisk-1 
-INFO[0069] Scaling: POD started pod_version: 107396%!(EXTRA string= ss_version: %d, int=107369, string= Status: %s, string=&ContainerStateRunning{StartedAt:2018-11-23 17:31:16 +0530 IST,}) 
-INFO[0069] Scaling: ES checking if the data node: es-data-es-cluster-localdisk-1-0 joined master  
-INFO[0079] Scaling: ES checking for shards name: es-data-es-cluster-localdisk-1-0 
-INFO[0079] Scaling: change ES setting:  delay timeout:1m  and translog durability: async 
-INFO[0080] Scaling:------------- sucessfully Completed  for: es-data-es-cluster-localdisk-1 :-------------------------------- 
-INFO[0080] Scaling: java_opts Changed by user: %!(EXTRA string=-Xms1072m -Xmx1072m, string= current value: , string=-Xms1062m -Xmx1062m, string= name: , string=es-data-es-cluster-localdisk-2) 
-INFO[0080] Scaling:STARTED scaling with new resources ... : es-data-es-cluster-localdisk-2 
-INFO[0080] Scaling: ES checking for green               
-INFO[0080] Scaling: ES checking for shards name:        
-INFO[0080] Scaling: change ES setting:  delay timeout:6m  and translog durability: request 
-INFO[0082] Scaling: checking Datanode if it restarted or not by k8: es-data-es-cluster-localdisk-2 
-INFO[0089] Scaling: POD started pod_version: 107448%!(EXTRA string= ss_version: %d, int=107421, string= Status: %s, string=&ContainerStateRunning{StartedAt:2018-11-23 17:31:36 +0530 IST,}) 
-INFO[0089] Scaling: ES checking if the data node: es-data-es-cluster-localdisk-2-0 joined master  
-INFO[0099] Scaling: ES checking for shards name: es-data-es-cluster-localdisk-2-0 
-INFO[0099] Scaling: change ES setting:  delay timeout:1m  and translog durability: async 
-INFO[0100] Scaling:------------- sucessfully Completed  for: es-data-es-cluster-localdisk-2 :-------------------------------- 
-INFO[0100] Scaling: java_opts Changed by user: %!(EXTRA string=-Xms1072m -Xmx1072m, string= current value: , string=-Xms1062m -Xmx1062m, string= name: , string=es-data-es-cluster-localdisk-3) 
-INFO[0100] Scaling:STARTED scaling with new resources ... : es-data-es-cluster-localdisk-3 
-INFO[0100] Scaling: ES checking for green               
-INFO[0100] Scaling: ES checking for shards name:        
-INFO[0100] Scaling: change ES setting:  delay timeout:6m  and translog durability: request 
-INFO[0102] Scaling: checking Datanode if it restarted or not by k8: es-data-es-cluster-localdisk-3 
-INFO[0108] Scaling: POD started pod_version: 107498%!(EXTRA string= ss_version: %d, int=107470, string= Status: %s, string=&ContainerStateRunning{StartedAt:2018-11-23 17:31:56 +0530 IST,}) 
-INFO[0108] Scaling: ES checking if the data node: es-data-es-cluster-localdisk-3-0 joined master  
-INFO[0118] Scaling: ES checking for shards name: es-data-es-cluster-localdisk-3-0 
-INFO[0120] Scaling: change ES setting:  delay timeout:1m  and translog durability: async 
-INFO[0120] Scaling:------------- sucessfully Completed  for: es-data-es-cluster-localdisk-3 :-------------------------------- 
-INFO[0122] --------> ElasticSearch Event finished!
-
-```
