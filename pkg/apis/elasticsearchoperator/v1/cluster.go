@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package v1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -71,6 +72,12 @@ type ClusterSpec struct {
 	// to run on a node, the node must have each of the indicated key-value pairs as
 	// labels.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// Tolerations specifies which tolerations the Master and Data nodes will have applied to them
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+
+	// Affinity (podAffinity, podAntiAffinity, nodeAffinity) will be applied to the Client nodes
+	Affinity v1.Affinity `json:"affinity,omitempty"`
 
 	// Zones specifies a map of key-value pairs. Defines which zones
 	// to deploy persistent volumes for data nodes

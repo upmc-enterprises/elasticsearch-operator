@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	v1 "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestGetESURL(t *testing.T) {
@@ -39,8 +40,10 @@ func TestSSLCertConfig(t *testing.T) {
 	}
 	clusterName := "test"
 	useSSL := false
+	nodeSelector := make(map[string]string)
+	tolerations := []corev1.Toleration{}
 	statefulSet := buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
-		"", "", "", "", "", nil, &useSSL, resources, nil, "")
+		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations)
 
 	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
 		if volume.Name == fmt.Sprintf("%s-%s", secretName, clusterName) {
@@ -50,7 +53,7 @@ func TestSSLCertConfig(t *testing.T) {
 
 	useSSL = true
 	statefulSet = buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
-		"", "", "", "", "", nil, &useSSL, resources, nil, "")
+		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations)
 
 	found := false
 	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
