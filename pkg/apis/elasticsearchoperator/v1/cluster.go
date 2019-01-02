@@ -92,8 +92,17 @@ type ClusterSpec struct {
 	// Storage defines how volumes are provisioned
 	Storage Storage `json:"storage"`
 
-	// JavaOptions defines args passed to elastic nodes
+	// JavaOptions defines args passed to all elastic nodes
 	JavaOptions string `json:"java-options"`
+
+	// ClientJavaOptions defines args passed to client nodes (Overrides JavaOptions)
+	ClientJavaOptions string `json:"client-java-options"`
+
+	// DataJavaOptions defines args passed to data nodes (Overrides JavaOptions)
+	DataJavaOptions string `json:"data-java-options"`
+
+	// MasterJavaOptions defines args passed to master nodes (Overrides JavaOptions)
+	MasterJavaOptions string `json:"master-java-options"`
 
 	// ImagePullSecrets defines credentials to pull image from private repository (optional)
 	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
