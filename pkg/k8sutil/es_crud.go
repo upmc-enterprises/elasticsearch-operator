@@ -21,7 +21,7 @@ TODO:
   this can be corrected by reading the setting before change.
 */
 
-func es_change_settings(es_ip , duration,translog_durability string)(error){  
+func ES_change_settings(es_ip , duration,translog_durability string)(error){  
 	var ret error
 	ret = errors.New("Scaling: error in setting delay timeout")
 	
@@ -36,6 +36,9 @@ func es_change_settings(es_ip , duration,translog_durability string)(error){
 	req, _ := http.NewRequest("PUT", "http://"+es_ip+"/_all/_settings", bytes.NewBufferString(body))
 	req.Header.Add("Content-Type", `application/json`)
 	resp, _ := client.Do(req)
+	if (resp == nil){
+		return ret;
+	}
 	data, _ := ioutil.ReadAll(resp.Body)
 
 	if (resp.StatusCode == 200){
@@ -51,9 +54,9 @@ func es_change_settings(es_ip , duration,translog_durability string)(error){
 	}
 	return ret;
 }
-func es_checkForGreen(es_ip string)(error){ 
+func ES_checkForGreen(es_ip string)(error){ 
 	logrus.Infof("Scaling: ES checking for green  ")
-	return es_checkForShards(es_ip , "", MAX_EsCommunicationTime)
+	return ES_checkForShards(es_ip , "", MAX_EsCommunicationTime)
 }
 func util_wordcount(input string, nodename string) (int,int) {
 	node_count := 0
@@ -74,7 +77,7 @@ func util_wordcount(input string, nodename string) (int,int) {
 	return node_count,unassigned_count+initializing_count
 }
 
-func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
+func ES_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 	var ret error
 	ret = errors.New("still unassigned shards are there")
 	
@@ -82,7 +85,7 @@ func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 	for i := 0; i < waitSeconds; i++ {
 		response, err := http.Get("http://" + es_ip + "/_cat/shards")
 		if err != nil {
-			fmt.Printf("The HTTP request failed with error %s\n", err)
+			logrus.Infof("Error: The HTTP request failed with error %s\n", err)
 		} else {
 			data, _ := ioutil.ReadAll(response.Body)
 			_,unassigned_count := util_wordcount(string(data), nodeName)
@@ -90,7 +93,12 @@ func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 				time.Sleep(1 * time.Second)
 				continue
 			} else {
-				ret = nil
+				
+				if (response.StatusCode == 200){
+					ret = nil
+				}else{
+					logrus.Infof("Scaling: Error checkForShards response :%s: statuscode %d:",data,response.StatusCode)
+				}
 				break
 			}
 		}
@@ -100,7 +108,7 @@ func es_checkForShards(es_ip string, nodeName string, waitSeconds int)(error) {
 	return ret;
 }
 
- func es_checkForNodeUp(es_ip string, nodeName string, waitSeconds int)(error){
+ func ES_checkForNodeUp(es_ip string, nodeName string, waitSeconds int)(error){
 	 var ret error
 	 ret = errors.New("ES node is not up")
 

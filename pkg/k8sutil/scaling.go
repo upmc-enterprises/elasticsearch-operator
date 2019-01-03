@@ -124,13 +124,13 @@ func get_masterIP(k *K8sutil, namespace, clusterName string) string {
 }
 func scale_datanode(k *K8sutil, namespace, clusterName, statefulSetName, podName string, resources myspec.Resources, javaOptions string, statefulSet *v1beta2.StatefulSet, pod_index int32, masterip string) error {
 	// Step-3: ES-change: check if ES cluster is green state, suppose if one of the data node is down and state is yellow then do not proceed with scaling.
-	if err := es_checkForGreen(masterip); err != nil {
+	if err := ES_checkForGreen(masterip); err != nil {
 		err = fmt.Errorf("Scaling: ES cluster is not in green state")
 		return err
 	}
 
 	// Step-2: ES-chanage:  change default time from 1 min to 3 to n min to avoid copying of shards belonging to the data node that is going to be scaled.
-	if err := es_change_settings(masterip, MAX_EsWaitForDataNode, "request"); err != nil { // TODO before overwriting save the orginal setting
+	if err := ES_change_settings(masterip, MAX_EsWaitForDataNode, "request"); err != nil { // TODO before overwriting save the orginal setting
 		return err
 	}
 
@@ -150,16 +150,16 @@ func scale_datanode(k *K8sutil, namespace, clusterName, statefulSetName, podName
 	}
 
 	// Step-6: check if the POD is up from the ES point of view.
-	if err = es_checkForNodeUp(masterip, podName, MAX_EsCommunicationTime); err != nil {
+	if err = ES_checkForNodeUp(masterip, podName, MAX_EsCommunicationTime); err != nil {
 		return err
 	}
 
 	// Step-7: check if all shards are registered with Master, At this ES should turn in to green from yellow, now it is safe to scale next data node.
-	if err = es_checkForShards(masterip,  podName, MAX_EsCommunicationTime); err != nil {
+	if err = ES_checkForShards(masterip,  podName, MAX_EsCommunicationTime); err != nil {
 		return err
 	}
 	// Step-8: Undo the timeout settings
-	if err := es_change_settings(masterip, "1m", "async"); err != nil {
+	if err := ES_change_settings(masterip, "1m", "async"); err != nil {
 		return err
 	}
 	logrus.Infof("Scaling:------------- sucessfully Completed  for: %s :--------------------------------", podName)
