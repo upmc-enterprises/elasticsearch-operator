@@ -585,6 +585,10 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 									Value: "true",
 								},
 								v1.EnvVar{
+									Name:  "path.data",
+									Value: "/data11/test",
+								},
+								v1.EnvVar{
 									Name:  "SEARCHGUARD_SSL_TRANSPORT_ENABLED",
 									Value: enableSSL,
 								},
@@ -684,7 +688,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string, useSSL *bool, esUrl string,scaling bool) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration, scaling bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
