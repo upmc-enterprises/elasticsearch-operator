@@ -1,5 +1,5 @@
 # elasticsearch operator
-scaling    
+
 [![Build Status](https://travis-ci.org/upmc-enterprises/elasticsearch-operator.svg?branch=master)](https://travis-ci.org/upmc-enterprises/elasticsearch-operator)
 
 The ElasticSearch operator is designed to manage one or more elastic search clusters. Included in the project (initially) is the ability to create the Elastic cluster, deploy the `data nodes` across zones in your Kubernetes cluster, and snapshot indexes to AWS S3. 
@@ -308,6 +308,9 @@ $ go get -u github.com/cloudflare/cfssl/cmd/cfssl
 $ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
 $ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
+# Scaling feature:
+
+[Details of scaling](docs/scaling.md)
 
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/
