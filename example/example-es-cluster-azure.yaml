@@ -13,6 +13,7 @@ spec:
   java-options: "-Xms1024m -Xmx1024m"
   snapshot:
     scheduler-enabled: false
+    type: azure
     bucket-name: elasticsnapshots99
     cron-schedule: "@every 2m"
     image: upmcenterprises/elasticsearch-cron:0.0.4

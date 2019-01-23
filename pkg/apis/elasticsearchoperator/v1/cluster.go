@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package v1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -72,6 +73,12 @@ type ClusterSpec struct {
 	// labels.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
+	// Tolerations specifies which tolerations the Master and Data nodes will have applied to them
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+
+	// Affinity (podAffinity, podAntiAffinity, nodeAffinity) will be applied to the Client nodes
+	Affinity v1.Affinity `json:"affinity,omitempty"`
+
 	// Zones specifies a map of key-value pairs. Defines which zones
 	// to deploy persistent volumes for data nodes
 	Zones []string `json:"zones,omitempty"`
@@ -92,8 +99,17 @@ type ClusterSpec struct {
 	// Storage defines how volumes are provisioned
 	Storage Storage `json:"storage"`
 
-	// JavaOptions defines args passed to elastic nodes
+	// JavaOptions defines args passed to all elastic nodes
 	JavaOptions string `json:"java-options"`
+
+	// ClientJavaOptions defines args passed to client nodes (Overrides JavaOptions)
+	ClientJavaOptions string `json:"client-java-options"`
+
+	// DataJavaOptions defines args passed to data nodes (Overrides JavaOptions)
+	DataJavaOptions string `json:"data-java-options"`
+
+	// MasterJavaOptions defines args passed to master nodes (Overrides JavaOptions)
+	MasterJavaOptions string `json:"master-java-options"`
 
 	// ImagePullSecrets defines credentials to pull image from private repository (optional)
 	ImagePullSecrets []ImagePullSecrets `json:"image-pull-secrets"`
@@ -139,10 +155,10 @@ type Snapshot struct {
 	// Enabled determines if snapshots are enabled
 	SchedulerEnabled bool `json:"scheduler-enabled"`
 
-	// RepoType defines the type of Elasticsearch Repository, s3 or gcs
+	// RepoType defines the type of Elasticsearch Repository, s3, gcs, azure
 	RepoType string `json:"type"`
 
-	// BucketName defines the AWS S3 or GCS bucket to store snapshots
+	// BucketName defines the AWS s3, gcs, azure bucket/container to store snapshots
 	BucketName string `json:"bucket-name"`
 
 	// CronSchedule defines how to run the snapshots
@@ -185,6 +201,9 @@ type Storage struct {
 
 	// Volume Reclaim Policy on Persistent Volumes
 	VolumeReclaimPolicy string `json:"volume-reclaim-policy"`
+
+	// Encrypted chooses whether or not to use encryption ("true or false")
+	Encrypted string `json:"encrypted,omitempty"`
 }
 
 // Resources defines CPU / Memory restrictions on pods
@@ -222,7 +241,7 @@ type Kibana struct {
 // Cerebro properties if wanting operator to deploy for user
 type Cerebro struct {
 	// Defines the image to use for deploying Cerebro
-	Image         string `json:"image"`
+	Image string `json:"image"`
 
 	// ImagePullPolicy specifies the image-pull-policy to use (optional)
 	ImagePullPolicy string `json:"image-pull-policy"`

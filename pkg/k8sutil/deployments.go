@@ -30,7 +30,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"k8s.io/api/apps/v1beta1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -95,8 +95,8 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 }
 
 // CreateClientDeployment creates the client deployment
-func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool) error {
+func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions, clientJavaOptions string,
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool, affinity v1.Affinity) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -111,6 +111,16 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	enableSSL := "false"
 	if useSSL != nil && *useSSL {
 		enableSSL = "true"
+	}
+
+	// parse javaOptions and see if client nodes are using different options
+	// if using the legacy (global) java-options, then this will be applied to all nodes that dont have custom settings
+	esJavaOps := ""
+
+	if clientJavaOptions != "" {
+		esJavaOps = clientJavaOptions
+	} else {
+		esJavaOps = javaOptions
 	}
 
 	if len(deployment.Name) == 0 {
@@ -164,6 +174,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 							RunAsUser: &k.RunAsUser,
 							FSGroup: &k.RunAsUser,
 						},
+						Affinity: &affinity,
 						Containers: []v1.Container{
 							v1.Container{
 								Name: deploymentName,
@@ -213,7 +224,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 									},
 									v1.EnvVar{
 										Name:  "ES_JAVA_OPTS",
-										Value: javaOptions,
+										Value: esJavaOps,
 									},
 									v1.EnvVar{
 										Name:  "STATSD_HOST",

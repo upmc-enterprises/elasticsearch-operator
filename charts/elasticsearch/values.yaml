@@ -23,6 +23,7 @@ use-ssl: True
 
 snapshot:
   enabled: false
+  type: s3
   bucketName: elasticsnapshots
   schedule: "@every 2m"
   image: upmcenterprises/elasticsearch-cron:0.0.4

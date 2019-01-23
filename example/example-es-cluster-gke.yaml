@@ -18,6 +18,7 @@ spec:
   java-options: "-Xms512m -Xmx512m"
   snapshot:
     scheduler-enabled: false
+    type: gcs
     bucket-name: elasticsnapshots99
     cron-schedule: "@every 2m"
     image: upmcenterprises/elasticsearch-cron:0.0.4

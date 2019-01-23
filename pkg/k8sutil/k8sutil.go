@@ -37,7 +37,7 @@ import (
 	clientset "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
 	genclient "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
 	apps "k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -400,8 +400,7 @@ func processDeploymentType(deploymentType string, clusterName string) (string, s
 }
 
 func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, serviceAccountName,
-	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets,
-	imagePullPolicy string, runPrivileged *bool, runAsUser *int64) *apps.StatefulSet {
+	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, nodeSelector map[string]string, tolerations []v1.Toleration, runPrivileged *bool, runAsUser *int64) *apps.StatefulSet {
 
 	_, role, isNodeMaster, isNodeData := processDeploymentType(deploymentType, clusterName)
 
@@ -412,6 +411,18 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 	if useSSL != nil && !*useSSL {
 		enableSSL = "false"
 		scheme = v1.URISchemeHTTP
+	}
+
+	// parse javaOptions and see if master,data nodes are using different options
+	// if using the legacy (global) java-options, then this will be applied to all nodes (master,data), otherwise segment them
+	esJavaOps := ""
+
+	if deploymentType == "master" && masterJavaOptions != "" {
+		esJavaOps = masterJavaOptions
+	} else if deploymentType == "data" && dataJavaOptions != "" {
+		esJavaOps = dataJavaOptions
+	} else {
+		esJavaOps = javaOptions
 	}
 
 	// Parse CPU / Memory
@@ -482,6 +493,8 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 						RunAsUser: runAsUser,
 						FSGroup: runAsUser,
 					},
+					Tolerations:  tolerations,
+					NodeSelector: nodeSelector,
 					Affinity: &v1.Affinity{
 						PodAntiAffinity: &v1.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
@@ -551,7 +564,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 								},
 								v1.EnvVar{
 									Name:  "ES_JAVA_OPTS",
-									Value: javaOptions,
+									Value: esJavaOps,
 								},
 								v1.EnvVar{
 									Name:  "STATSD_HOST",
@@ -663,8 +676,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions string,
-	useSSL *bool, esUrl string) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -677,8 +689,8 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
-		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, serviceAccountName,
-			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, &k.RunPrivileged, &k.RunAsUser)
+		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
+			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations, &k.RunPrivileged, &k.RunAsUser)
 
 		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
