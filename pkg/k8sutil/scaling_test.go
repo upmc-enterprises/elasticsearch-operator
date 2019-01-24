@@ -1,5 +1,5 @@
 package k8sutil
-
+/*
 import (
 	"testing"
 )
@@ -9,7 +9,7 @@ const (
 	NonExistingIP = "10.1.1.1"  /* some non existing IP */
 	NonExistingPOD = "nonexistingpodname"
 )
-
+*/
 /*
    Test for Failures, by sending the unrechable ES Master IP, the below function under test  should always return the error, 
    incase if testing function does not return the error then the unit test should fail. 
