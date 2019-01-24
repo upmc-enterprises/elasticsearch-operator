@@ -6,7 +6,7 @@ import (
 
 
 const (
-	NonExistingIP = "10.1.1.1"  /* some non existing IP */
+	NonExistingIP = "10.1.1.1"  
 	NonExistingPOD = "nonexistingpodname"
 )
 */
