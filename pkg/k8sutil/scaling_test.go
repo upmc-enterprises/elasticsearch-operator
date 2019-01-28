@@ -21,7 +21,7 @@ func Test_scaling_change_setting(t *testing.T) {
 }
 
 func Test_check_for_green(t *testing.T) {
-	err := ES_checkForGreen(NonExistingIP); 
+        err :=  ES_checkForShards(NonExistingIP , "", 2)
 	if (err == nil){
 		t.Errorf("Scaling unittest check_for_green failed");
 	}
