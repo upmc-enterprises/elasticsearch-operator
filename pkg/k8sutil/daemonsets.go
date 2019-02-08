@@ -26,7 +26,7 @@ package k8sutil
 
 import (
 	"github.com/Sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +43,7 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 
 	if err != nil && len(ds.Name) == 0 {
 
-		logrus.Infof("Daemonset %s not found, creating...", ds)
+		logrus.Infof("Daemonset %s/%s not found, creating...", ds.Namespace, ds.Name)
 
 		resourceCPU, _ := resource.ParseQuantity("10m")
 		resourceMemory, _ := resource.ParseQuantity("50Mi")
@@ -100,7 +100,7 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 		_, err = k.Kclient.ExtensionsV1beta1().DaemonSets(k.InitDaemonsetNamespace).Create(daemonset)
 
 	} else {
-		logrus.Infof("Daemonset %s already exist, skipping creation ...", ds)
+		logrus.Infof("Daemonset %s/%s already exist, skipping creation ...", ds.Namespace, ds.Name)
 	}
 
 	return err
