@@ -226,7 +226,7 @@ func (k *K8sutil) CreateKubernetesCustomResourceDefinition() error {
 			panic(err)
 		}
 	} else {
-		logrus.Infof("SKIPPING: already exists %#v\n", crd.ObjectMeta.Name)
+		logrus.Infof("SKIPPING: already exists %#v", crd.ObjectMeta.Name)
 	}
 
 	return nil
