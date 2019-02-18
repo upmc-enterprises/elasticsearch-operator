@@ -15,7 +15,7 @@ spec:
         release: {{ .Release.Name }}
     spec:
       containers:
-      - name: {{ .Chart.Name }}
+      - name: {{ template "elasticsearch-operator.name" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
