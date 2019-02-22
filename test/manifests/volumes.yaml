@@ -1,0 +1,96 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: hostpath-storage
+provisioner: kubernetes.io/host-path
+volumeBindingMode: WaitForFirstConsumer
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-1"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data1"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-2"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data2"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-3"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data3"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-4"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data4"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-5"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data5"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ .Namespace }}-pv-6"
+  labels:
+    type: local
+spec:
+  storageClassName: hostpath-storage
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/{{ .Namespace }}/data6"

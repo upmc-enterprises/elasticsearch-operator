@@ -1,0 +1,24 @@
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  name: example-es-cluster
+spec:
+  kibana:
+    image: {{ .KibanaImage }}
+  cerebro:
+    image: {{ .CerebroImage }}
+  elastic-search-image: {{ .EsImage }}
+  client-node-replicas: 1
+  master-node-replicas: 1
+  data-node-replicas: {{ .DataNodeReplicas }}
+  network-host: 0.0.0.0
+  zones: []
+  data-volume-size: 10Gi
+  java-options: "-Xms512m -Xmx512m"
+  snapshot:
+    scheduler-enabled: false
+    bucket-name: elasticsnapshots99
+    cron-schedule: "@every 2m"
+    image: {{ .SnapshotImage }}
+  storage:
+    storage-class: hostpath-storage
