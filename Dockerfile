@@ -1,5 +1,5 @@
 FROM openjdk:8-jdk-alpine
-MAINTAINER  Steve Sloka <slokas@upmc.edu>
+MAINTAINER  Steve Sloka <steve@stevesloka.com>
 
 RUN apk add --update ca-certificates openssl && \
   rm -rf /var/cache/apk/*
