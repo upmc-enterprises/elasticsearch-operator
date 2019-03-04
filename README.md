@@ -308,6 +308,9 @@ $ go get -u github.com/cloudflare/cfssl/cmd/cfssl
 $ go get -u github.com/cloudflare/cfssl/cmd/cfssljson
 $ go run cmd/operator/main.go --kubecfg-file=${HOME}/.kube/config
 ```
+# Scaling feature:
+
+[Details of scaling](docs/scaling.md)
 
 # About
 Built by UPMC Enterprises in Pittsburgh, PA. http://enterprises.upmc.com/

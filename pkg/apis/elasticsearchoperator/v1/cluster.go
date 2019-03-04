@@ -95,7 +95,10 @@ type ClusterSpec struct {
 
 	// Snapshot defines how snapshots are scheduled
 	Snapshot Snapshot `json:"snapshot"`
-
+	
+	// Scaling defines how data nodes does virtual-scaling
+	Scaling Scaling `json:"scaling"`
+	
 	// Storage defines how volumes are provisioned
 	Storage Storage `json:"storage"`
 
@@ -148,6 +151,15 @@ type ClusterSpec struct {
 type ImagePullSecrets struct {
 	// Name defines the name of the secret file that will be used
 	Name string `json:"name"`
+}
+
+// Scaling defines all params for vertical scaling of data nodes
+type Scaling struct {
+	// Resources defines memory / cpu constraints
+	Resources Resources `json:"resources"`
+	
+	// JavaOptions defines args passed to elastic nodes
+	JavaOptions string `json:"java-options"`
 }
 
 // Snapshot defines all params to create / store snapshots

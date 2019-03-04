@@ -34,4 +34,4 @@ helm-package:
 	helm repo index --merge charts/index.yaml charts
 
 test: clean
-	go test $$(go list ./... | grep -v /vendor/)
+	go  test -v  $$(go list ./... | grep -v /vendor/)

@@ -466,6 +466,9 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 		},
 		Spec: apps.StatefulSetSpec{
 			Replicas:    replicas,
+			UpdateStrategy: apps.StatefulSetUpdateStrategy {
+				Type: apps.OnDeleteStatefulSetStrategyType,
+			},
 			ServiceName: statefulSetName,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -532,6 +535,14 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 								v1.EnvVar{
 									Name:  "CLUSTER_NAME",
 									Value: clusterName,
+								},
+								v1.EnvVar{
+									Name: "NODE_NAME",
+									ValueFrom: &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
 								},
 								v1.EnvVar{
 									Name:  "NODE_MASTER",
@@ -667,7 +678,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration, scaling bool) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -692,7 +703,16 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 			logrus.Error("Could not get stateful set! ", err)
 			return err
 		}
-
+		if deploymentType == "data"  && scaling {
+			esJavaOps := ""
+			if dataJavaOptions != "" {
+				esJavaOps = dataJavaOptions
+			} else {
+				esJavaOps = javaOptions
+			}
+			ret := scale_statefulset(k, namespace, clusterName, statefulSetName, resources, esJavaOps, statefulSet, *replicas)
+			return ret
+		}
 		//scale replicas?
 		if statefulSet.Spec.Replicas != replicas {
 			currentReplicas := *statefulSet.Spec.Replicas
