@@ -140,7 +140,7 @@ var _ = Describe("ElasticSearch Operator", func() {
 	ossCluster.EsImage = "randomvariable/docker-elasticsearch-kubernetes:latest"
 
 	for _, testCase := range []esCluster{
-		newEsCluster("example-es-cluster-hostpath"),
+		//newEsCluster("example-es-cluster-hostpath"),
 		ossCluster,
 	} {
 		esc := testCase
@@ -173,8 +173,15 @@ var _ = Describe("ElasticSearch Operator", func() {
 			var escBuf bytes.Buffer
 			err = escTmpl.Execute(&escBuf, esc)
 			Expect(err).NotTo(HaveOccurred())
+			fmt.Fprintln(GinkgoWriter, escBuf.String())
 
-			err = cluster.KubectlApply(esNamespace, escBuf.String())
+			Eventually(
+				func() error {
+					return cluster.KubectlApply(esNamespace, escBuf.String())
+				},
+				2*time.Minute, 5*time.Second,
+			).Should(BeNil())
+			//err = cluster.KubectlApply(esNamespace, escBuf.String())
 
 			clusterDeployments := client.AppsV1().Deployments(esNamespace)
 			clusterStatefulSets := client.AppsV1().StatefulSets(esNamespace)

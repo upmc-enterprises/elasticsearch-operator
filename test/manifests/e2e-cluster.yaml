@@ -4,10 +4,10 @@ metadata:
   name: example-es-cluster
 spec:
   kibana:
-    image: {{ .KibanaImage }}
+    image: "{{ .KibanaImage }}"
   cerebro:
-    image: {{ .CerebroImage }}
-  elastic-search-image: {{ .EsImage }}
+    image: "{{ .CerebroImage }}"
+  elastic-search-image: "{{ .EsImage }}"
   client-node-replicas: 1
   master-node-replicas: 1
   data-node-replicas: {{ .DataNodeReplicas }}
@@ -19,6 +19,6 @@ spec:
     scheduler-enabled: false
     bucket-name: elasticsnapshots99
     cron-schedule: "@every 2m"
-    image: {{ .SnapshotImage }}
+    image: "{{ .SnapshotImage }}"
   storage:
     storage-class: hostpath-storage
