@@ -282,6 +282,9 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 func (p *Processor) processDataPodEvent(c *v1.Pod) error {
 	// Set the policy to retain
 	name := c.Labels["component"]
+	if len(name) <= 14 {
+		return nil
+	}
 	name = name[14:len(name)]
 
 	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
@@ -291,6 +294,9 @@ func (p *Processor) processDataPodEvent(c *v1.Pod) error {
 
 func (p *Processor) processMasterPodEvent(c *v1.Pod) error {
 	name := c.Labels["component"]
+	if len(name) <= 14 {
+		return nil
+	}
 	name = name[14:len(name)]
 	// get all ready master nodes
 	m, err := p.k8sclient.GetMasterNodes(c.ObjectMeta.Namespace, name)
