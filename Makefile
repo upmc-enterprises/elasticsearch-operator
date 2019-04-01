@@ -35,3 +35,8 @@ helm-package:
 
 test: clean
 	go test $$(go list ./... | grep -v /vendor/)
+
+devpreq:
+	mkdir -p /tmp/certs/config && mkdir -p /tmp/certs/certs
+	go get -u github.com/cloudflare/cfssl/cmd/cfssl
+	go get -u github.com/cloudflare/cfssl/cmd/cfssljson
