@@ -282,10 +282,12 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 func (p *Processor) processDataPodEvent(c *v1.Pod) error {
 	// Set the policy to retain
 	name := c.Labels["component"]
-	name = name[14:len(name)]
 
-	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
+	if len(name) > 14 {
+		name = name[14:len(name)]
 
+		p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
+	}
 	return nil
 }
 
