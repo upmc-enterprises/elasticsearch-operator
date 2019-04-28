@@ -174,6 +174,16 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 						Containers: []v1.Container{
 							v1.Container{
 								Name: deploymentName,
+								InitContainers: []v1.Container{
+		                            {
+		                                Name:  "sysctl",
+		                                Image: "busybox",
+		                                Command: []string{ "sysctl", "-w", "vm.max_map_count=262144"},
+		                                SecurityContext: &v1.SecurityContext{
+		                                    Privileged: &[]bool{true}[0],
+		                                },
+		                            },
+		                        },
 								SecurityContext: &v1.SecurityContext{
 									Privileged: &[]bool{true}[0],
 									Capabilities: &v1.Capabilities{
