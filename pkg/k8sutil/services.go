@@ -262,19 +262,14 @@ func (k *K8sutil) DeleteServices(clusterName, namespace string) error {
 
 	for component, _ := range mgmtServices {
 
+		fullClientServiceName := fmt.Sprintf("%s-%s", component, clusterName)
 		// Check if service exists
-		s, _ := k.Kclient.CoreV1().Services(namespace).Get(component, metav1.GetOptions{})
-
-		// Service exists, delete
-		if len(s.Name) >= 1 {
-			fullClientServiceName := fmt.Sprintf("%s-%s", component, clusterName)
-
+		if _, err := k.Kclient.CoreV1().Services(namespace).Get(fullClientServiceName, metav1.GetOptions{}); err = nil {
 			if err := k.Kclient.CoreV1().Services(namespace).Delete(fullClientServiceName, &metav1.DeleteOptions{}); err != nil {
 				logrus.Error("Could not delete service "+fullClientServiceName+":", err)
 			}
 			logrus.Infof("Deleted service: %s", fullClientServiceName)
 		}
-
 	}
 
 	return nil
