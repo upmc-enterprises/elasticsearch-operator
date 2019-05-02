@@ -282,46 +282,47 @@ func (p *Processor) processPodEvent(c *v1.Pod) error {
 func (p *Processor) processDataPodEvent(c *v1.Pod) error {
 	// Set the policy to retain
 	name := c.Labels["component"]
-	name = name[14:len(name)]
-
-	p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
-
+	if len(name) > 14 && name[:14] == "elasticsearch-" {
+		name = name[14:]
+		p.k8sclient.UpdateVolumeReclaimPolicy(p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)].ESCluster.Spec.Storage.VolumeReclaimPolicy, c.ObjectMeta.Namespace, name)
+	}
 	return nil
 }
 
 func (p *Processor) processMasterPodEvent(c *v1.Pod) error {
 	name := c.Labels["component"]
-	name = name[14:len(name)]
-	// get all ready master nodes
-	m, err := p.k8sclient.GetMasterNodes(c.ObjectMeta.Namespace, name)
-	if err != nil {
-		return err
-	}
-	readyMasterPods := 0
-	for _, pod := range m.Items {
-		for _, cond := range pod.Status.Conditions {
-			if cond.Type == v1.PodReady && cond.Status == v1.ConditionTrue {
-				readyMasterPods++
-			}
-		}
-	}
-	logrus.Debugf("Found %d ready master pods", readyMasterPods)
-	// calc min master nodes
-	minMasterNodes := elasticsearchutil.MinMasterNodes(readyMasterPods)
-	// set min master node value in ES
-	cluster, ok := p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)]
-	if !ok {
-		return fmt.Errorf("No elasticsearch cluster with name %s found", name)
-	}
-	esHost := cluster.ESCluster.Spec.Scheduler.ElasticURL
-	if cluster.ESCluster.Spec.MasterNodeReplicas == readyMasterPods {
-		logrus.Infof("All %d master nodes ready. Setting 'discovery.zen.minimum_master_nodes' to %d", readyMasterPods, minMasterNodes)
-		err := elasticsearchutil.UpdateDiscoveryMinMasterNodes(esHost, minMasterNodes)
+	if len(name) > 14 && name[:14] == "elasticsearch-" {
+		name = name[14:]
+		// get all ready master nodes
+		m, err := p.k8sclient.GetMasterNodes(c.ObjectMeta.Namespace, name)
 		if err != nil {
 			return err
 		}
+		readyMasterPods := 0
+		for _, pod := range m.Items {
+			for _, cond := range pod.Status.Conditions {
+				if cond.Type == v1.PodReady && cond.Status == v1.ConditionTrue {
+					readyMasterPods++
+				}
+			}
+		}
+		logrus.Debugf("Found %d ready master pods", readyMasterPods)
+		// calc min master nodes
+		minMasterNodes := elasticsearchutil.MinMasterNodes(readyMasterPods)
+		// set min master node value in ES
+		cluster, ok := p.clusters[fmt.Sprintf("%s-%s", name, c.ObjectMeta.Namespace)]
+		if !ok {
+			return fmt.Errorf("No elasticsearch cluster with name %s found", name)
+		}
+		esHost := cluster.ESCluster.Spec.Scheduler.ElasticURL
+		if cluster.ESCluster.Spec.MasterNodeReplicas == readyMasterPods {
+			logrus.Infof("All %d master nodes ready. Setting 'discovery.zen.minimum_master_nodes' to %d", readyMasterPods, minMasterNodes)
+			err := elasticsearchutil.UpdateDiscoveryMinMasterNodes(esHost, minMasterNodes)
+			if err != nil {
+				return err
+			}
+		}
 	}
-
 	return nil
 }
 
