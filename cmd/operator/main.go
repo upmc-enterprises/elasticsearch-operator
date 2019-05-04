@@ -54,6 +54,8 @@ var (
 	enableInitDaemonset    bool
 	initDaemonsetNamespace string
 	busyboxImage           string
+	runPrivileged          bool
+	runAsUser              int64
 )
 
 func init() {
@@ -64,6 +66,8 @@ func init() {
 	flag.BoolVar(&enableInitDaemonset, "enableInitDaemonset", true, "Set to false to disable the sysctl init daemonset")
 	flag.StringVar(&initDaemonsetNamespace, "initDaemonsetNamespace", "default", "Namespace to deploy the sysctl init daemonset into")
 	flag.StringVar(&busyboxImage, "busybox-image", "busybox:1.26.2", "Image to use for sysctl init daemonset")
+	flag.BoolVar(&runPrivileged, "runPrivileged", true, "Run pods as privileged. Set to false if your Kubernetes cluster doesn't allow running containers in privileged mode. Setting does not affect InitDaemonset.")
+	flag.Int64Var(&runAsUser, "runAsUser", 0, "Run the first process in the container as this uid. Change this if your Kubernetes cluster doesn't allow running containers as root. Setting does not affect InitDaemonset.")
 	flag.Parse()
 }
 
@@ -78,11 +82,16 @@ func Main() int {
 
 	// Print params configured
 	logrus.Info("Using Variables:")
+	logrus.Infof("   masterhost: %s", masterHost)
 	logrus.Infof("   enableInitDaemonset: %t", enableInitDaemonset)
+	logrus.Infof("   initDaemonsetNamespace: %s", initDaemonsetNamespace)
 	logrus.Infof("   baseImage: %s", baseImage)
+	logrus.Infof("   busybox-image: %s", busyboxImage)
+	logrus.Infof("   runPrivileged: %t", runPrivileged)
+	logrus.Infof("   runAsUser: %d", runAsUser)
 
 	// Init
-	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost, enableInitDaemonset, initDaemonsetNamespace, busyboxImage)
+	k8sclient, err := k8sutil.New(kubeCfgFile, masterHost, enableInitDaemonset, initDaemonsetNamespace, busyboxImage, runPrivileged, runAsUser)
 	if err != nil {
 		logrus.Error("Could not init k8sclient! ", err)
 		return 1

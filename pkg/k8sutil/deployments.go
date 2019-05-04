@@ -170,15 +170,20 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 						},
 					},
 					Spec: v1.PodSpec{
+						SecurityContext: &v1.PodSecurityContext{
+							RunAsUser: &k.RunAsUser,
+							FSGroup: &k.RunAsUser,
+						},
 						Affinity: &affinity,
 						Containers: []v1.Container{
 							v1.Container{
 								Name: deploymentName,
 								SecurityContext: &v1.SecurityContext{
-									Privileged: &[]bool{true}[0],
+									Privileged: &k.RunPrivileged,
 									Capabilities: &v1.Capabilities{
 										Add: []v1.Capability{
 											"IPC_LOCK",
+											"SYS_RESOURCE",
 										},
 									},
 								},

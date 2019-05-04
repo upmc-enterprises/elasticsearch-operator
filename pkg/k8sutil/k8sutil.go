@@ -89,10 +89,12 @@ type K8sutil struct {
 	EnableInitDaemonset    bool
 	InitDaemonsetNamespace string
 	BusyboxImage           string
+	RunPrivileged          bool
+	RunAsUser              int64
 }
 
 // New creates a new instance of k8sutil
-func New(kubeCfgFile, masterHost string, enableInitDaemonset bool, initDaemonsetNamespace, busyboxImage string) (*K8sutil, error) {
+func New(kubeCfgFile, masterHost string, enableInitDaemonset bool, initDaemonsetNamespace, busyboxImage string, runPrivileged bool, runAsUser int64) (*K8sutil, error) {
 
 	crdClient, kubeClient, kubeExt, k8sVersion, err := newKubeClient(kubeCfgFile)
 
@@ -109,6 +111,8 @@ func New(kubeCfgFile, masterHost string, enableInitDaemonset bool, initDaemonset
 		EnableInitDaemonset:    enableInitDaemonset,
 		InitDaemonsetNamespace: initDaemonsetNamespace,
 		BusyboxImage:           busyboxImage,
+		RunPrivileged:          runPrivileged,
+		RunAsUser:              runAsUser,
 	}
 
 	return k, nil
@@ -395,8 +399,8 @@ func processDeploymentType(deploymentType string, clusterName string) (string, s
 	return deploymentName, role, isNodeMaster, isNodeData
 }
 
-func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
-	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, nodeSelector map[string]string, tolerations []v1.Toleration) *apps.StatefulSet {
+func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, serviceAccountName,
+	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, nodeSelector map[string]string, tolerations []v1.Toleration, runPrivileged *bool, runAsUser *int64) *apps.StatefulSet {
 
 	_, role, isNodeMaster, isNodeData := processDeploymentType(deploymentType, clusterName)
 
@@ -485,6 +489,10 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 					},
 				},
 				Spec: v1.PodSpec{
+					SecurityContext: &v1.PodSecurityContext{
+						RunAsUser: runAsUser,
+						FSGroup: runAsUser,
+					},
 					Tolerations:  tolerations,
 					NodeSelector: nodeSelector,
 					Affinity: &v1.Affinity{
@@ -511,10 +519,11 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 						v1.Container{
 							Name: statefulSetName,
 							SecurityContext: &v1.SecurityContext{
-								Privileged: &[]bool{true}[0],
+								Privileged: runPrivileged,
 								Capabilities: &v1.Capabilities{
 									Add: []v1.Capability{
 										"IPC_LOCK",
+										"SYS_RESOURCE",
 									},
 								},
 							},
@@ -681,7 +690,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
 		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
-			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations)
+			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations, &k.RunPrivileged, &k.RunAsUser)
 
 		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
