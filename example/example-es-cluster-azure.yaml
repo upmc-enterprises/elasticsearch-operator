@@ -10,6 +10,7 @@ spec:
   network-host: 0.0.0.0
   zones: []
   data-volume-size: 10Gi
+  master-volume-size: 10Gi
   java-options: "-Xms1024m -Xmx1024m"
   snapshot:
     scheduler-enabled: false

@@ -161,6 +161,7 @@ func (p *Processor) refreshClusters() error {
 					DataNodeReplicas:    cluster.Spec.DataNodeReplicas,
 					Zones:               cluster.Spec.Zones,
 					DataDiskSize:        cluster.Spec.DataDiskSize,
+                                        MasterDiskSize:      cluster.Spec.MasterDiskSize,
 					JavaOptions:         cluster.Spec.JavaOptions,
 					ClientJavaOptions:   cluster.Spec.ClientJavaOptions,
 					DataJavaOptions:     cluster.Spec.DataJavaOptions,
@@ -395,7 +396,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		for index, count := range zoneDistributionMaster {
-			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.DataDiskSize, c.Spec.Resources,
+			if err := p.k8sclient.CreateDataNodeDeployment("master", &count, baseImage, c.Spec.Zones[index], c.Spec.MasterDiskSize, c.Spec.Resources,
 				c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost,
 				c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.MasterJavaOptions, c.Spec.DataJavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, c.Spec.NodeSelector, c.Spec.Tolerations); err != nil {
 				logrus.Error("Error creating master node deployment ", err)
@@ -422,7 +423,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 
 		// Create Master Nodes
 		if err := p.k8sclient.CreateDataNodeDeployment("master", func() *int32 { i := int32(c.Spec.MasterNodeReplicas); return &i }(), baseImage, c.Spec.Storage.StorageClass,
-			c.Spec.DataDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
+			c.Spec.MasterDiskSize, c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name,
 			c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.JavaOptions, c.Spec.MasterJavaOptions, c.Spec.DataJavaOptions, c.Spec.UseSSL, c.Spec.Scheduler.ElasticURL, c.Spec.NodeSelector, c.Spec.Tolerations); err != nil {
 			logrus.Error("Error creating master node deployment ", err)
 
