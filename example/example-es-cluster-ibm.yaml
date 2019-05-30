@@ -71,6 +71,7 @@ spec:
   - dal12
   - dal13
   data-volume-size: 10Gi
+  master-volume-size: 10Gi
   java-options: "-Xms512m -Xmx512m"
   snapshot:  # Not verified with IBM Cloud Object Storage
     scheduler-enabled: false

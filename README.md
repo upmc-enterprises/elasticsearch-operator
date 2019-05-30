@@ -36,6 +36,7 @@ Following parameters are available to customize the elastic cluster:
 - data-node-replicas: Number of data node replicas
 - zones: Define which zones to deploy data nodes to for high availability (_Note: Zones are evenly distributed based upon number of data-node-replicas defined_)
 - data-volume-size: Size of persistent volume to attach to data nodes
+- master-volume-size: Size of persistent volume to attach to master nodes
 - elastic-search-image: Override the elasticsearch image (e.g. `upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0`)
 - keep-secrets-on-delete (Boolean): Tells the operator to not delete cert secrets when a cluster is deleted
 - use-ssl: Use SSL for communication with the cluster and inside the cluster. Default value is true.
@@ -107,6 +108,7 @@ spec:
   client-node-replicas: 3
   data-node-replicas: 3
   data-volume-size: 10Gi
+  master-volume-size: 10Gi
   java-options: -Xms256m -Xmx256m
   master-node-replicas: 2
   image-pull-secrets:
@@ -274,6 +276,7 @@ spec:
   client-node-replicas: 3
   data-node-replicas: 3
   data-volume-size: 10Gi
+  master-volume-size: 10Gi
   java-options: -Xms256m -Xmx256m
   master-node-replicas: 2
   snapshot:
