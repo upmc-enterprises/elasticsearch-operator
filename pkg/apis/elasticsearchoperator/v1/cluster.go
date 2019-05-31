@@ -79,6 +79,9 @@ type ClusterSpec struct {
 	// Affinity (podAffinity, podAntiAffinity, nodeAffinity) will be applied to the Client nodes
 	Affinity v1.Affinity `json:"affinity,omitempty"`
 
+	// Annotations specifies a map of key-value pairs
+	Annotations map[string]string `json:"annotations,omitempty"`
+
 	// Zones specifies a map of key-value pairs. Defines which zones
 	// to deploy persistent volumes for data nodes
 	Zones []string `json:"zones,omitempty"`

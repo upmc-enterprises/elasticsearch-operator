@@ -42,8 +42,9 @@ func TestSSLCertConfig(t *testing.T) {
 	useSSL := false
 	nodeSelector := make(map[string]string)
 	tolerations := []corev1.Toleration{}
+	annotations := make(map[string]string)
 	statefulSet := buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
-		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations)
+		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations, annotations)
 
 	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
 		if volume.Name == fmt.Sprintf("%s-%s", secretName, clusterName) {
@@ -53,7 +54,7 @@ func TestSSLCertConfig(t *testing.T) {
 
 	useSSL = true
 	statefulSet = buildStatefulSet("test", clusterName, "master", "foo/image", "test", "1G", "",
-		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations)
+		"", "", "", "", "", nil, &useSSL, resources, nil, "", nodeSelector, tolerations, annotations)
 
 	found := false
 	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {

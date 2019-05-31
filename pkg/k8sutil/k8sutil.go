@@ -396,7 +396,7 @@ func processDeploymentType(deploymentType string, clusterName string) (string, s
 }
 
 func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
-	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, nodeSelector map[string]string, tolerations []v1.Toleration) *apps.StatefulSet {
+	statsdEndpoint, networkHost string, replicas *int32, useSSL *bool, resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy string, nodeSelector map[string]string, tolerations []v1.Toleration, annotations map[string]string) *apps.StatefulSet {
 
 	_, role, isNodeMaster, isNodeData := processDeploymentType(deploymentType, clusterName)
 
@@ -483,6 +483,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 						"name":      statefulSetName,
 						"cluster":   clusterName,
 					},
+					Annotations: annotations,
 				},
 				Spec: v1.PodSpec{
 					Tolerations:  tolerations,
@@ -667,7 +668,7 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 
 // CreateDataNodeDeployment creates the data node deployment
 func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int32, baseImage, storageClass string, dataDiskSize string, resources myspec.Resources,
-	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration) error {
+	imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace, javaOptions, masterJavaOptions, dataJavaOptions string, useSSL *bool, esUrl string, nodeSelector map[string]string, tolerations []v1.Toleration, annotations map[string]string) error {
 
 	deploymentName, _, _, _ := processDeploymentType(deploymentType, clusterName)
 
@@ -681,7 +682,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		logrus.Infof("StatefulSet %s not found, creating...", statefulSetName)
 
 		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
-			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations)
+			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations, annotations)
 
 		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
