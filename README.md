@@ -71,9 +71,9 @@ Following parameters are available to customize the elastic cluster:
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/kibana-docker) since upstream has x-pack installed and causes issues)
 - cerebro: Deploy [cerebro](https://github.com/lmenezes/cerebro) to cluster and automatically reference certs from secret
   - image: Image to use (Note: Using [custom image](https://github.com/upmc-enterprises/cerebro-docker) since upstream has no docker images available)
-- nodeSelector: list of k8s NodeSelectors which are applied to the Master Nodes and Data Nodes
+- nodeSelector: list of k8s NodeSelectors which are applied to the master, data, and client nodes
   - `key: value`
-- tolerations: list of k8s Tolerations which are applied to the Master Nodes and Data Nodes
+- tolerations: list of k8s Tolerations which are applied to the master, data, and client nodes
   - `- effect:` eg: NoSchedule, NoExecute
     `key:` eg: somekey
     `operator:` eg: exists

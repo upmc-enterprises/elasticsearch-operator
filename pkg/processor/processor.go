@@ -161,7 +161,7 @@ func (p *Processor) refreshClusters() error {
 					DataNodeReplicas:    cluster.Spec.DataNodeReplicas,
 					Zones:               cluster.Spec.Zones,
 					DataDiskSize:        cluster.Spec.DataDiskSize,
-                                        MasterDiskSize:      cluster.Spec.MasterDiskSize,
+					MasterDiskSize:      cluster.Spec.MasterDiskSize,
 					JavaOptions:         cluster.Spec.JavaOptions,
 					ClientJavaOptions:   cluster.Spec.ClientJavaOptions,
 					DataJavaOptions:     cluster.Spec.DataJavaOptions,
@@ -375,7 +375,7 @@ func (p *Processor) processElasticSearchCluster(c *myspec.ElasticsearchCluster) 
 	}
 
 	if err := p.k8sclient.CreateClientDeployment(baseImage, &c.Spec.ClientNodeReplicas, c.Spec.JavaOptions, c.Spec.ClientJavaOptions,
-		c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.UseSSL, c.Spec.Affinity, c.Spec.Annotations); err != nil {
+		c.Spec.Resources, c.Spec.ImagePullSecrets, c.Spec.ImagePullPolicy, c.Spec.ServiceAccountName, c.ObjectMeta.Name, c.Spec.Instrumentation.StatsdHost, c.Spec.NetworkHost, c.ObjectMeta.Namespace, c.Spec.UseSSL, c.Spec.Affinity, c.Spec.Annotations, c.Spec.NodeSelector, c.Spec.Tolerations); err != nil {
 		logrus.Error("Error creating client deployment ", err)
 		return err
 	}
