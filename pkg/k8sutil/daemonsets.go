@@ -67,6 +67,12 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 						NodeSelector: map[string]string{
 							"beta.kubernetes.io/os": "linux",
 						},
+						Tolerations: []v1.Toleration{
+							{
+								Effect:		"NoSchedule",
+								Operator:	"Exists",
+						  },
+						},
 						Containers: []v1.Container{
 							v1.Container{
 								Name:  "sysctl-conf",
