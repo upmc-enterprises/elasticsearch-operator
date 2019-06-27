@@ -1,9 +1,9 @@
 # Makefile for the Docker image upmcenterprises/elasticsearch-operator
-# MAINTAINER: Steve Sloka <slokas@upmc.edu>
+# MAINTAINER: Steve Sloka <steve@stevesloka.com>
 
 .PHONY: all build container push clean test
 
-TAG ?= 0.3.0
+TAG ?= 0.4.0
 PREFIX ?= upmcenterprises
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 # go source files, ignore vendor directory
