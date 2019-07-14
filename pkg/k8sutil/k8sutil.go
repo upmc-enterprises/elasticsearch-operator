@@ -507,7 +507,18 @@ func buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, s
 									},
 								},
 							},
-						}},
+						},
+					},
+					InitContainers: []v1.Container{
+                        {
+                            Name:  "sysctl",
+                            Image: "busybox",
+                            Command: []string{ "sysctl", "-w", "vm.max_map_count=262144"},
+                            SecurityContext: &v1.SecurityContext{
+                                Privileged: &[]bool{true}[0],
+                            },
+                        },
+                    },
 					Containers: []v1.Container{
 						v1.Container{
 							Name: statefulSetName,
