@@ -21,6 +21,10 @@ javaOpts: "-Xms256m -Xmx256m"
 # Enable ssl or not
 use-ssl: True
 
+# custom Labels
+customLabels: {}
+#  custom/label: "custom"
+
 snapshot:
   enabled: false
   type: s3
