@@ -15,3 +15,5 @@ resources:
     memory: 128Mi
 rbac:
   enabled: false
+nodeSelector:
+  beta.kubernetes.io/os: linux
