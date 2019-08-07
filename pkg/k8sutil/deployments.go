@@ -407,6 +407,9 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 						},
 					},
 					Spec: v1.PodSpec{
+						NodeSelector: map[string]string{
+							"beta.kubernetes.io/os": "linux",
+						},
 						Containers: []v1.Container{
 							v1.Container{
 								Name:            deploymentName,
@@ -540,6 +543,9 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 						},
 					},
 					Spec: v1.PodSpec{
+						NodeSelector: map[string]string{
+							"beta.kubernetes.io/os": "linux",
+						},
 						Containers: []v1.Container{
 							{
 								Name:            deploymentName,
