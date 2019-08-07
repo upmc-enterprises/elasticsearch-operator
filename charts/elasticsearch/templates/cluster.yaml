@@ -57,3 +57,5 @@ spec:
 {{- end }}
   resources:
 {{ toYaml .Values.resources | indent 4 }}
+  nodeSelector:
+  {{ toYaml .Values.nodeSelector | indent 4 }}
