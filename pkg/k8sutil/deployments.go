@@ -96,7 +96,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 
 // CreateClientDeployment creates the client deployment
 func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, javaOptions, clientJavaOptions string,
-	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool, affinity v1.Affinity, annotations map[string]string) error {
+	resources myspec.Resources, imagePullSecrets []myspec.ImagePullSecrets, imagePullPolicy, serviceAccountName, clusterName, statsdEndpoint, networkHost, namespace string, useSSL *bool, affinity v1.Affinity, annotations map[string]string, nodeSelector map[string]string, tolerations []v1.Toleration) error {
 
 	component := fmt.Sprintf("elasticsearch-%s", clusterName)
 	discoveryServiceNameCluster := fmt.Sprintf("%s-%s", discoveryServiceName, clusterName)
@@ -171,6 +171,8 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 						Annotations: annotations,
 					},
 					Spec: v1.PodSpec{
+						Tolerations:  tolerations,
+						NodeSelector: nodeSelector,
 						Affinity: &affinity,
 						Containers: []v1.Container{
 							v1.Container{
@@ -405,6 +407,9 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 						},
 					},
 					Spec: v1.PodSpec{
+						NodeSelector: map[string]string{
+							"beta.kubernetes.io/os": "linux",
+						},
 						Containers: []v1.Container{
 							v1.Container{
 								Name:            deploymentName,
@@ -538,6 +543,9 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 						},
 					},
 					Spec: v1.PodSpec{
+						NodeSelector: map[string]string{
+							"beta.kubernetes.io/os": "linux",
+						},
 						Containers: []v1.Container{
 							{
 								Name:            deploymentName,

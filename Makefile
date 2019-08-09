@@ -3,8 +3,8 @@
 
 .PHONY: all build container push clean test
 
-TAG ?= 0.4.0
 PREFIX ?= upmcenterprises
+TAG ?= 0.4.1
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 # go source files, ignore vendor directory
 SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")

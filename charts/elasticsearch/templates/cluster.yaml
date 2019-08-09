@@ -26,6 +26,7 @@ spec:
 {{- else }}
   zones: []
 {{- end }}
+  master-volume-size: {{ .Values.masterVolumeSize }}
   data-volume-size: {{ .Values.dataVolumeSize }}
   java-options: {{ .Values.javaOpts }}
 {{- if .Values.image.pullSecret }}
@@ -57,3 +58,5 @@ spec:
 {{- end }}
   resources:
 {{ toYaml .Values.resources | indent 4 }}
+  nodeSelector:
+  {{ toYaml .Values.nodeSelector | indent 4 }}

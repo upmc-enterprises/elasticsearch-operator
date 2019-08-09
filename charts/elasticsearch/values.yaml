@@ -61,3 +61,6 @@ resources:
   limits:
     memory: 1024Mi
     cpu: '1'
+
+nodeSelector:
+  beta.kubernetes.io/os: linux
