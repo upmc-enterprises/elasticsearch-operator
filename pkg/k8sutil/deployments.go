@@ -27,9 +27,9 @@ package k8sutil
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +48,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 	labelSelector := fmt.Sprintf("component=elasticsearch-%s,role=%s", clusterName, deploymentType)
 
 	// Get list of deployments
-	deployments, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+	deployments, err := k.Kclient.AppsV1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get deployments! ", err)
@@ -57,7 +57,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 	for _, deployment := range deployments.Items {
 		//Scale the deployment down to zero (https://github.com/kubernetes/client-go/issues/91)
 		deployment.Spec.Replicas = new(int32)
-		deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(&deployment)
+		deployment, err := k.Kclient.AppsV1().Deployments(namespace).Update(&deployment)
 
 		if err != nil {
 			logrus.Errorf("Could not scale deployment: %s ", deployment.Name)
@@ -65,7 +65,7 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 			logrus.Infof("Scaled deployment: %s to zero", deployment.Name)
 		}
 
-		err = k.Kclient.ExtensionsV1beta1().Deployments(namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
+		err = k.Kclient.AppsV1().Deployments(namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
 
 		if err != nil {
 			logrus.Errorf("Could not delete deployments: %s ", deployment.Name)
@@ -75,14 +75,14 @@ func (k *K8sutil) DeleteDeployment(clusterName, namespace, deploymentType string
 	}
 
 	// Get list of ReplicaSets
-	replicaSets, err := k.Kclient.ExtensionsV1beta1().ReplicaSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+	replicaSets, err := k.Kclient.AppsV1().ReplicaSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get replica sets! ", err)
 	}
 
 	for _, replicaSet := range replicaSets.Items {
-		err := k.Kclient.ExtensionsV1beta1().ReplicaSets(namespace).Delete(replicaSet.Name, &metav1.DeleteOptions{})
+		err := k.Kclient.AppsV1().ReplicaSets(namespace).Delete(replicaSet.Name, &metav1.DeleteOptions{})
 
 		if err != nil {
 			logrus.Errorf("Could not delete replica sets: %s ", replicaSet.Name)
@@ -106,7 +106,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 	role := "client"
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+	deployment, err := k.Kclient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 
 	enableSSL := "false"
 	if useSSL != nil && *useSSL {
@@ -148,7 +148,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 				},
 			},
 		}
-		deployment := &v1beta1.Deployment{
+		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
 				Labels: map[string]string{
@@ -158,8 +158,16 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 					"cluster":   clusterName,
 				},
 			},
-			Spec: v1beta1.DeploymentSpec{
+			Spec: appsv1.DeploymentSpec{
 				Replicas: replicas,
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"component": component,
+						"role":      role,
+						"name":      deploymentName,
+						"cluster":   clusterName,
+					},
+				},
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
@@ -326,7 +334,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
 		}
 
-		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
+		_, err := k.Kclient.AppsV1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
 			logrus.Error("Could not create client deployment: ", err)
@@ -342,7 +350,7 @@ func (k *K8sutil) CreateClientDeployment(baseImage string, replicas *int32, java
 		if deployment.Spec.Replicas != replicas {
 			deployment.Spec.Replicas = replicas
 
-			if _, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Update(deployment); err != nil {
+			if _, err := k.Kclient.AppsV1().Deployments(namespace).Update(deployment); err != nil {
 				logrus.Error("Could not scale deployment: ", err)
 				return err
 			}
@@ -369,7 +377,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 	}
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.ExtensionsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+	deployment, err := k.Kclient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 	probe := &v1.Probe{
 		TimeoutSeconds:      30,
 		InitialDelaySeconds: 1,
@@ -385,7 +393,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 	if len(deployment.Name) == 0 {
 		logrus.Infof("%s not found, creating...", deploymentName)
 
-		deployment := &v1beta1.Deployment{
+		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
 				Labels: map[string]string{
@@ -394,7 +402,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 					"name":      deploymentName,
 				},
 			},
-			Spec: v1beta1.DeploymentSpec{
+			Spec: appsv1.DeploymentSpec{
 				Replicas: &replicaCount,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
@@ -479,7 +487,7 @@ func (k *K8sutil) CreateKibanaDeployment(baseImage, clusterName, namespace strin
 			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
 		}
 
-		_, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment)
+		_, err := k.Kclient.AppsV1().Deployments(namespace).Create(deployment)
 
 		if err != nil {
 			logrus.Error("Could not create kibana deployment: ", err)
@@ -502,7 +510,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 	deploymentName := fmt.Sprintf("%s-%s", cerebroDeploymentName, clusterName)
 
 	// Check if deployment exists
-	deployment, err := k.Kclient.AppsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+	deployment, err := k.Kclient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 	probe := &v1.Probe{
 		TimeoutSeconds:      30,
 		InitialDelaySeconds: 1,
@@ -518,7 +526,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 	if len(deployment.Name) == 0 {
 		logrus.Infof("Deployment %s not found, creating...", deploymentName)
 
-		deployment := &v1beta1.Deployment{
+		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
 				Labels: map[string]string{
@@ -527,7 +535,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 					"name":      deploymentName,
 				},
 			},
-			Spec: v1beta1.DeploymentSpec{
+			Spec: appsv1.DeploymentSpec{
 				Replicas: &replicaCount,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
@@ -607,7 +615,7 @@ func (k *K8sutil) CreateCerebroDeployment(baseImage, clusterName, namespace, cer
 			deployment.Spec.Template.Spec.ServiceAccountName = serviceAccountName
 		}
 
-		if _, err := k.Kclient.AppsV1beta1().Deployments(namespace).Create(deployment); err != nil {
+		if _, err := k.Kclient.AppsV1().Deployments(namespace).Create(deployment); err != nil {
 			logrus.Error("Could not create cerebro deployment: ", err)
 			return err
 		}

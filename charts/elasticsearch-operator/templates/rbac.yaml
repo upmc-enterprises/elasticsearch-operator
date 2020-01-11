@@ -17,9 +17,6 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
 rules:
-- apiGroups: ["extensions"]
-  resources: ["deployments", "replicasets", "daemonsets"]
-  verbs: ["create", "get", "update", "delete", "list"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
   verbs: ["create", "get", "update", "delete", "list"]
@@ -36,7 +33,7 @@ rules:
   resources: ["pods"]
   verbs: ["list", "get", "watch"]
 - apiGroups: ["apps"]
-  resources: ["statefulsets", "deployments"]
+  resources: ["statefulsets", "deployments", "replicasets", "daemonsets"]
   verbs: ["*"]
 - apiGroups: ["enterprises.upmc.com"]
   resources: ["elasticsearchclusters"]

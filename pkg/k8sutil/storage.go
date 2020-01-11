@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +37,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 
 	component := "elasticsearch" + "-" + clusterName
 	// Check if storage class exists
-	storageClass, err := k.Kclient.StorageV1beta1().StorageClasses().Get(zone, metav1.GetOptions{})
+	storageClass, err := k.Kclient.StorageV1().StorageClasses().Get(zone, metav1.GetOptions{})
 
 	// Default encryption to true
 	if useEncryption == "" {
@@ -66,7 +66,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 			class.Parameters["zone"] = zone
 		}
 
-		_, err := k.Kclient.Storage().StorageClasses().Create(class)
+		_, err := k.Kclient.StorageV1().StorageClasses().Create(class)
 
 		if err != nil {
 			logrus.Error("Could not create storage class: ", err)
@@ -83,7 +83,7 @@ func (k *K8sutil) CreateStorageClass(zone, storageClassProvisioner, storageType 
 // DeleteStorageClasses removes storage classes tied to the operator
 func (k *K8sutil) DeleteStorageClasses(clusterName string) error {
 	component := "elasticsearch" + "-" + clusterName
-	if err := k.Kclient.StorageV1beta1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{},
+	if err := k.Kclient.StorageV1().StorageClasses().DeleteCollection(&metav1.DeleteOptions{},
 		metav1.ListOptions{LabelSelector: component}); err != nil {
 		logrus.Error("Could not delete storageclasses: ", err)
 	}

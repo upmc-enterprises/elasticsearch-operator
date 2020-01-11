@@ -34,10 +34,9 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/controller"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
@@ -104,15 +103,19 @@ func Main() int {
 	var wg sync.WaitGroup
 
 	r := prometheus.NewRegistry()
-	r.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+	r.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{
+		PidFn: func() (i int, err error) { return os.Getpid(), nil },
+	}))
 	r.MustRegister(prometheus.NewGoCollector())
-
-	health := healthcheck.NewMetricsHandler(r, "elasticsearch-operator")
 
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
-	mux.HandleFunc("/live", health.LiveEndpoint)
-	mux.HandleFunc("/ready", health.ReadyEndpoint)
+	okProbe := func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(200)
+		_, _ = writer.Write([]byte("OK"))
+	}
+	mux.HandleFunc("/live", okProbe)
+	mux.HandleFunc("/ready", okProbe)
 
 	// Kick it off
 	controller.Run()

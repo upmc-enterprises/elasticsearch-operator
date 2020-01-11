@@ -25,9 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 package k8sutil
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,7 +39,7 @@ const (
 // CreateNodeInitDaemonset creates the node init daemonset
 func (k *K8sutil) CreateNodeInitDaemonset() error {
 
-	ds, err := k.Kclient.ExtensionsV1beta1().DaemonSets(k.InitDaemonsetNamespace).Get(esOperatorSysctlName, metav1.GetOptions{})
+	ds, err := k.Kclient.AppsV1().DaemonSets(k.InitDaemonsetNamespace).Get(esOperatorSysctlName, metav1.GetOptions{})
 
 	if err != nil && len(ds.Name) == 0 {
 
@@ -48,7 +48,7 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 		resourceCPU, _ := resource.ParseQuantity("10m")
 		resourceMemory, _ := resource.ParseQuantity("50Mi")
 
-		daemonset := &v1beta1.DaemonSet{
+		daemonset := &appsv1.DaemonSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: esOperatorSysctlName,
 				Labels: map[string]string{
@@ -56,7 +56,12 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 				},
 				Namespace: k.InitDaemonsetNamespace,
 			},
-			Spec: v1beta1.DaemonSetSpec{
+			Spec: appsv1.DaemonSetSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"k8s-app": "elasticsearch-operator",
+					},
+				},
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
@@ -97,7 +102,7 @@ func (k *K8sutil) CreateNodeInitDaemonset() error {
 			},
 		}
 
-		_, err = k.Kclient.ExtensionsV1beta1().DaemonSets(k.InitDaemonsetNamespace).Create(daemonset)
+		_, err = k.Kclient.AppsV1().DaemonSets(k.InitDaemonsetNamespace).Create(daemonset)
 
 	} else {
 		logrus.Infof("Daemonset %s/%s already exist, skipping creation ...", ds.Namespace, ds.Name)

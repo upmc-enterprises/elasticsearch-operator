@@ -129,7 +129,7 @@ func (c *FakeElasticsearchClusters) DeleteCollection(options *v1.DeleteOptions, 
 // Patch applies the patch and returns the patched elasticsearchCluster.
 func (c *FakeElasticsearchClusters) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *elasticsearchoperator_v1.ElasticsearchCluster, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(elasticsearchclustersResource, c.ns, name, data, subresources...), &elasticsearchoperator_v1.ElasticsearchCluster{})
+		Invokes(testing.NewPatchSubresourceAction(elasticsearchclustersResource, c.ns, name, pt, data, subresources...), &elasticsearchoperator_v1.ElasticsearchCluster{})
 
 	if obj == nil {
 		return nil, err

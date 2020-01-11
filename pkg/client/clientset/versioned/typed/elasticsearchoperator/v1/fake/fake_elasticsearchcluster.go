@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ func (c *FakeElasticsearchClusters) List(opts v1.ListOptions) (result *elasticse
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &elasticsearchoperatorv1.ElasticsearchClusterList{}
+	list := &elasticsearchoperatorv1.ElasticsearchClusterList{ListMeta: obj.(*elasticsearchoperatorv1.ElasticsearchClusterList).ListMeta}
 	for _, item := range obj.(*elasticsearchoperatorv1.ElasticsearchClusterList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -131,7 +131,7 @@ func (c *FakeElasticsearchClusters) DeleteCollection(options *v1.DeleteOptions, 
 // Patch applies the patch and returns the patched elasticsearchCluster.
 func (c *FakeElasticsearchClusters) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *elasticsearchoperatorv1.ElasticsearchCluster, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(elasticsearchclustersResource, c.ns, name, data, subresources...), &elasticsearchoperatorv1.ElasticsearchCluster{})
+		Invokes(testing.NewPatchSubresourceAction(elasticsearchclustersResource, c.ns, name, pt, data, subresources...), &elasticsearchoperatorv1.ElasticsearchCluster{})
 
 	if obj == nil {
 		return nil, err

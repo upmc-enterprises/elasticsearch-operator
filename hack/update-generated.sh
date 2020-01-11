@@ -18,8 +18,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-HACK_DIR=$(dirname "${BASH_SOURCE}")
+HACK_DIR="${PWD}/$(dirname "${BASH_SOURCE}")"
 REPO_ROOT=${HACK_DIR}/..
+
+chmod +x ${REPO_ROOT}/vendor/k8s.io/code-generator/generate-groups.sh
+cd ${REPO_ROOT}/vendor/k8s.io/code-generator
+go mod vendor
+cd ${HACK_DIR}
 
 ${REPO_ROOT}/vendor/k8s.io/code-generator/generate-groups.sh \
   all \

@@ -31,12 +31,12 @@ import (
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/elasticsearchutil"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	elasticsearchoperator "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	clientset "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
 	genclient "github.com/upmc-enterprises/elasticsearch-operator/pkg/client/clientset/versioned"
-	apps "k8s.io/api/apps/v1beta2"
+	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -278,7 +278,7 @@ func (k *K8sutil) MonitorDataPods(stopchan chan struct{}) (<-chan *v1.Pod, <-cha
 	errc := make(chan error, 1)
 
 	// create the pod watcher
-	podListWatcher := cache.NewListWatchFromClient(k.Kclient.Core().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
+	podListWatcher := cache.NewListWatchFromClient(k.Kclient.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
 
 	createAddHandler := func(obj interface{}) {
 		event := obj.(*v1.Pod)
@@ -323,7 +323,7 @@ func (k *K8sutil) DeleteStatefulSet(deploymentType, clusterName, namespace strin
 	}
 
 	// Get list of data type statefulsets
-	statefulsets, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+	statefulsets, err := k.Kclient.AppsV1().StatefulSets(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 
 	if err != nil {
 		logrus.Error("Could not get stateful sets! ", err)
@@ -332,7 +332,7 @@ func (k *K8sutil) DeleteStatefulSet(deploymentType, clusterName, namespace strin
 	for _, statefulset := range statefulsets.Items {
 		//Scale the statefulset down to zero (https://github.com/kubernetes/client-go/issues/91)
 		statefulset.Spec.Replicas = new(int32)
-		statefulset, err := k.Kclient.AppsV1beta1().StatefulSets(namespace).Update(&statefulset)
+		statefulset, err := k.Kclient.AppsV1().StatefulSets(namespace).Update(&statefulset)
 
 		if err != nil {
 			logrus.Errorf("Could not scale statefulset: %s ", statefulset.Name)
@@ -340,7 +340,7 @@ func (k *K8sutil) DeleteStatefulSet(deploymentType, clusterName, namespace strin
 			logrus.Infof("Scaled statefulset: %s to zero", statefulset.Name)
 		}
 
-		err = k.Kclient.AppsV1beta1().StatefulSets(namespace).Delete(statefulset.Name, &metav1.DeleteOptions{
+		err = k.Kclient.AppsV1().StatefulSets(namespace).Delete(statefulset.Name, &metav1.DeleteOptions{
 			PropagationPolicy: func() *metav1.DeletionPropagation {
 				foreground := metav1.DeletePropagationForeground
 				return &foreground
@@ -675,7 +675,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 	statefulSetName := fmt.Sprintf("%s-%s", deploymentName, storageClass)
 
 	// Check if StatefulSet exists
-	statefulSet, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
+	statefulSet, err := k.Kclient.AppsV1().StatefulSets(namespace).Get(statefulSetName, metav1.GetOptions{})
 
 	if len(statefulSet.Name) == 0 {
 
@@ -684,7 +684,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 		statefulSet := buildStatefulSet(statefulSetName, clusterName, deploymentType, baseImage, storageClass, dataDiskSize, javaOptions, masterJavaOptions, dataJavaOptions, serviceAccountName,
 			statsdEndpoint, networkHost, replicas, useSSL, resources, imagePullSecrets, imagePullPolicy, nodeSelector, tolerations, annotations)
 
-		if _, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Create(statefulSet); err != nil {
+		if _, err := k.Kclient.AppsV1().StatefulSets(namespace).Create(statefulSet); err != nil {
 			logrus.Error("Could not create stateful set: ", err)
 			return err
 		}
@@ -703,7 +703,7 @@ func (k *K8sutil) CreateDataNodeDeployment(deploymentType string, replicas *int3
 				elasticsearchutil.UpdateDiscoveryMinMasterNodes(esUrl, minMasterNodes)
 			}
 			statefulSet.Spec.Replicas = replicas
-			_, err := k.Kclient.AppsV1beta2().StatefulSets(namespace).Update(statefulSet)
+			_, err := k.Kclient.AppsV1().StatefulSets(namespace).Update(statefulSet)
 
 			if err != nil {
 				logrus.Error("Could not scale statefulSet: ", err)
