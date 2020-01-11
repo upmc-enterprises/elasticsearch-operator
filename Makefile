@@ -5,9 +5,6 @@
 
 TAG ?= 0.4.0
 PREFIX ?= upmcenterprises
-pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
-# go source files, ignore vendor directory
-SRC = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 all: container
 
@@ -17,6 +14,9 @@ build:
 container: build
 	docker build -t $(PREFIX)/elasticsearch-operator:$(TAG) .
 
+dep:
+	go mod vendor
+
 push:
 	docker push $(PREFIX)/elasticsearch-operator:$(TAG)
 
@@ -24,17 +24,17 @@ clean:
 	rm -f elasticsearch-operator
 
 format:
-	go fmt $(pkgs)
+	go fmt ./pkg/... ./cmd/...
 
 check:
-	@go tool vet ${SRC}
+	go vet ./pkg/... ./cmd/...
 
 helm-package:
 	helm package charts/{elasticsearch,elasticsearch-operator} -d charts
 	helm repo index --merge charts/index.yaml charts
 
 test: clean
-	go test $$(go list ./... | grep -v /vendor/)
+	go test ./pkg/...
 
 devpreq:
 	mkdir -p /tmp/certs/config && mkdir -p /tmp/certs/certs

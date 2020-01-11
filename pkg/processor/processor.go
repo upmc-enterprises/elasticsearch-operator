@@ -32,7 +32,7 @@ import (
 
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/snapshot"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	myspec "github.com/upmc-enterprises/elasticsearch-operator/pkg/apis/elasticsearchoperator/v1"
 	"github.com/upmc-enterprises/elasticsearch-operator/pkg/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -161,7 +161,7 @@ func (p *Processor) refreshClusters() error {
 					DataNodeReplicas:    cluster.Spec.DataNodeReplicas,
 					Zones:               cluster.Spec.Zones,
 					DataDiskSize:        cluster.Spec.DataDiskSize,
-                                        MasterDiskSize:      cluster.Spec.MasterDiskSize,
+					MasterDiskSize:      cluster.Spec.MasterDiskSize,
 					JavaOptions:         cluster.Spec.JavaOptions,
 					ClientJavaOptions:   cluster.Spec.ClientJavaOptions,
 					DataJavaOptions:     cluster.Spec.DataJavaOptions,
